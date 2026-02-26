@@ -1,0 +1,60 @@
+name = "vulflare-worker"
+main = "apps/worker/src/index.ts"
+compatibility_date = "2025-01-16"
+compatibility_flags = ["nodejs_compat"]
+
+[[send_email]]
+name = "SEND_EMAIL"
+
+[triggers]
+crons = ["0 1 * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "vulflare-db"
+database_id = "YOUR_D1_DATABASE_ID"  # wrangler d1 create vulflare-db で取得
+migrations_dir = "migrations"
+
+[[kv_namespaces]]
+binding = "KV_SESSIONS"
+id = "YOUR_KV_SESSIONS_ID"  # wrangler kv namespace create KV_SESSIONS で取得
+
+[[kv_namespaces]]
+binding = "KV_CACHE"
+id = "YOUR_KV_CACHE_ID"  # wrangler kv namespace create KV_CACHE で取得
+
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "vulflare-scanner-results"
+
+[vars]
+ENVIRONMENT = "development"
+PAGES_URL = "https://YOUR_PROJECT_NAME.pages.dev"  # Cloudflare Pages の URL
+
+[env.production]
+name = "vulflare-worker"
+
+[[env.production.send_email]]
+name = "SEND_EMAIL"
+
+[env.production.vars]
+ENVIRONMENT = "production"
+PAGES_URL = "https://YOUR_PROJECT_NAME.pages.dev"  # Cloudflare Pages の URL
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "vulflare-db"
+database_id = "YOUR_D1_DATABASE_ID"  # wrangler d1 create vulflare-db で取得
+migrations_dir = "migrations"
+
+[[env.production.kv_namespaces]]
+binding = "KV_SESSIONS"
+id = "YOUR_KV_SESSIONS_ID"  # wrangler kv namespace create KV_SESSIONS で取得
+
+[[env.production.kv_namespaces]]
+binding = "KV_CACHE"
+id = "YOUR_KV_CACHE_ID"  # wrangler kv namespace create KV_CACHE で取得
+
+[[env.production.r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "vulflare-scanner-results"

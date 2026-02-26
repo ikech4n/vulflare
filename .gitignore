@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.wrangler/
+.dev.vars
+*.local
+.env
+
+# 本番環境ファイル（個人URLを含む）
+apps/web/.env.production
+
+# 内部実装計画ドキュメント
+plan.md
+
+# TypeScriptビルドキャッシュ
+apps/web/tsconfig.tsbuildinfo

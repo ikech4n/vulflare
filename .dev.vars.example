@@ -1,0 +1,5 @@
+# Copy this file to .dev.vars and fill in the values
+JWT_SECRET=your-strong-secret-key-at-least-32-chars-long
+NVD_API_KEY=
+PAGES_URL=http://localhost:5173
+ENVIRONMENT=development

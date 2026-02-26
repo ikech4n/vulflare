@@ -1,0 +1,58 @@
+name: 機能リクエスト
+description: 新機能や改善の提案
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        機能リクエストをありがとうございます。
+        提案内容を詳しく教えていただけると検討しやすくなります。
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: 対象コンポーネント
+      description: どのコンポーネントに関する提案ですか？
+      multiple: true
+      options:
+        - Worker API
+        - Web フロントエンド
+        - NVD 同期
+        - JVN 同期
+        - EUVD 同期
+        - 認証 / セッション
+        - スキャナインポート
+        - 通知
+        - DB マイグレーション
+        - 新規コンポーネント
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 解決したい問題
+      description: この機能が解決する課題や不便な点を説明してください
+      placeholder: "例: ～の場合に～ができないため、～が困難です"
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: 提案する解決策
+      description: どのような機能・変更を期待しますか？
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 代替案
+      description: 他に検討した代替案があれば記載してください
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 補足情報
+      description: 参考リンク、スクリーンショット、その他の補足情報

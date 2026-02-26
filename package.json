@@ -1,0 +1,21 @@
+{
+  "name": "vulflare",
+  "private": true,
+  "scripts": {
+    "dev:worker": "wrangler dev",
+    "dev:web": "pnpm --filter @vulflare/web dev",
+    "build:web": "pnpm --filter @vulflare/web build",
+    "deploy:worker": "wrangler deploy --env production",
+    "deploy:web": "pnpm --filter @vulflare/web build && wrangler pages deploy apps/web/dist --project-name vulflare",
+    "db:migrate": "wrangler d1 migrations apply vulflare-db --local",
+    "db:migrate:prod": "wrangler d1 migrations apply vulflare-db --env production --remote",
+    "type-check": "pnpm run -r type-check",
+    "test": "pnpm run -r test",
+    "test:worker": "pnpm --filter @vulflare/worker test",
+    "test:web": "pnpm --filter @vulflare/web test"
+  },
+  "devDependencies": {
+    "wrangler": "^3.114.0",
+    "typescript": "^5.7.0"
+  }
+}

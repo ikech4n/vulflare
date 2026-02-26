@@ -1,0 +1,425 @@
+import type { Env } from '../types.ts';
+
+type DB = Env['DB'];
+
+// --- Users ---
+
+export interface DbUser {
+  id: string;
+  email: string;
+  username: string;
+  password_hash: string;
+  role: string;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export const userRepo = {
+  findByEmail(db: DB, email: string) {
+    return db.prepare('SELECT * FROM users WHERE email = ?').bind(email).first<DbUser>();
+  },
+  findById(db: DB, id: string) {
+    return db.prepare('SELECT * FROM users WHERE id = ?').bind(id).first<DbUser>();
+  },
+  create(db: DB, user: Omit<DbUser, 'created_at' | 'updated_at'>) {
+    return db
+      .prepare(
+        'INSERT INTO users (id, email, username, password_hash, role, is_active) VALUES (?, ?, ?, ?, ?, ?)',
+      )
+      .bind(user.id, user.email, user.username, user.password_hash, user.role, user.is_active)
+      .run();
+  },
+  list(db: DB) {
+    return db
+      .prepare('SELECT id, email, username, role, is_active, created_at FROM users ORDER BY created_at ASC')
+      .all<Omit<DbUser, 'password_hash'>>();
+  },
+  updatePassword(db: DB, id: string, passwordHash: string) {
+    return db
+      .prepare("UPDATE users SET password_hash = ?, updated_at = datetime('now') WHERE id = ?")
+      .bind(passwordHash, id)
+      .run();
+  },
+  updateRole(db: DB, id: string, role: string) {
+    return db
+      .prepare("UPDATE users SET role = ?, updated_at = datetime('now') WHERE id = ?")
+      .bind(role, id)
+      .run();
+  },
+  setActive(db: DB, id: string, isActive: number) {
+    return db
+      .prepare("UPDATE users SET is_active = ?, updated_at = datetime('now') WHERE id = ?")
+      .bind(isActive, id)
+      .run();
+  },
+  delete(db: DB, id: string) {
+    return db.prepare('DELETE FROM users WHERE id = ?').bind(id).run();
+  },
+};
+
+// --- Refresh Tokens ---
+
+export const tokenRepo = {
+  create(
+    db: DB,
+    id: string,
+    userId: string,
+    tokenHash: string,
+    expiresAt: string,
+  ) {
+    return db
+      .prepare(
+        'INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at) VALUES (?, ?, ?, ?)',
+      )
+      .bind(id, userId, tokenHash, expiresAt)
+      .run();
+  },
+  findByHash(db: DB, tokenHash: string) {
+    return db
+      .prepare(
+        'SELECT * FROM refresh_tokens WHERE token_hash = ? AND revoked = 0 AND expires_at > datetime(\'now\')',
+      )
+      .bind(tokenHash)
+      .first<{ id: string; user_id: string; token_hash: string; expires_at: string }>();
+  },
+  revoke(db: DB, id: string) {
+    return db.prepare('UPDATE refresh_tokens SET revoked = 1 WHERE id = ?').bind(id).run();
+  },
+  revokeAllForUser(db: DB, userId: string) {
+    return db
+      .prepare('UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?')
+      .bind(userId)
+      .run();
+  },
+};
+
+// --- Vulnerabilities ---
+
+export interface DbVulnerability {
+  id: string;
+  cve_id: string | null;
+  title: string;
+  description: string | null;
+  severity: string;
+  cvss_v3_score: number | null;
+  cvss_v3_vector: string | null;
+  cvss_v2_score: number | null;
+  cvss_v2_vector: string | null;
+  cwe_ids: string;
+  affected_products: string;
+  vuln_references: string;
+  published_at: string | null;
+  modified_at: string | null;
+  source: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const vulnRepo = {
+  list(
+    db: DB,
+    {
+      page,
+      limit,
+      severity,
+      status,
+      source,
+      q,
+    }: {
+      page: number;
+      limit: number;
+      severity?: string;
+      status?: string;
+      source?: string;
+      q?: string;
+    },
+  ) {
+    const conditions: string[] = [];
+    const params: unknown[] = [];
+
+    if (severity) { conditions.push('severity = ?'); params.push(severity); }
+    if (status) { conditions.push('status = ?'); params.push(status); }
+    if (source) { conditions.push('source = ?'); params.push(source); }
+    if (q) {
+      conditions.push('(cve_id LIKE ? OR title LIKE ?)');
+      params.push(`%${q}%`, `%${q}%`);
+    }
+
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const offset = (page - 1) * limit;
+
+    const countStmt = db
+      .prepare(`SELECT COUNT(*) as total FROM vulnerabilities ${where}`)
+      .bind(...params);
+    const dataStmt = db
+      .prepare(
+        `SELECT * FROM vulnerabilities ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      )
+      .bind(...params, limit, offset);
+
+    return { countStmt, dataStmt };
+  },
+
+  findById(db: DB, id: string) {
+    return db.prepare('SELECT * FROM vulnerabilities WHERE id = ?').bind(id).first<DbVulnerability>();
+  },
+
+  findByCveId(db: DB, cveId: string) {
+    return db
+      .prepare('SELECT * FROM vulnerabilities WHERE cve_id = ?')
+      .bind(cveId)
+      .first<DbVulnerability>();
+  },
+
+  create(db: DB, v: Omit<DbVulnerability, 'created_at' | 'updated_at'>) {
+    return db
+      .prepare(
+        `INSERT INTO vulnerabilities
+          (id, cve_id, title, description, severity, cvss_v3_score, cvss_v3_vector,
+           cvss_v2_score, cvss_v2_vector, cwe_ids, affected_products, vuln_references,
+           published_at, modified_at, source, status)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      )
+      .bind(
+        v.id, v.cve_id, v.title, v.description, v.severity,
+        v.cvss_v3_score, v.cvss_v3_vector, v.cvss_v2_score, v.cvss_v2_vector,
+        v.cwe_ids, v.affected_products, v.vuln_references,
+        v.published_at, v.modified_at, v.source, v.status,
+      )
+      .run();
+  },
+
+  update(db: DB, id: string, fields: Partial<Pick<DbVulnerability, 'title' | 'description' | 'severity' | 'status' | 'cvss_v3_score' | 'cvss_v3_vector'>>) {
+    const sets: string[] = ["updated_at = datetime('now')"];
+    const params: unknown[] = [];
+    for (const [k, v] of Object.entries(fields)) {
+      sets.push(`${k} = ?`);
+      params.push(v);
+    }
+    params.push(id);
+    return db.prepare(`UPDATE vulnerabilities SET ${sets.join(', ')} WHERE id = ?`).bind(...params).run();
+  },
+
+  delete(db: DB, id: string) {
+    return db.prepare('DELETE FROM vulnerabilities WHERE id = ?').bind(id).run();
+  },
+
+  stats(db: DB) {
+    return db
+      .prepare(
+        `SELECT
+           COUNT(*) as total,
+           SUM(CASE WHEN severity = 'critical' THEN 1 ELSE 0 END) as critical,
+           SUM(CASE WHEN severity = 'high' THEN 1 ELSE 0 END) as high,
+           SUM(CASE WHEN severity = 'medium' THEN 1 ELSE 0 END) as medium,
+           SUM(CASE WHEN severity = 'low' THEN 1 ELSE 0 END) as low,
+           SUM(CASE WHEN severity = 'informational' THEN 1 ELSE 0 END) as informational,
+           SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active,
+           SUM(CASE WHEN status = 'fixed' THEN 1 ELSE 0 END) as fixed,
+           SUM(CASE WHEN status = 'accepted_risk' THEN 1 ELSE 0 END) as accepted_risk,
+           SUM(CASE WHEN status = 'false_positive' THEN 1 ELSE 0 END) as false_positive,
+           SUM(CASE WHEN created_at >= datetime('now', '-7 days') THEN 1 ELSE 0 END) as recently_added
+         FROM vulnerabilities`,
+      )
+      .first<Record<string, number>>();
+  },
+
+  batchUpdate(
+    db: DB,
+    ids: string[],
+    fields: Partial<Pick<DbVulnerability, 'severity' | 'status'>>
+  ) {
+    if (ids.length === 0) {
+      return { success: true, meta: { changes: 0 } };
+    }
+
+    const sets: string[] = ["updated_at = datetime('now')"];
+    const params: unknown[] = [];
+
+    for (const [k, v] of Object.entries(fields)) {
+      sets.push(`${k} = ?`);
+      params.push(v);
+    }
+
+    const placeholders = ids.map(() => '?').join(',');
+    params.push(...ids);
+
+    const sql = `UPDATE vulnerabilities SET ${sets.join(', ')} WHERE id IN (${placeholders})`;
+    return db.prepare(sql).bind(...params).run();
+  },
+};
+
+// --- Assets ---
+
+export interface DbAsset {
+  id: string;
+  name: string;
+  asset_type: string;
+  description: string | null;
+  environment: string;
+  owner: string | null;
+  tags: string;
+  metadata: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const assetRepo = {
+  list(db: DB, { page, limit, environment, assetType }: { page: number; limit: number; environment?: string; assetType?: string }) {
+    const conditions: string[] = [];
+    const params: unknown[] = [];
+    if (environment) { conditions.push('environment = ?'); params.push(environment); }
+    if (assetType) { conditions.push('asset_type = ?'); params.push(assetType); }
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const offset = (page - 1) * limit;
+    return {
+      countStmt: db.prepare(`SELECT COUNT(*) as total FROM assets ${where}`).bind(...params),
+      dataStmt: db.prepare(`SELECT * FROM assets ${where} ORDER BY name ASC LIMIT ? OFFSET ?`).bind(...params, limit, offset),
+    };
+  },
+
+  findById(db: DB, id: string) {
+    return db.prepare('SELECT * FROM assets WHERE id = ?').bind(id).first<DbAsset>();
+  },
+
+  create(db: DB, a: Omit<DbAsset, 'created_at' | 'updated_at'>) {
+    return db
+      .prepare(
+        'INSERT INTO assets (id, name, asset_type, description, environment, owner, tags, metadata) VALUES (?,?,?,?,?,?,?,?)',
+      )
+      .bind(a.id, a.name, a.asset_type, a.description, a.environment, a.owner, a.tags, a.metadata)
+      .run();
+  },
+
+  update(db: DB, id: string, fields: Partial<Omit<DbAsset, 'id' | 'created_at' | 'updated_at'>>) {
+    const sets: string[] = ["updated_at = datetime('now')"];
+    const params: unknown[] = [];
+    for (const [k, v] of Object.entries(fields)) {
+      sets.push(`${k} = ?`);
+      params.push(v);
+    }
+    params.push(id);
+    return db.prepare(`UPDATE assets SET ${sets.join(', ')} WHERE id = ?`).bind(...params).run();
+  },
+
+  delete(db: DB, id: string) {
+    return db.prepare('DELETE FROM assets WHERE id = ?').bind(id).run();
+  },
+
+  listVulnerabilities(db: DB, assetId: string) {
+    return db
+      .prepare(
+        `SELECT av.*, v.*,
+           av.id as av_id, av.status as av_status, av.priority as av_priority,
+           av.detected_at as av_detected_at
+         FROM asset_vulnerabilities av
+         JOIN vulnerabilities v ON av.vulnerability_id = v.id
+         WHERE av.asset_id = ?
+         ORDER BY
+           CASE v.severity WHEN 'critical' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 ELSE 4 END,
+           av.detected_at DESC`,
+      )
+      .bind(assetId)
+      .all();
+  },
+
+  linkVulnerability(db: DB, id: string, assetId: string, vulnerabilityId: string, priority: string) {
+    return db
+      .prepare(
+        'INSERT OR IGNORE INTO asset_vulnerabilities (id, asset_id, vulnerability_id, priority) VALUES (?,?,?,?)',
+      )
+      .bind(id, assetId, vulnerabilityId, priority)
+      .run();
+  },
+
+  updateVulnerabilityLink(
+    db: DB,
+    assetId: string,
+    vulnId: string,
+    fields: Partial<{ status: string; priority: string; assigned_to: string; due_date: string; notes: string; resolved_at: string }>,
+  ) {
+    const sets: string[] = ["updated_at = datetime('now')"];
+    const params: unknown[] = [];
+    for (const [k, v] of Object.entries(fields)) {
+      sets.push(`${k} = ?`);
+      params.push(v);
+    }
+    params.push(assetId, vulnId);
+    return db
+      .prepare(
+        `UPDATE asset_vulnerabilities SET ${sets.join(', ')} WHERE asset_id = ? AND vulnerability_id = ?`,
+      )
+      .bind(...params)
+      .run();
+  },
+
+  unlinkVulnerability(db: DB, assetId: string, vulnId: string) {
+    return db
+      .prepare('DELETE FROM asset_vulnerabilities WHERE asset_id = ? AND vulnerability_id = ?')
+      .bind(assetId, vulnId)
+      .run();
+  },
+};
+
+// --- Scan Imports ---
+
+export interface DbScanImport {
+  id: string;
+  asset_id: string | null;
+  scanner_type: string;
+  file_name: string;
+  r2_object_key: string;
+  status: string;
+  total_vulns: number;
+  created_vulns: number;
+  updated_vulns: number;
+  error_message: string | null;
+  imported_by: string;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export const importRepo = {
+  list(db: DB, { page, limit }: { page: number; limit: number }) {
+    const offset = (page - 1) * limit;
+    return {
+      countStmt: db.prepare('SELECT COUNT(*) as total FROM scan_imports'),
+      dataStmt: db
+        .prepare('SELECT * FROM scan_imports ORDER BY created_at DESC LIMIT ? OFFSET ?')
+        .bind(limit, offset),
+    };
+  },
+
+  findById(db: DB, id: string) {
+    return db.prepare('SELECT * FROM scan_imports WHERE id = ?').bind(id).first<DbScanImport>();
+  },
+
+  create(
+    db: DB,
+    imp: Omit<DbScanImport, 'status' | 'total_vulns' | 'created_vulns' | 'updated_vulns' | 'error_message' | 'created_at' | 'completed_at'>,
+  ) {
+    return db
+      .prepare(
+        'INSERT INTO scan_imports (id, asset_id, scanner_type, file_name, r2_object_key, imported_by) VALUES (?,?,?,?,?,?)',
+      )
+      .bind(imp.id, imp.asset_id, imp.scanner_type, imp.file_name, imp.r2_object_key, imp.imported_by)
+      .run();
+  },
+
+  updateStatus(
+    db: DB,
+    id: string,
+    fields: Partial<Pick<DbScanImport, 'status' | 'total_vulns' | 'created_vulns' | 'updated_vulns' | 'error_message' | 'completed_at'>>,
+  ) {
+    const sets: string[] = [];
+    const params: unknown[] = [];
+    for (const [k, v] of Object.entries(fields)) {
+      sets.push(`${k} = ?`);
+      params.push(v);
+    }
+    params.push(id);
+    return db.prepare(`UPDATE scan_imports SET ${sets.join(', ')} WHERE id = ?`).bind(...params).run();
+  },
+};

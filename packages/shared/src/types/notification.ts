@@ -1,0 +1,40 @@
+export type NotificationChannelType = 'webhook' | 'email';
+
+export type EventType =
+  | 'vulnerability_created'
+  | 'vulnerability_updated'
+  | 'vulnerability_critical'
+  | 'sla_breach'
+  | 'asset_created'
+  | 'asset_updated'
+  | 'eol_approaching';
+
+export interface NotificationChannel {
+  id: string;
+  name: string;
+  type: NotificationChannelType;
+  config: string; // JSON
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NotificationRule {
+  id: string;
+  channel_id: string;
+  event_type: EventType;
+  filter_config: string | null;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NotificationLog {
+  id: string;
+  channel_id: string;
+  event_type: EventType;
+  payload: string;
+  status: 'sent' | 'failed' | 'pending';
+  error_message: string | null;
+  sent_at: string;
+}

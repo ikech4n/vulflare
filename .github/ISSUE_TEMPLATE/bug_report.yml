@@ -1,0 +1,74 @@
+name: バグレポート
+description: 不具合・エラーの報告
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        バグレポートをありがとうございます。
+        セキュリティ脆弱性の場合は、このフォームではなく [SECURITY.md](../SECURITY.md) の手順に従ってください。
+
+  - type: input
+    id: version
+    attributes:
+      label: バージョン / コミット
+      description: 問題が発生したバージョンまたはコミット SHA
+      placeholder: "例: main@abc1234"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: コンポーネント
+      description: 問題が発生しているコンポーネントを選択してください
+      multiple: true
+      options:
+        - Worker API
+        - Web フロントエンド
+        - NVD 同期
+        - JVN 同期
+        - EUVD 同期
+        - 認証 / セッション
+        - スキャナインポート
+        - 通知
+        - DB マイグレーション
+        - その他
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 問題の説明
+      description: 何が起きているかを説明してください
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      description: |
+        問題を再現するための手順を記載してください
+      placeholder: |
+        1. ～のページを開く
+        2. ～をクリック
+        3. ～が表示される
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待する動作
+      description: 本来どのような動作になるべきかを説明してください
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: ログ・エラーメッセージ
+      description: 関連するログやエラーメッセージがあれば貼り付けてください
+      render: shell
