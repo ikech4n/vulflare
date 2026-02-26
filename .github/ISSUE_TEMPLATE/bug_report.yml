@@ -26,11 +26,8 @@ body:
       options:
         - Worker API
         - Web フロントエンド
-        - NVD 同期
         - JVN 同期
-        - EUVD 同期
         - 認証 / セッション
-        - スキャナインポート
         - 通知
         - DB マイグレーション
         - その他

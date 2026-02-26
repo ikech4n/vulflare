@@ -10,11 +10,8 @@
 ### Added
 
 - 脆弱性管理ダッシュボード（CVE 一覧・フィルタリング・ステータス管理）
-- NVD（National Vulnerability Database）の自動日次同期（毎日 01:00 UTC）
-- JVN（Japan Vulnerability Notes）の自動日次同期
-- EUVD（European Union Vulnerability Database）の自動日次同期
-- スキャナ連携（Trivy / Grype の JSON レポートインポート）
-- プロダクト・バージョンのEOL（End of Life）追跡
+- JVN（Japan Vulnerability Notes）の自動日次同期（毎日 01:00 UTC）
+- プロダクト・バージョンの EOL（End of Life）追跡
 - ロールベースアクセス制御（管理者 / 一般ユーザー）
 - 通知システム（脆弱性アラート・EOL アラート）
 - Cloudflare Workers + Hono による REST API

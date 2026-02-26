@@ -35,7 +35,6 @@ cp .dev.vars.example .dev.vars
 
 ```
 JWT_SECRET=your-secret-key-here
-NVD_API_KEY=your-nvd-api-key  # 任意。設定するとレート制限が緩和される
 ```
 
 ### 4. Cloudflare リソースの作成（初回のみ）
@@ -49,13 +48,6 @@ npx wrangler d1 create vulflare-db
 # KV Namespaces
 npx wrangler kv namespace create KV_SESSIONS
 npx wrangler kv namespace create KV_CACHE
-
-# R2 バケット
-npx wrangler r2 bucket create vulflare-scanner-results
-
-# Queues
-npx wrangler queues create vulflare-import-queue
-npx wrangler queues create vulflare-import-dlq
 ```
 
 取得した ID を `wrangler.toml` に設定してください。
@@ -128,10 +120,10 @@ pnpm type-check
 **例:**
 
 ```
-feat(worker): NVD API の差分同期に対応
+feat(worker): JVN 同期の差分取得に対応
 
-既存の全件取得から差分取得に変更し、APIレート制限を削減。
-lastModStartDate を KV に保存して次回取得時に参照する。
+既存の全件取得から差分取得に変更し、API 呼び出し回数を削減。
+lastModDate を KV に保存して次回取得時に参照する。
 ```
 
 ## プルリクエストのプロセス
