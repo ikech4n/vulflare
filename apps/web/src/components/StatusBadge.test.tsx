@@ -10,7 +10,7 @@ describe('StatusBadge', () => {
 
   it('renders fixed status correctly', () => {
     render(<StatusBadge status="fixed" />);
-    expect(screen.getByText('修正済み')).toBeInTheDocument();
+    expect(screen.getByText('解決済み')).toBeInTheDocument();
   });
 
   it('renders accepted_risk status correctly', () => {

@@ -4,9 +4,6 @@ export type EventType =
   | 'vulnerability_created'
   | 'vulnerability_updated'
   | 'vulnerability_critical'
-  | 'sla_breach'
-  | 'asset_created'
-  | 'asset_updated'
   | 'eol_approaching';
 
 export interface NotificationChannel {

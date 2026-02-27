@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, Package, ExternalLink, Plus, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Calendar, ExternalLink, Plus, Edit, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api.ts';
 import type { EolProductWithCycles, EolCycle } from '@vulflare/shared/types';
 import { EolStatusBadge } from '@/components/EolStatusBadge.tsx';
@@ -74,15 +74,6 @@ export function EolProductDetailPage() {
               ) : (
                 <span className="text-gray-500">手動管理</span>
               )}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">影響アセット数</dt>
-            <dd className="mt-1 text-sm text-gray-900">
-              <span className="flex items-center gap-2">
-                <Package className="w-4 h-4 text-gray-400" />
-                {product.affected_asset_count ?? 0} 件
-              </span>
             </dd>
           </div>
         </dl>

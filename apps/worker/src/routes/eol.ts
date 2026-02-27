@@ -5,7 +5,6 @@ import { authMiddleware, requireRole } from '../middleware/auth.ts';
 import {
   eolProductRepo,
   eolCycleRepo,
-  assetEolLinkRepo,
   eolSyncLogRepo,
 } from '../db/eol-repository.ts';
 import {
@@ -37,17 +36,9 @@ eolRoutes.get('/products/:id', async (c) => {
 
   const cycles = await eolCycleRepo.listByProduct(c.env.DB, id);
 
-  // 影響を受けるアセット数をカウント
-  let affectedAssetCount = 0;
-  for (const cycle of cycles) {
-    const count = await assetEolLinkRepo.countByCycle(c.env.DB, cycle.id);
-    affectedAssetCount += count;
-  }
-
   return c.json({
     ...product,
     cycles,
-    affected_asset_count: affectedAssetCount,
   });
 });
 
@@ -291,80 +282,6 @@ eolRoutes.delete('/cycles/:id', requireRole('admin'), async (c) => {
   return c.json({ message: 'Cycle deleted' });
 });
 
-// --- アセット-EOL紐付け ---
-
-// GET /api/assets/:id/eol - アセットのEOL情報
-eolRoutes.get('/assets/:id/eol', async (c) => {
-  const assetId = c.req.param('id');
-  const links = await assetEolLinkRepo.listByAsset(c.env.DB, assetId);
-
-  const enriched = [];
-  for (const link of links) {
-    const cycle = await eolCycleRepo.findById(c.env.DB, link.eol_cycle_id);
-    if (!cycle) continue;
-
-    const product = await eolProductRepo.findById(c.env.DB, cycle.product_id);
-    if (!product) continue;
-
-    enriched.push({
-      ...link,
-      cycle,
-      product,
-    });
-  }
-
-  return c.json(enriched);
-});
-
-// POST /api/assets/:id/eol - 紐付け追加
-eolRoutes.post('/assets/:id/eol', requireRole('editor'), async (c) => {
-  const assetId = c.req.param('id');
-  const body = await c.req.json<{
-    eol_cycle_id: string;
-    installed_version?: string;
-    notes?: string;
-  }>();
-
-  if (!body.eol_cycle_id) {
-    return c.json({ error: 'eol_cycle_id is required' }, 400);
-  }
-
-  const cycle = await eolCycleRepo.findById(c.env.DB, body.eol_cycle_id);
-  if (!cycle) {
-    return c.json({ error: 'Cycle not found' }, 404);
-  }
-
-  const id = crypto.randomUUID();
-  try {
-    await assetEolLinkRepo.create(c.env.DB, {
-      id,
-      asset_id: assetId,
-      eol_cycle_id: body.eol_cycle_id,
-      installed_version: body.installed_version ?? null,
-      notes: body.notes ?? null,
-    });
-  } catch (err) {
-    // UNIQUE制約違反の場合
-    return c.json({ error: 'Link already exists' }, 409);
-  }
-
-  const created = await assetEolLinkRepo.findById(c.env.DB, id);
-  return c.json(created, 201);
-});
-
-// DELETE /api/assets/:assetId/eol/:linkId - 紐付け解除
-eolRoutes.delete('/assets/:assetId/eol/:linkId', requireRole('editor'), async (c) => {
-  const linkId = c.req.param('linkId');
-  const link = await assetEolLinkRepo.findById(c.env.DB, linkId);
-
-  if (!link) {
-    return c.json({ error: 'Link not found' }, 404);
-  }
-
-  await assetEolLinkRepo.delete(c.env.DB, linkId);
-  return c.json({ message: 'Link deleted' });
-});
-
 // --- endoflife.date 同期 ---
 
 // GET /api/eol/available-products - 利用可能プロダクト一覧
@@ -425,17 +342,11 @@ eolRoutes.get('/stats', async (c) => {
   }>();
   const totalCycles = allCycles?.count ?? 0;
 
-  const allLinks = await c.env.DB.prepare('SELECT COUNT(*) as count FROM asset_eol_links').first<{
-    count: number;
-  }>();
-  const totalLinks = allLinks?.count ?? 0;
-
   const supportedCount = totalCycles - eolCount - approaching30d;
 
   const stats: EolStats = {
     total_products: totalProducts,
     total_cycles: totalCycles,
-    total_links: totalLinks,
     eol_count: eolCount,
     approaching_eol_30d: approaching30d,
     approaching_eol_90d: approaching90d,
@@ -471,29 +382,13 @@ eolRoutes.get('/timeline', async (c) => {
       days_until_eol: number;
     }>();
 
-  const timeline: EolTimelineItem[] = [];
-
-  for (const row of result.results) {
-    const count = await c.env.DB
-      .prepare(
-        `SELECT COUNT(*) as count FROM asset_eol_links WHERE eol_cycle_id IN (
-          SELECT id FROM eol_cycles WHERE product_id = (
-            SELECT id FROM eol_products WHERE product_name = ?
-          ) AND cycle = ?
-        )`,
-      )
-      .bind(row.product_name, row.cycle)
-      .first<{ count: number }>();
-
-    timeline.push({
-      product_name: row.product_name,
-      display_name: row.display_name,
-      cycle: row.cycle,
-      eol_date: row.eol_date,
-      days_until_eol: Math.floor(row.days_until_eol),
-      affected_asset_count: count?.count ?? 0,
-    });
-  }
+  const timeline: EolTimelineItem[] = result.results.map((row) => ({
+    product_name: row.product_name,
+    display_name: row.display_name,
+    cycle: row.cycle,
+    eol_date: row.eol_date,
+    days_until_eol: Math.floor(row.days_until_eol),
+  }));
 
   return c.json(timeline);
 });

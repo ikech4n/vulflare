@@ -127,9 +127,6 @@ notificationRoutes.post('/rules', requireRole('admin'), async (c) => {
     'vulnerability_created',
     'vulnerability_updated',
     'vulnerability_critical',
-    'sla_breach',
-    'asset_created',
-    'asset_updated',
     'eol_approaching',
   ];
 

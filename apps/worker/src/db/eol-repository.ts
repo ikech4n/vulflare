@@ -1,4 +1,4 @@
-import type { EolProduct, EolCycle, AssetEolLink, EolSyncLog } from '@vulflare/shared/types';
+import type { EolProduct, EolCycle, EolSyncLog } from '@vulflare/shared/types';
 
 type DB = D1Database;
 
@@ -243,93 +243,6 @@ export const eolCycleRepo = {
          AND eol_date <= ?`,
       )
       .bind(futureDateStr)
-      .first<{ count: number }>();
-    return result?.count ?? 0;
-  },
-};
-
-// --- Asset EOL Links ---
-
-export const assetEolLinkRepo = {
-  async listByAsset(db: DB, assetId: string): Promise<AssetEolLink[]> {
-    const result = await db
-      .prepare('SELECT * FROM asset_eol_links WHERE asset_id = ? ORDER BY created_at DESC')
-      .bind(assetId)
-      .all();
-    return result.results as unknown as AssetEolLink[];
-  },
-
-  async listByCycle(db: DB, eolCycleId: string): Promise<AssetEolLink[]> {
-    const result = await db
-      .prepare('SELECT * FROM asset_eol_links WHERE eol_cycle_id = ?')
-      .bind(eolCycleId)
-      .all();
-    return result.results as unknown as AssetEolLink[];
-  },
-
-  async findById(db: DB, id: string): Promise<AssetEolLink | null> {
-    const result = await db
-      .prepare('SELECT * FROM asset_eol_links WHERE id = ?')
-      .bind(id)
-      .first();
-    return result as AssetEolLink | null;
-  },
-
-  create(
-    db: DB,
-    link: Omit<AssetEolLink, 'created_at' | 'updated_at'>,
-  ) {
-    return db
-      .prepare(
-        `INSERT INTO asset_eol_links
-         (id, asset_id, eol_cycle_id, installed_version, notes)
-         VALUES (?, ?, ?, ?, ?)`,
-      )
-      .bind(
-        link.id,
-        link.asset_id,
-        link.eol_cycle_id,
-        link.installed_version,
-        link.notes,
-      );
-  },
-
-  async update(
-    db: DB,
-    id: string,
-    fields: Partial<Pick<AssetEolLink, 'installed_version' | 'notes'>>,
-  ): Promise<void> {
-    const sets: string[] = ["updated_at = datetime('now')"];
-    const params: unknown[] = [];
-
-    for (const [k, v] of Object.entries(fields)) {
-      sets.push(`${k} = ?`);
-      params.push(v);
-    }
-    params.push(id);
-
-    await db
-      .prepare(`UPDATE asset_eol_links SET ${sets.join(', ')} WHERE id = ?`)
-      .bind(...params)
-      .run();
-  },
-
-  async delete(db: DB, id: string): Promise<void> {
-    await db.prepare('DELETE FROM asset_eol_links WHERE id = ?').bind(id).run();
-  },
-
-  async countByAsset(db: DB, assetId: string): Promise<number> {
-    const result = await db
-      .prepare('SELECT COUNT(*) as count FROM asset_eol_links WHERE asset_id = ?')
-      .bind(assetId)
-      .first<{ count: number }>();
-    return result?.count ?? 0;
-  },
-
-  async countByCycle(db: DB, eolCycleId: string): Promise<number> {
-    const result = await db
-      .prepare('SELECT COUNT(*) as count FROM asset_eol_links WHERE eol_cycle_id = ?')
-      .bind(eolCycleId)
       .first<{ count: number }>();
     return result?.count ?? 0;
   },

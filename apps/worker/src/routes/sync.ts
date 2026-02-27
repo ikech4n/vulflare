@@ -235,6 +235,12 @@ syncRoutes.post('/trigger', authMiddleware, requireRole('admin'), async (c) => {
   return c.json({ message: 'JVN sync triggered' }, 202);
 });
 
+// POST /api/sync/trigger-full - JVN全件同期の手動トリガー (admin only)
+syncRoutes.post('/trigger-full', authMiddleware, requireRole('admin'), async (c) => {
+  c.executionCtx.waitUntil(handleJvnSync(c.env, true));
+  return c.json({ message: 'JVN full sync triggered' }, 202);
+});
+
 // GET /api/sync/settings - 全認証ユーザー参照可能
 syncRoutes.get('/settings', authMiddleware, async (c) => {
   const settings = await getSyncSettings(c.env);

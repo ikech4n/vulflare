@@ -4,17 +4,13 @@ import { logger } from 'hono/logger';
 import type { Env } from './types.ts';
 import { authRoutes } from './routes/auth.ts';
 import { vulnerabilityRoutes } from './routes/vulnerabilities.ts';
-import { assetRoutes } from './routes/assets.ts';
 import { jvnRoutes } from './routes/jvn.ts';
 import { userRoutes } from './routes/users.ts';
 import { syncRoutes } from './routes/sync.ts';
-import { slaRoutes } from './routes/sla.ts';
 import { notificationRoutes } from './routes/notifications.ts';
 import { reportRoutes } from './routes/reports.ts';
 import { dashboardRoutes } from './routes/dashboard.ts';
 import { eolRoutes } from './routes/eol.ts';
-import { packageRoutes } from './routes/packages.ts';
-import { assetTemplateRoutes } from './routes/asset-templates.ts';
 import { handleJvnSync } from './scheduled/jvn-sync.ts';
 import { handleEolSync } from './scheduled/eol-sync.ts';
 import { csrfProtection } from './middleware/csrf.ts';
@@ -41,17 +37,13 @@ app.get('/health', (c) => c.json({ status: 'ok', version: '1.0.0' }));
 
 app.route('/api/auth', authRoutes);
 app.route('/api/vulnerabilities', vulnerabilityRoutes);
-app.route('/api/assets', assetRoutes);
 app.route('/api/jvn', jvnRoutes);
 app.route('/api/users', userRoutes);
 app.route('/api/sync', syncRoutes);
-app.route('/api/sla', slaRoutes);
 app.route('/api/notifications', notificationRoutes);
 app.route('/api/reports', reportRoutes);
 app.route('/api/dashboard', dashboardRoutes);
 app.route('/api/eol', eolRoutes);
-app.route('/api/assets', packageRoutes);
-app.route('/api/asset-templates', assetTemplateRoutes);
 
 app.notFound((c) => c.json({ error: 'Not found' }, 404));
 

@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import type { Env, JwtVariables } from '../types.ts';
 import { authMiddleware } from '../middleware/auth.ts';
-import { vulnRepo, assetRepo } from '../db/repository.ts';
+import { vulnRepo } from '../db/repository.ts';
 
 export const reportRoutes = new Hono<{ Bindings: Env; Variables: JwtVariables }>();
 
@@ -106,61 +106,10 @@ reportRoutes.get('/vulnerabilities/json', async (c) => {
   });
 });
 
-// GET /api/reports/assets/:id/csv - アセット別脆弱性CSV
-reportRoutes.get('/assets/:id/csv', async (c) => {
-  const assetId = c.req.param('id');
-  const asset = await assetRepo.findById(c.env.DB, assetId);
-  if (!asset) return c.json({ error: 'Asset not found' }, 404);
-
-  const result = await assetRepo.listVulnerabilities(c.env.DB, assetId);
-  const rows = result.results ?? [];
-
-  const headers = [
-    'Vulnerability ID',
-    'CVE ID',
-    'Title',
-    'Severity',
-    'Priority',
-    'Status',
-    'Assigned To',
-    'Due Date',
-    'SLA Deadline',
-    'Created At',
-  ];
-
-  const csvLines = [headers.join(',')];
-
-  for (const row of rows) {
-    const r = row as Record<string, unknown>;
-    const line = [
-      r.vulnerability_id ?? '',
-      escapeCsv(r.cve_id as string | null),
-      escapeCsv(r.title as string),
-      escapeCsv(r.severity as string),
-      escapeCsv(r.priority as string),
-      escapeCsv(r.status as string),
-      escapeCsv(r.assigned_to as string | null),
-      r.due_date ?? '',
-      r.sla_deadline ?? '',
-      r.created_at ?? '',
-    ];
-    csvLines.push(line.join(','));
-  }
-
-  const csv = csvLines.join('\n');
-  const assetName = (asset['name'] as string).replace(/[^a-zA-Z0-9]/g, '_');
-
-  return c.text(csv, 200, {
-    'Content-Type': 'text/csv',
-    'Content-Disposition': `attachment; filename="asset_${assetName}_vulnerabilities.csv"`,
-  });
-});
 
 // GET /api/reports/summary - サマリー統計
 reportRoutes.get('/summary', async (c) => {
   const vulnStats = await vulnRepo.stats(c.env.DB);
-
-  const assetCount = await c.env.DB.prepare('SELECT COUNT(*) as cnt FROM assets').first<{ cnt: number }>();
 
   const recentVulns = await c.env.DB.prepare(
     `SELECT COUNT(*) as cnt FROM vulnerabilities WHERE created_at > datetime('now', '-7 days')`
@@ -188,9 +137,6 @@ reportRoutes.get('/summary', async (c) => {
       },
       recentlyAdded: recentVulns?.cnt ?? 0,
       criticalActive: criticalActive?.cnt ?? 0,
-    },
-    assets: {
-      total: assetCount?.cnt ?? 0,
     },
     generatedAt: new Date().toISOString(),
   });

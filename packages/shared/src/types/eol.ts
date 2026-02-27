@@ -45,16 +45,6 @@ export interface EolCycle {
   updated_at: string;
 }
 
-export interface AssetEolLink {
-  id: string;
-  asset_id: string;
-  eol_cycle_id: string;
-  installed_version: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface EolSyncLog {
   id: string;
   product_name: string;
@@ -68,15 +58,9 @@ export interface EolSyncLog {
 // API レスポンス用の拡張型
 export interface EolProductWithCycles extends EolProduct {
   cycles: EolCycle[];
-  affected_asset_count?: number;
 }
 
 export interface EolCycleWithProduct extends EolCycle {
-  product: EolProduct;
-}
-
-export interface AssetEolLinkWithDetails extends AssetEolLink {
-  cycle: EolCycle;
   product: EolProduct;
 }
 
@@ -98,7 +82,6 @@ export interface EndoflifeDateCycle {
 export interface EolStats {
   total_products: number;
   total_cycles: number;
-  total_links: number;
   eol_count: number;
   approaching_eol_30d: number;
   approaching_eol_90d: number;
@@ -112,5 +95,4 @@ export interface EolTimelineItem {
   cycle: string;
   eol_date: string;
   days_until_eol: number;
-  affected_asset_count: number;
 }

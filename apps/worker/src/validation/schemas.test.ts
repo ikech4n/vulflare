@@ -3,7 +3,6 @@ import {
   registerSchema,
   loginSchema,
   createVulnerabilitySchema,
-  createAssetSchema,
   updateSyncSettingsSchema,
 } from './schemas';
 
@@ -107,34 +106,6 @@ describe('Vulnerability Schemas', () => {
   });
 });
 
-describe('Asset Schemas', () => {
-  describe('createAssetSchema', () => {
-    it('should accept valid asset data', () => {
-      const valid = {
-        name: 'Web Server',
-        assetType: 'server',
-        environment: 'production',
-      };
-      expect(() => createAssetSchema.parse(valid)).not.toThrow();
-    });
-
-    it('should reject missing name', () => {
-      const invalid = {
-        assetType: 'server',
-      };
-      expect(() => createAssetSchema.parse(invalid)).toThrow();
-    });
-
-    it('should reject invalid environment', () => {
-      const invalid = {
-        name: 'Web Server',
-        assetType: 'server',
-        environment: 'invalid',
-      };
-      expect(() => createAssetSchema.parse(invalid)).toThrow();
-    });
-  });
-});
 
 describe('Sync Settings Schema', () => {
   describe('updateSyncSettingsSchema', () => {

@@ -51,6 +51,7 @@ export function SyncPage() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [showSettings, setShowSettings] = useState(false);
+  const [showFullSyncConfirm, setShowFullSyncConfirm] = useState(false);
 
   // 設定の状態
   const [vendorSelections, setVendorSelections] = useState<JvnVendorSelection[]>([]);
@@ -99,6 +100,14 @@ export function SyncPage() {
     mutationFn: () => api.post('/sync/trigger'),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['sync-status'] });
+    },
+  });
+
+  const triggerFullSyncMutation = useMutation({
+    mutationFn: () => api.post('/sync/trigger-full'),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['sync-status'] });
+      setShowFullSyncConfirm(false);
     },
   });
 
@@ -270,14 +279,24 @@ export function SyncPage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">同期ステータス</h2>
           {user?.role === 'admin' && (
-            <button
-              onClick={() => triggerSyncMutation.mutate()}
-              disabled={triggerSyncMutation.isPending || latestLog?.status === 'running'}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <RefreshCw size={16} className={triggerSyncMutation.isPending ? 'animate-spin' : ''} />
-              {triggerSyncMutation.isPending ? '同期中...' : '今すぐ同期'}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => triggerSyncMutation.mutate()}
+                disabled={triggerSyncMutation.isPending || triggerFullSyncMutation.isPending || latestLog?.status === 'running'}
+                className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw size={16} className={triggerSyncMutation.isPending ? 'animate-spin' : ''} />
+                増分同期
+              </button>
+              <button
+                onClick={() => setShowFullSyncConfirm(true)}
+                disabled={triggerSyncMutation.isPending || triggerFullSyncMutation.isPending || latestLog?.status === 'running'}
+                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw size={16} className={triggerFullSyncMutation.isPending ? 'animate-spin' : ''} />
+                全件同期
+              </button>
+            </div>
           )}
         </div>
 
@@ -637,13 +656,46 @@ export function SyncPage() {
         <div className="text-sm text-blue-800 space-y-1">
           <p>• JVN (Japan Vulnerability Notes) から脆弱性情報を取得します</p>
           <p>• 自動同期は毎日10:00 (JST) に実行されます</p>
-          <p>• 管理者は「今すぐ同期」ボタンで手動実行できます</p>
-          <p>• <strong>初回同期</strong>: 設定した期間（例: 365日）の脆弱性を取得</p>
-          <p>• <strong>増分同期</strong>: 2回目以降は前回同期以降に更新された脆弱性のみを取得</p>
+          <p>• <strong>増分同期</strong>: 前回同期以降の更新データのみ取得（通常運用）</p>
+          <p>• <strong>全件同期</strong>: 設定期間の全データを再取得（製品追加時や過去データ補完に使用）</p>
           <p>• ベンダー/製品選択、キーワード、CVSS閾値を組み合わせてフィルタリングできます</p>
           <p>• 登録済みアセットパッケージ（CPE）は自動的に検知対象になります</p>
         </div>
       </div>
+
+      {/* 全件同期確認モーダル */}
+      {showFullSyncConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">全件同期の実行</h3>
+            <div className="space-y-3 mb-6">
+              <p className="text-sm text-gray-700">
+                過去 <strong className="text-blue-600">{syncFullSyncDays}日分</strong> のデータを取得します。
+              </p>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="text-sm text-amber-800">
+                  <strong>注意:</strong> 全件同期は通常の同期より時間がかかります。実行してよろしいですか？
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowFullSyncConfirm(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={() => triggerFullSyncMutation.mutate()}
+                disabled={triggerFullSyncMutation.isPending}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {triggerFullSyncMutation.isPending ? '実行中...' : '実行'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

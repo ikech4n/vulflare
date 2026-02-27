@@ -24,7 +24,6 @@ const cvssScoreSchema = z
 const severitySchema = z.enum(['critical', 'high', 'medium', 'low', 'informational']);
 const statusSchema = z.enum(['active', 'fixed', 'accepted_risk', 'false_positive']);
 const roleSchema = z.enum(['admin', 'editor', 'viewer']);
-const environmentSchema = z.enum(['production', 'staging', 'development', 'qa']);
 
 // ========================================
 // 認証スキーマ
@@ -71,42 +70,6 @@ export const updateVulnerabilitySchema = z.object({
   cvssV3Vector: z.string().max(100, 'CVSS vector too long').optional(),
 });
 
-// ========================================
-// アセットスキーマ
-// ========================================
-
-export const createAssetSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(200, 'Name too long'),
-  assetType: z.string().min(1, 'Asset type is required').max(50, 'Asset type too long'),
-  description: z.string().max(1000, 'Description too long').optional(),
-  environment: environmentSchema.optional(),
-  owner: z.string().max(200, 'Owner too long').optional(),
-  tags: z.array(z.string()).optional(),
-  metadata: z.record(z.unknown()).optional(),
-});
-
-export const updateAssetSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(200, 'Name too long').optional(),
-  assetType: z.string().min(1, 'Asset type is required').max(50, 'Asset type too long').optional(),
-  description: z.string().max(1000, 'Description too long').optional(),
-  environment: environmentSchema.optional(),
-  owner: z.string().max(200, 'Owner too long').optional(),
-  tags: z.array(z.string()).optional(),
-  metadata: z.record(z.unknown()).optional(),
-});
-
-export const linkVulnerabilitySchema = z.object({
-  vulnerabilityId: z.string().uuid('Invalid vulnerability ID'),
-  priority: z.enum(['critical', 'high', 'medium', 'low']).optional(),
-});
-
-export const updateAssetVulnerabilitySchema = z.object({
-  status: statusSchema.optional(),
-  priority: z.enum(['critical', 'high', 'medium', 'low']).optional(),
-  assignedTo: z.string().max(200, 'Assigned to too long').optional(),
-  dueDate: z.string().datetime().optional(),
-  notes: z.string().max(5000, 'Notes too long').optional(),
-});
 
 // ========================================
 // ユーザースキーマ
@@ -181,34 +144,6 @@ export const deleteSyncDataSchema = z.object({
   source: z.enum(['jvn']),
 });
 
-// ========================================
-// パッケージスキーマ
-// ========================================
-
-const ecosystemSchema = z.enum([
-  'npm', 'pypi', 'maven', 'go', 'nuget', 'rubygems', 'crates.io', 'packagist', 'cpe',
-]);
-
-export const createAssetPackageSchema = z.object({
-  ecosystem: ecosystemSchema,
-  name: z.string().min(1, 'Name is required').max(500, 'Name too long'),
-  version: z.string().min(1, 'Version is required').max(200, 'Version too long'),
-  vendor: z.string().max(200, 'Vendor too long').optional(),
-});
-
-export const importAssetPackagesSchema = z.object({
-  packages: z
-    .array(
-      z.object({
-        ecosystem: ecosystemSchema,
-        name: z.string().min(1).max(500),
-        version: z.string().min(1).max(200),
-        vendor: z.string().max(200).optional(),
-      }),
-    )
-    .min(1, 'At least one package is required')
-    .max(1000, 'Maximum 1000 packages per import'),
-});
 
 // ========================================
 // 一括更新スキーマ

@@ -13,9 +13,6 @@ const EVENT_LABELS: Record<EventType, string> = {
   vulnerability_created: '脆弱性作成',
   vulnerability_updated: '脆弱性更新',
   vulnerability_critical: 'クリティカル脆弱性',
-  sla_breach: 'SLA違反',
-  asset_created: 'アセット作成',
-  asset_updated: 'アセット更新',
   eol_approaching: 'EOL期限接近',
 };
 

@@ -1,8 +1,6 @@
 import type { Env } from '../types.ts';
 import { cvssScoreToSeverity } from '@vulflare/shared/utils';
 import { getSyncSettings, shouldExcludeByKeywords, shouldExcludeByCvss } from '../services/sync-settings.ts';
-import { packageRepo } from '../db/package-repository.ts';
-import { createMatchRecords } from '../services/matching-service.ts';
 import { extractVendorsAndProducts } from '../utils/cpe-parser.ts';
 
 const JVN_API_BASE = 'https://jvndb.jvn.jp/myjvn';
@@ -323,10 +321,10 @@ async function updateVendorsAndProducts(env: Env): Promise<void> {
   }
 }
 
-export async function handleJvnSync(env: Env): Promise<void> {
+export async function handleJvnSync(env: Env, forceFullSync = false): Promise<void> {
   const settings = await getSyncSettings(env);
   const lastSyncDate = await env.KV_CACHE.get('jvn:last_sync_date');
-  const isFullSync = !lastSyncDate;
+  const isFullSync = !lastSyncDate || forceFullSync;
   const syncLogId = crypto.randomUUID();
 
   await env.DB.prepare(
@@ -387,30 +385,9 @@ export async function handleJvnSync(env: Env): Promise<void> {
 
     let cancelled = false;
 
-    // === PHASE 1: アセットパッケージ自動検知（常時実行） ===
-    const cpeResult = await packageRepo.listDistinctCpePackages(env.DB);
-    const cpePackages = cpeResult.results ?? [];
-
-    if (cpePackages.length > 0) {
-      console.log(`JVN Phase 1: Auto-detecting from ${cpePackages.length} registered CPE packages`);
-      for (const cpePkg of cpePackages) {
-        const cancelCheck = await env.KV_CACHE.get('jvn:cancel_requested');
-        if (cancelCheck) { cancelled = true; break; }
-
-        const cpeParams = new URLSearchParams(baseParams);
-        cpeParams.set('cpeName', cpePkg.cpe_string);
-
-        const result = await fetchAndUpsertJvn(env, cpeParams, seenIds, settings.excludeKeywords, settings.cvssMinScore);
-        totalFetched += result.fetched;
-        totalCreated += result.created;
-
-        if (result.cancelled) { cancelled = true; break; }
-      }
-    }
-
-    // === PHASE 2: ベンダー/製品フィルター ===
+    // === PHASE 1: ベンダー/製品フィルター ===
     if (!cancelled && settings.vendorSelections.length > 0) {
-      console.log(`JVN Phase 2: Querying ${settings.vendorSelections.length} selected vendors`);
+      console.log(`JVN Phase 1: Querying ${settings.vendorSelections.length} selected vendors`);
       for (const vendor of settings.vendorSelections) {
         const cancelCheck = await env.KV_CACHE.get('jvn:cancel_requested');
         if (cancelCheck) { cancelled = true; break; }
@@ -438,9 +415,9 @@ export async function handleJvnSync(env: Env): Promise<void> {
       }
     }
 
-    // === PHASE 3: キーワード検索 ===
+    // === PHASE 2: キーワード検索 ===
     if (!cancelled && settings.keywords.length > 0) {
-      console.log(`JVN Phase 3: Querying ${settings.keywords.length} keywords`);
+      console.log(`JVN Phase 2: Querying ${settings.keywords.length} keywords`);
       for (const keyword of settings.keywords) {
         const cancelCheck = await env.KV_CACHE.get('jvn:cancel_requested');
         if (cancelCheck) { cancelled = true; break; }

@@ -2,15 +2,12 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   ShieldAlert,
-  Server,
   RefreshCw,
   Settings,
   LogOut,
   User,
-  Clock,
   Bell,
   Calendar,
-  FileText,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore.ts';
 import { api } from '@/lib/api.ts';
@@ -18,10 +15,7 @@ import { api } from '@/lib/api.ts';
 const NAV_ITEMS = [
   { to: '/', icon: LayoutDashboard, label: 'ダッシュボード', end: true },
   { to: '/vulnerabilities', icon: ShieldAlert, label: '脆弱性' },
-  { to: '/assets', icon: Server, label: 'アセット' },
-  { to: '/asset-templates', icon: FileText, label: 'アセットテンプレート' },
   { to: '/sync', icon: RefreshCw, label: 'JVN同期' },
-  { to: '/sla', icon: Clock, label: 'SLA 追跡' },
   { to: '/eol', icon: Calendar, label: 'EOL 管理' },
   { to: '/notifications', icon: Bell, label: '通知' },
 ];

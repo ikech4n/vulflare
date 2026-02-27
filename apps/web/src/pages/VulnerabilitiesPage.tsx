@@ -5,7 +5,7 @@ import { Plus, Search } from 'lucide-react';
 import { api } from '@/lib/api.ts';
 import { SeverityBadge } from '@/components/SeverityBadge.tsx';
 import { StatusBadge } from '@/components/StatusBadge.tsx';
-import type { Vulnerability, PaginatedResponse, BatchUpdateVulnerabilityRequest, BatchUpdateVulnerabilityResponse } from '@vulflare/shared/types';
+import type { Vulnerability, PaginatedResponse, BatchUpdateVulnerabilityRequest, BatchUpdateVulnerabilityResponse, Severity, VulnStatus } from '@vulflare/shared/types';
 
 const PAGE_SIZE = 20;
 
@@ -86,9 +86,9 @@ export function VulnerabilitiesPage() {
   const handleBatchUpdate = () => {
     if (selectedIds.size === 0) return;
 
-    const updates: { severity?: string; status?: string } = {};
-    if (batchSeverity) updates.severity = batchSeverity;
-    if (batchStatus) updates.status = batchStatus;
+    const updates: { severity?: Severity; status?: VulnStatus } = {};
+    if (batchSeverity) updates.severity = batchSeverity as Severity;
+    if (batchStatus) updates.status = batchStatus as VulnStatus;
 
     if (!updates.severity && !updates.status) {
       alert('更新する項目を選択してください');

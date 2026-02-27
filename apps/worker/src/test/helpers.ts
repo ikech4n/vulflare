@@ -100,29 +100,3 @@ export async function createTestVulnerability(
 
   return { id, cveId, title, severity, status };
 }
-
-/**
- * テスト用アセットを作成
- */
-export async function createTestAsset(
-  db: D1Database,
-  options: {
-    name?: string;
-    assetType?: string;
-    environment?: string;
-  } = {}
-) {
-  const id = crypto.randomUUID();
-  const name = options.name ?? `Test Asset ${id.slice(0, 8)}`;
-  const assetType = options.assetType ?? 'server';
-  const environment = options.environment ?? 'production';
-
-  await db
-    .prepare(
-      'INSERT INTO assets (id, name, asset_type, description, environment, owner, tags, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-    )
-    .bind(id, name, assetType, 'Test description', environment, null, '[]', '{}')
-    .run();
-
-  return { id, name, assetType, environment };
-}

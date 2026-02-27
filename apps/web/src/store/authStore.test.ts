@@ -22,7 +22,7 @@ describe('authStore', () => {
     };
     const mockToken = 'mock-token';
 
-    useAuthStore.getState().login(mockUser, mockToken);
+    useAuthStore.getState().login(mockToken, mockUser);
 
     const { user, accessToken } = useAuthStore.getState();
     expect(user).toEqual(mockUser);
@@ -37,7 +37,7 @@ describe('authStore', () => {
       role: 'admin' as const,
     };
 
-    useAuthStore.getState().login(mockUser, 'mock-token');
+    useAuthStore.getState().login('mock-token', mockUser);
     useAuthStore.getState().logout();
 
     const { user, accessToken } = useAuthStore.getState();
