@@ -98,8 +98,8 @@ export function Sidebar() {
   return (
     <aside className="w-56 bg-gray-900 text-white flex flex-col">
       <div className="p-4 border-b border-gray-700">
-        <h1 className="text-lg font-bold text-white">Vulflare</h1>
-        <p className="text-xs text-gray-400 mt-0.5">脆弱性管理プラットフォーム</p>
+        <img src="/logo.webp" alt="Vulflare" className="w-full" />
+        <p className="text-xs text-gray-400 mt-2">脆弱性管理プラットフォーム</p>
       </div>
 
       <nav className="flex-1 p-3 space-y-1">
