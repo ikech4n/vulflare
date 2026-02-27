@@ -238,7 +238,7 @@ export function SyncPage() {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'running':
-        return '同期中';
+        return '取得中';
       case 'completed':
         return '完了';
       case 'failed':
@@ -256,9 +256,9 @@ export function SyncPage() {
   const getSyncTypeText = (syncType: string) => {
     switch (syncType) {
       case 'full':
-        return '全件同期';
+        return '全件取得';
       case 'incremental':
-        return '増分同期';
+        return '増分取得';
       default:
         return syncType;
     }
@@ -271,13 +271,13 @@ export function SyncPage() {
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">JVN同期</h1>
+        <h1 className="text-2xl font-bold text-gray-900">JVN取得</h1>
       </div>
 
       {/* 全体ステータス */}
       <div className="bg-white border border-gray-200 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">同期ステータス</h2>
+          <h2 className="text-lg font-semibold text-gray-900">取得ステータス</h2>
           {user?.role === 'admin' && (
             <div className="flex gap-2">
               <button
@@ -286,7 +286,7 @@ export function SyncPage() {
                 className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <RefreshCw size={16} className={triggerSyncMutation.isPending ? 'animate-spin' : ''} />
-                増分同期
+                増分取得
               </button>
               <button
                 onClick={() => setShowFullSyncConfirm(true)}
@@ -294,7 +294,7 @@ export function SyncPage() {
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <RefreshCw size={16} className={triggerFullSyncMutation.isPending ? 'animate-spin' : ''} />
-                全件同期
+                全件取得
               </button>
             </div>
           )}
@@ -335,7 +335,7 @@ export function SyncPage() {
             </div>
           </div>
         ) : (
-          <p className="text-sm text-gray-500">同期履歴がありません</p>
+          <p className="text-sm text-gray-500">取得履歴がありません</p>
         )}
       </div>
 
@@ -346,7 +346,7 @@ export function SyncPage() {
             onClick={() => setShowSettings(!showSettings)}
             className="flex items-center justify-between w-full text-left"
           >
-            <h2 className="text-lg font-semibold text-gray-900">同期設定</h2>
+            <h2 className="text-lg font-semibold text-gray-900">取得設定</h2>
             {showSettings ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </button>
 
@@ -599,10 +599,10 @@ export function SyncPage() {
               {/* 初回同期期間 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  初回同期期間
+                  初回取得期間
                 </label>
                 <p className="text-xs text-gray-500 mb-2">
-                  初回同期時に取得する過去の期間を指定します。2回目以降は前回同期以降の更新のみを取得します。
+                  初回取得時に取得する過去の期間を指定します。2回目以降は前回取得以降の更新のみを取得します。
                 </p>
                 <input
                   type="number"
@@ -652,12 +652,12 @@ export function SyncPage() {
 
       {/* 説明 */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="text-sm font-semibold text-blue-900 mb-2">JVN同期について</h3>
+        <h3 className="text-sm font-semibold text-blue-900 mb-2">JVN取得について</h3>
         <div className="text-sm text-blue-800 space-y-1">
           <p>• JVN (Japan Vulnerability Notes) から脆弱性情報を取得します</p>
-          <p>• 自動同期は毎日10:00 (JST) に実行されます</p>
-          <p>• <strong>増分同期</strong>: 前回同期以降の更新データのみ取得（通常運用）</p>
-          <p>• <strong>全件同期</strong>: 設定期間の全データを再取得（製品追加時や過去データ補完に使用）</p>
+          <p>• 自動取得は毎日10:00 (JST) に実行されます</p>
+          <p>• <strong>増分取得</strong>: 前回取得以降の更新データのみ取得（通常運用）</p>
+          <p>• <strong>全件取得</strong>: 設定期間の全データを再取得（製品追加時や過去データ補完に使用）</p>
           <p>• ベンダー/製品選択、キーワード、CVSS閾値を組み合わせてフィルタリングできます</p>
           <p>• 登録済みアセットパッケージ（CPE）は自動的に検知対象になります</p>
         </div>
@@ -667,14 +667,14 @@ export function SyncPage() {
       {showFullSyncConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">全件同期の実行</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">全件取得の実行</h3>
             <div className="space-y-3 mb-6">
               <p className="text-sm text-gray-700">
                 過去 <strong className="text-blue-600">{syncFullSyncDays}日分</strong> のデータを取得します。
               </p>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <p className="text-sm text-amber-800">
-                  <strong>注意:</strong> 全件同期は通常の同期より時間がかかります。実行してよろしいですか？
+                  <strong>注意:</strong> 全件取得は通常の取得より時間がかかります。実行してよろしいですか？
                 </p>
               </div>
             </div>

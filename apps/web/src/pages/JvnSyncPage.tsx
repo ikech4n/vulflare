@@ -62,7 +62,7 @@ export function JvnSyncPage() {
     <div className="space-y-6 max-w-2xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">JVN同期</h1>
+          <h1 className="text-2xl font-bold text-gray-900">JVN取得</h1>
           <p className="text-sm text-gray-500 mt-1">JVN iPedia (MyJVN API) から脆弱性情報を取得します</p>
         </div>
         {isAdmin && (
@@ -83,7 +83,7 @@ export function JvnSyncPage() {
               className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
             >
               <RefreshCw size={16} className={triggerMutation.isPending ? 'animate-spin' : ''} />
-              同期を実行
+              取得を実行
             </button>
           </div>
         )}
@@ -94,10 +94,10 @@ export function JvnSyncPage() {
       ) : (
         <div className="space-y-4">
           <div className="bg-white border border-gray-200 rounded-xl p-5">
-            <h2 className="text-sm font-semibold text-gray-700 mb-3">同期ステータス</h2>
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">取得ステータス</h2>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-500">前回の同期</span>
+                <span className="text-gray-500">前回の取得</span>
                 <span className="text-gray-900">
                   {data?.lastSyncDate
                     ? new Date(data.lastSyncDate).toLocaleString('ja-JP')
@@ -163,7 +163,7 @@ export function JvnSyncPage() {
           )}
 
           {!isAdmin && (
-            <p className="text-xs text-gray-500">管理者のみ手動同期を実行できます。</p>
+            <p className="text-xs text-gray-500">管理者のみ手動取得を実行できます。</p>
           )}
         </div>
       )}

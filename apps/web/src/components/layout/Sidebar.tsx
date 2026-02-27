@@ -15,7 +15,7 @@ import { api } from '@/lib/api.ts';
 const NAV_ITEMS = [
   { to: '/', icon: LayoutDashboard, label: 'ダッシュボード', end: true },
   { to: '/vulnerabilities', icon: ShieldAlert, label: '脆弱性' },
-  { to: '/sync', icon: RefreshCw, label: 'JVN同期' },
+  { to: '/sync', icon: RefreshCw, label: 'JVN取得' },
   { to: '/eol', icon: Calendar, label: 'EOL 管理' },
   { to: '/notifications', icon: Bell, label: '通知' },
 ];
