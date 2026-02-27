@@ -1,3 +1,4 @@
+import type { ElementType } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -12,13 +13,40 @@ import {
 import { useAuthStore } from '@/store/authStore.ts';
 import { api } from '@/lib/api.ts';
 
-const NAV_ITEMS = [
+interface NavChild {
+  to: string;
+  icon: ElementType;
+  label: string;
+}
+
+interface NavItem {
+  to: string;
+  icon: ElementType;
+  label: string;
+  end?: boolean;
+  children?: NavChild[];
+}
+
+const NAV_ITEMS: NavItem[] = [
   { to: '/', icon: LayoutDashboard, label: 'ダッシュボード', end: true },
-  { to: '/vulnerabilities', icon: ShieldAlert, label: '脆弱性' },
-  { to: '/sync', icon: RefreshCw, label: 'JVN取得' },
+  {
+    to: '/vulnerabilities',
+    icon: ShieldAlert,
+    label: '脆弱性',
+    children: [
+      { to: '/sync', icon: RefreshCw, label: 'JVN取得' },
+    ],
+  },
   { to: '/eol', icon: Calendar, label: 'EOL 管理' },
   { to: '/notifications', icon: Bell, label: '通知' },
 ];
+
+const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+  `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+    isActive
+      ? 'bg-blue-600 text-white'
+      : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+  }`;
 
 export function Sidebar() {
   const { user, logout } = useAuthStore();
@@ -40,34 +68,37 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 p-3 space-y-1">
-        {NAV_ITEMS.map(({ to, icon: Icon, label, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                isActive
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-              }`
-            }
-          >
-            <Icon size={16} />
-            {label}
-          </NavLink>
+        {NAV_ITEMS.map(({ to, icon: Icon, label, end, children }) => (
+          <div key={to}>
+            <NavLink
+              to={to}
+              end={end}
+              className={navLinkClass}
+            >
+              <Icon size={16} />
+              {label}
+            </NavLink>
+            {children && (
+              <div className="ml-4 mt-1 space-y-1">
+                {children.map(({ to: childTo, icon: ChildIcon, label: childLabel }) => (
+                  <NavLink
+                    key={childTo}
+                    to={childTo}
+                    className={navLinkClass}
+                  >
+                    <ChildIcon size={16} />
+                    {childLabel}
+                  </NavLink>
+                ))}
+              </div>
+            )}
+          </div>
         ))}
 
         {user?.role === 'admin' && (
           <NavLink
             to="/settings"
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                isActive
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-              }`
-            }
+            className={navLinkClass}
           >
             <Settings size={16} />
             管理者設定
