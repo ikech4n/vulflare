@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, RefreshCw, Trash2, Package, Calendar, Edit } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '@/lib/api.ts';
 import type { EolProduct, EolCategory, EolStats } from '@vulflare/shared/types';
 
@@ -16,10 +16,21 @@ const CATEGORY_LABELS: Record<EolCategory, string> = {
   hardware: 'ハードウェア',
 };
 
+type EolStatusFilter = 'eol' | 'approaching_30d' | 'approaching_90d';
+
+const STATUS_LABELS: Record<EolStatusFilter, string> = {
+  eol: 'EOL済み',
+  approaching_30d: '30日以内EOL',
+  approaching_90d: '90日以内EOL',
+};
+
 export function EolPage() {
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState<EolCategory | ''>('');
   const [showAddModal, setShowAddModal] = useState(false);
+
+  const selectedStatus = searchParams.get('status') as EolStatusFilter | null;
 
   // 統計情報
   const { data: stats } = useQuery<EolStats>({
@@ -32,13 +43,24 @@ export function EolPage() {
 
   // プロダクト一覧
   const { data: products = [], isLoading } = useQuery<EolProduct[]>({
-    queryKey: ['eol', 'products', selectedCategory],
+    queryKey: ['eol', 'products', selectedCategory, selectedStatus],
     queryFn: async () => {
-      const params = selectedCategory ? `?category=${selectedCategory}` : '';
-      const res = await api.get(`/eol/products${params}`);
+      const params = new URLSearchParams();
+      if (selectedCategory) params.set('category', selectedCategory);
+      if (selectedStatus) params.set('status', selectedStatus);
+      const query = params.toString() ? `?${params.toString()}` : '';
+      const res = await api.get(`/eol/products${query}`);
       return res.data;
     },
   });
+
+  const handleStatusFilter = (status: EolStatusFilter) => {
+    if (selectedStatus === status) {
+      setSearchParams({});
+    } else {
+      setSearchParams({ status });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -59,7 +81,10 @@ export function EolPage() {
       {/* 統計サマリー */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow p-6">
+          <button
+            onClick={() => setSearchParams({})}
+            className={`bg-white rounded-lg shadow p-6 text-left transition-all hover:shadow-md ${!selectedStatus ? 'ring-2 ring-blue-400' : ''}`}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">登録プロダクト</p>
@@ -67,9 +92,12 @@ export function EolPage() {
               </div>
               <Package className="w-8 h-8 text-gray-400" />
             </div>
-          </div>
+          </button>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <button
+            onClick={() => handleStatusFilter('eol')}
+            className={`bg-white rounded-lg shadow p-6 text-left transition-all hover:shadow-md ${selectedStatus === 'eol' ? 'ring-2 ring-red-400' : ''}`}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">EOL済み</p>
@@ -77,9 +105,12 @@ export function EolPage() {
               </div>
               <Calendar className="w-8 h-8 text-red-400" />
             </div>
-          </div>
+          </button>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <button
+            onClick={() => handleStatusFilter('approaching_30d')}
+            className={`bg-white rounded-lg shadow p-6 text-left transition-all hover:shadow-md ${selectedStatus === 'approaching_30d' ? 'ring-2 ring-orange-400' : ''}`}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">30日以内EOL</p>
@@ -87,7 +118,7 @@ export function EolPage() {
               </div>
               <Calendar className="w-8 h-8 text-orange-400" />
             </div>
-          </div>
+          </button>
 
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
@@ -120,8 +151,14 @@ export function EolPage() {
 
       {/* プロダクト一覧 */}
       <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
           <h2 className="text-lg font-semibold text-gray-900">プロダクト一覧</h2>
+          {selectedStatus && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+              {STATUS_LABELS[selectedStatus]}
+              <button onClick={() => setSearchParams({})} className="ml-0.5 hover:text-orange-600" aria-label="フィルター解除">×</button>
+            </span>
+          )}
         </div>
 
         <div className="p-6">

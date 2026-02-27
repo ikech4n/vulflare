@@ -21,7 +21,11 @@ eolRoutes.use('/*', authMiddleware);
 // GET /api/eol/products - プロダクト一覧
 eolRoutes.get('/products', async (c) => {
   const category = c.req.query('category') as EolCategory | undefined;
-  const products = await eolProductRepo.list(c.env.DB, category ? { category } : {});
+  const status = c.req.query('status') as 'eol' | 'approaching_30d' | 'approaching_90d' | undefined;
+  const products = await eolProductRepo.list(c.env.DB, {
+    ...(category && { category }),
+    ...(status && { status }),
+  });
   return c.json(products);
 });
 

@@ -48,10 +48,10 @@ userRoutes.post('/', authMiddleware, requireRole('admin'), validate(createUserSc
   return c.json({ id, email: body.email, username: body.username, role }, 201);
 });
 
-// Update user role/status - admin only
+// Update user role/status/profile - admin only
 userRoutes.patch('/:id', authMiddleware, requireRole('admin'), validate(updateUserSchema), async (c) => {
   const id = c.req.param('id');
-  const body = c.get('validatedBody') as { role?: string; isActive?: boolean };
+  const body = c.get('validatedBody') as { role?: string; isActive?: boolean; username?: string; email?: string };
 
   const user = await userRepo.findById(c.env.DB, id);
   if (!user) return c.json({ error: 'User not found' }, 404);
@@ -65,6 +65,16 @@ userRoutes.patch('/:id', authMiddleware, requireRole('admin'), validate(updateUs
   }
   if (body.isActive !== undefined) {
     await userRepo.setActive(c.env.DB, id, body.isActive ? 1 : 0);
+  }
+  if (body.username || body.email) {
+    if (body.email && body.email !== user.email) {
+      const existing = await userRepo.findByEmail(c.env.DB, body.email);
+      if (existing) return c.json({ error: 'このメールアドレスはすでに使用されています' }, 409);
+    }
+    await userRepo.updateProfile(c.env.DB, id, {
+      ...(body.username !== undefined && { username: body.username }),
+      ...(body.email !== undefined && { email: body.email }),
+    });
   }
 
   return c.json({ message: 'Updated' });

@@ -7,17 +7,39 @@ type DB = D1Database;
 export const eolProductRepo = {
   async list(
     db: DB,
-    filters?: { category?: string },
+    filters?: { category?: string; status?: 'eol' | 'approaching_30d' | 'approaching_90d' },
   ): Promise<EolProduct[]> {
-    let sql = 'SELECT * FROM eol_products';
+    const conditions: string[] = [];
     const params: unknown[] = [];
 
     if (filters?.category) {
-      sql += ' WHERE category = ?';
+      conditions.push('p.category = ?');
       params.push(filters.category);
     }
 
-    sql += ' ORDER BY display_name ASC';
+    if (filters?.status === 'eol') {
+      conditions.push(
+        'EXISTS (SELECT 1 FROM eol_cycles c WHERE c.product_id = p.id AND c.is_eol = 1)',
+      );
+    } else if (filters?.status === 'approaching_30d') {
+      conditions.push(
+        `EXISTS (SELECT 1 FROM eol_cycles c WHERE c.product_id = p.id
+          AND c.is_eol = 0 AND c.eol_date IS NOT NULL
+          AND c.eol_date > date('now') AND c.eol_date <= date('now', '+30 days'))`,
+      );
+    } else if (filters?.status === 'approaching_90d') {
+      conditions.push(
+        `EXISTS (SELECT 1 FROM eol_cycles c WHERE c.product_id = p.id
+          AND c.is_eol = 0 AND c.eol_date IS NOT NULL
+          AND c.eol_date > date('now') AND c.eol_date <= date('now', '+90 days'))`,
+      );
+    }
+
+    let sql = 'SELECT p.* FROM eol_products p';
+    if (conditions.length > 0) {
+      sql += ' WHERE ' + conditions.join(' AND ');
+    }
+    sql += ' ORDER BY p.display_name ASC';
 
     const result = await db.prepare(sql).bind(...params).all();
     return result.results as unknown as EolProduct[];

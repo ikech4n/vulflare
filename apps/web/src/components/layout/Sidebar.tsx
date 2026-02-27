@@ -48,7 +48,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
     isActive
       ? 'bg-blue-600 text-white'
-      : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+      : 'text-gray-400 hover:bg-zinc-800 hover:text-white'
   }`;
 
 export function Sidebar() {
@@ -96,8 +96,8 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-56 bg-gray-900 text-white flex flex-col">
-      <div className="p-4 border-b border-gray-700">
+    <aside className="w-56 bg-zinc-950 text-white flex flex-col">
+      <div className="p-4 border-b border-zinc-800">
         <img src="/logo.webp" alt="Vulflare" className="w-full" />
         <p className="text-xs text-gray-400 mt-2">脆弱性管理プラットフォーム</p>
       </div>
@@ -114,7 +114,7 @@ export function Sidebar() {
               <>
                 <button
                   onClick={() => toggleGroup(item.label)}
-                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-zinc-800 hover:text-white transition-colors"
                 >
                   <item.icon size={16} />
                   <span className="flex-1 text-left">{item.label}</span>
@@ -140,14 +140,14 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="p-3 border-t border-gray-700 space-y-1">
+      <div className="p-3 border-t border-zinc-800 space-y-1">
         <NavLink
           to="/profile"
           className={({ isActive }) =>
             `flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm transition-colors ${
               isActive
                 ? 'bg-blue-600 text-white'
-                : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                : 'text-gray-300 hover:bg-zinc-800 hover:text-white'
             }`
           }
         >
@@ -161,7 +161,7 @@ export function Sidebar() {
         </NavLink>
         <button
           onClick={() => void handleLogout()}
-          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-zinc-800 hover:text-white transition-colors"
         >
           <LogOut size={16} />
           ログアウト

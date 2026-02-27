@@ -85,6 +85,8 @@ export const createUserSchema = z.object({
 export const updateUserSchema = z.object({
   role: roleSchema.optional(),
   isActive: z.boolean().optional(),
+  username: z.string().min(1, 'Username is required').max(100, 'Username too long').optional(),
+  email: z.string().email('Invalid email format').optional(),
 });
 
 export const resetPasswordSchema = z.object({

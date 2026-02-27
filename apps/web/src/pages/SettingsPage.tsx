@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent, type KeyboardEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { UserPlus, Trash2, KeyRound, Database } from 'lucide-react';
+import { UserPlus, Trash2, KeyRound, Database, Pencil } from 'lucide-react';
 import { api } from '@/lib/api.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 
@@ -27,6 +27,12 @@ export function SettingsPage() {
   // パスワードリセット
   const [resetPwUserId, setResetPwUserId] = useState<string | null>(null);
   const [resetPwValue, setResetPwValue] = useState('');
+
+  // ユーザー情報編集
+  const [editUserId, setEditUserId] = useState<string | null>(null);
+  const [editUsername, setEditUsername] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editError, setEditError] = useState('');
 
   // 同期データ削除
   const [deleteSuccess, setDeleteSuccess] = useState('');
@@ -69,6 +75,22 @@ export function SettingsPage() {
     mutationFn: ({ id, role }: { id: string; role: string }) =>
       api.patch(`/users/${id}`, { role }),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['users'] }),
+  });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: ({ id, username, email }: { id: string; username: string; email: string }) =>
+      api.patch(`/users/${id}`, { username, email }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['users'] });
+      setEditUserId(null);
+      setEditUsername('');
+      setEditEmail('');
+      setEditError('');
+    },
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      setEditError(msg ?? '更新に失敗しました');
+    },
   });
 
   const deleteUserMutation = useMutation({
@@ -189,7 +211,7 @@ export function SettingsPage() {
 
       {/* User list */}
       <div className="bg-white border border-gray-200 rounded-xl p-6">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">ユーザー一覧</h2>
+        <h2 className="text-sm font-semibold text-gray-700 mb-4">ユーザー</h2>
         <div className="space-y-2">
           {users.map((u) => (
             <div key={u.id} className="py-2 border-b border-gray-100 last:border-0">
@@ -199,6 +221,24 @@ export function SettingsPage() {
                   <p className="text-xs text-gray-500 truncate">{u.email}</p>
                 </div>
                 <div className="flex items-center gap-2 ml-4 shrink-0">
+                  <button
+                    onClick={() => {
+                      if (editUserId === u.id) {
+                        setEditUserId(null);
+                        setEditError('');
+                      } else {
+                        setEditUserId(u.id);
+                        setEditUsername(u.username);
+                        setEditEmail(u.email);
+                        setEditError('');
+                        setResetPwUserId(null);
+                      }
+                    }}
+                    className={`p-1 transition-colors ${editUserId === u.id ? 'text-blue-600' : 'text-gray-400 hover:text-blue-600'}`}
+                    title="ユーザー情報を編集"
+                  >
+                    <Pencil size={14} />
+                  </button>
                   {u.id !== user.id && (
                     <button
                       onClick={() => { if (confirm(`${u.username} を削除しますか？この操作は元に戻せません。`)) deleteUserMutation.mutate(u.id); }}
@@ -214,6 +254,7 @@ export function SettingsPage() {
                       onClick={() => {
                         setResetPwUserId(resetPwUserId === u.id ? null : u.id);
                         setResetPwValue('');
+                        setEditUserId(null);
                       }}
                       className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
                       title="パスワードをリセット"
@@ -233,6 +274,42 @@ export function SettingsPage() {
                   </select>
                 </div>
               </div>
+              {editUserId === u.id && (
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={editUsername}
+                      onChange={(e) => setEditUsername(e.target.value)}
+                      placeholder="ユーザー名"
+                      className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="email"
+                      value={editEmail}
+                      onChange={(e) => setEditEmail(e.target.value)}
+                      placeholder="メールアドレス"
+                      className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  {editError && <p className="text-xs text-red-600">{editError}</p>}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => updateProfileMutation.mutate({ id: u.id, username: editUsername, email: editEmail })}
+                      disabled={!editUsername || !editEmail || updateProfileMutation.isPending}
+                      className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 shrink-0"
+                    >
+                      {updateProfileMutation.isPending ? '保存中...' : '保存'}
+                    </button>
+                    <button
+                      onClick={() => { setEditUserId(null); setEditError(''); }}
+                      className="px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:bg-gray-100 shrink-0"
+                    >
+                      キャンセル
+                    </button>
+                  </div>
+                </div>
+              )}
               {resetPwUserId === u.id && (
                 <div className="mt-2 flex items-center gap-2">
                   <input

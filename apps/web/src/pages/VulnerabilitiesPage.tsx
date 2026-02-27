@@ -15,6 +15,7 @@ export function VulnerabilitiesPage() {
   const page = Number(searchParams.get('page') ?? 1);
 
   const severity = searchParams.get('severity') ?? '';
+  const selectedSeverities = severity ? severity.split(',').filter(Boolean) : [];
   const status = searchParams.get('status') ?? '';
   const source = searchParams.get('source') ?? '';
 
@@ -56,6 +57,13 @@ export function VulnerabilitiesPage() {
     if (value) next.set(key, value); else next.delete(key);
     next.delete('page');
     setSearchParams(next);
+  };
+
+  const toggleSeverity = (s: string) => {
+    const next = selectedSeverities.includes(s)
+      ? selectedSeverities.filter((x) => x !== s)
+      : [...selectedSeverities, s];
+    setFilter('severity', next.join(','));
   };
 
   const setPage = (p: number) => {
@@ -132,16 +140,31 @@ export function VulnerabilitiesPage() {
           />
         </div>
 
-        <select
-          value={severity}
-          onChange={(e) => setFilter('severity', e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">すべての深刻度</option>
+        <div className="flex items-center gap-1 flex-wrap">
           {['critical', 'high', 'medium', 'low', 'informational'].map((s) => (
-            <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+            <button
+              key={s}
+              type="button"
+              onClick={() => toggleSeverity(s)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
+                selectedSeverities.includes(s)
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+              }`}
+            >
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+            </button>
           ))}
-        </select>
+          {selectedSeverities.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setFilter('severity', '')}
+              className="px-2 py-1 text-xs text-gray-400 hover:text-gray-600"
+            >
+              ✕ クリア
+            </button>
+          )}
+        </div>
 
         <select
           value={status}

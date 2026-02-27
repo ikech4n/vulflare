@@ -14,7 +14,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { api } from '@/lib/api.ts';
-import type { VulnerabilityStats, EolStats } from '@vulflare/shared/types';
+import type { VulnerabilityStats, EolStats, EolTimelineItem } from '@vulflare/shared/types';
 
 const SEVERITY_COLORS = {
   critical: '#dc2626',
@@ -33,6 +33,11 @@ export function DashboardPage() {
   const { data: eolStats } = useQuery<EolStats>({
     queryKey: ['eol-stats'],
     queryFn: () => api.get('/eol/stats').then((r) => r.data),
+  });
+
+  const { data: eolTimeline } = useQuery<EolTimelineItem[]>({
+    queryKey: ['eol-timeline'],
+    queryFn: () => api.get('/eol/timeline').then((r) => r.data),
   });
 
   if (isLoading) {
@@ -65,7 +70,7 @@ export function DashboardPage() {
           icon={<AlertTriangle className="text-orange-500" size={20} />}
           label="Critical / High"
           value={(stats.bySeverity.critical ?? 0) + (stats.bySeverity.high ?? 0)}
-          href="/vulnerabilities?severity=critical"
+          href="/vulnerabilities?severity=critical,high"
         />
         <StatCard
           icon={<Clock className="text-blue-500" size={20} />}
@@ -85,16 +90,16 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h2 className="text-sm font-semibold text-gray-700 mb-4">深刻度の分布</h2>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
+          <ResponsiveContainer width="100%" height={240}>
+            <PieChart margin={{ top: 20, right: 60, bottom: 20, left: 60 }}>
               <Pie
                 data={severityData}
                 cx="50%"
                 cy="50%"
-                innerRadius={60}
-                outerRadius={90}
+                innerRadius={55}
+                outerRadius={80}
                 dataKey="value"
-                label={({ name, value }) => value > 0 ? `${name}: ${String(value)}` : ''}
+                label={({ name, value, percent }) => value > 0 && percent >= 0.03 ? `${name}: ${String(value)}` : ''}
               >
                 {severityData.map(({ name }) => (
                   <Cell
@@ -143,23 +148,43 @@ export function DashboardPage() {
             </Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
+            <Link to="/eol" className="text-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
               <div className="text-2xl font-bold text-gray-900">{eolStats.total_products}</div>
               <div className="text-xs text-gray-600 mt-1">登録プロダクト</div>
-            </div>
-            <div className="text-center p-3 bg-red-50 rounded-lg">
+            </Link>
+            <Link to="/eol?status=eol" className="text-center p-3 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
               <div className="text-2xl font-bold text-red-600">{eolStats.eol_count}</div>
               <div className="text-xs text-gray-600 mt-1">EOL済み</div>
-            </div>
-            <div className="text-center p-3 bg-orange-50 rounded-lg">
+            </Link>
+            <Link to="/eol?status=approaching_30d" className="text-center p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
               <div className="text-2xl font-bold text-orange-600">{eolStats.approaching_eol_30d}</div>
               <div className="text-xs text-gray-600 mt-1">30日以内EOL</div>
-            </div>
+            </Link>
             <div className="text-center p-3 bg-green-50 rounded-lg">
               <div className="text-2xl font-bold text-green-600">{eolStats.supported_count}</div>
               <div className="text-xs text-gray-600 mt-1">サポート中</div>
             </div>
           </div>
+
+          {/* 近日EOL予定リスト */}
+          {eolTimeline && eolTimeline.filter(item => item.days_until_eol <= 30).length > 0 && (
+            <div className="mt-4 border-t border-gray-100 pt-4">
+              <p className="text-xs font-medium text-orange-700 mb-2">30日以内にEOLを迎えるバージョン</p>
+              <ul className="space-y-1.5">
+                {eolTimeline.filter(item => item.days_until_eol <= 30).slice(0, 5).map(item => (
+                  <li key={`${item.product_name}-${item.cycle}`} className="flex items-center justify-between text-sm">
+                    <span className="text-gray-800">
+                      <span className="font-medium">{item.display_name}</span>
+                      <span className="text-gray-500 ml-1">{item.cycle}</span>
+                    </span>
+                    <span className={`text-xs font-medium ${item.days_until_eol <= 7 ? 'text-red-600' : 'text-orange-600'}`}>
+                      {item.days_until_eol === 0 ? '本日' : `${item.days_until_eol}日後`} ({item.eol_date})
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </div>

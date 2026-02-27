@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Recharts のセクターにブラウザデフォルトのフォーカス枠を表示しない */
+.recharts-sector:focus {
+  outline: none;
+}

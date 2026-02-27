@@ -53,6 +53,14 @@ export const userRepo = {
       .bind(isActive, id)
       .run();
   },
+  updateProfile(db: DB, id: string, fields: { username?: string; email?: string }) {
+    const sets: string[] = ["updated_at = datetime('now')"];
+    const params: unknown[] = [];
+    if (fields.username) { sets.push('username = ?'); params.push(fields.username); }
+    if (fields.email) { sets.push('email = ?'); params.push(fields.email); }
+    params.push(id);
+    return db.prepare(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`).bind(...params).run();
+  },
   delete(db: DB, id: string) {
     return db.prepare('DELETE FROM users WHERE id = ?').bind(id).run();
   },
@@ -139,7 +147,16 @@ export const vulnRepo = {
     const conditions: string[] = [];
     const params: unknown[] = [];
 
-    if (severity) { conditions.push('severity = ?'); params.push(severity); }
+    if (severity) {
+      const severities = severity.split(',').filter(Boolean);
+      if (severities.length === 1) {
+        conditions.push('severity = ?');
+        params.push(severities[0]);
+      } else {
+        conditions.push(`severity IN (${severities.map(() => '?').join(',')})`);
+        params.push(...severities);
+      }
+    }
     if (status) { conditions.push('status = ?'); params.push(status); }
     if (source) { conditions.push('source = ?'); params.push(source); }
     if (q) {
