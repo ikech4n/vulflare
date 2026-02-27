@@ -23,10 +23,6 @@ id = "YOUR_KV_SESSIONS_ID"  # wrangler kv namespace create KV_SESSIONS で取得
 binding = "KV_CACHE"
 id = "YOUR_KV_CACHE_ID"  # wrangler kv namespace create KV_CACHE で取得
 
-[[r2_buckets]]
-binding = "R2_BUCKET"
-bucket_name = "vulflare-scanner-results"
-
 [vars]
 ENVIRONMENT = "development"
 PAGES_URL = "https://YOUR_PROJECT_NAME.pages.dev"  # Cloudflare Pages の URL
@@ -54,7 +50,3 @@ id = "YOUR_KV_SESSIONS_ID"  # wrangler kv namespace create KV_SESSIONS で取得
 [[env.production.kv_namespaces]]
 binding = "KV_CACHE"
 id = "YOUR_KV_CACHE_ID"  # wrangler kv namespace create KV_CACHE で取得
-
-[[env.production.r2_buckets]]
-binding = "R2_BUCKET"
-bucket_name = "vulflare-scanner-results"

@@ -101,7 +101,6 @@ pnpm deploy:web
 | Account > Workers Scripts | Edit | Worker のデプロイ・更新 |
 | Account > D1 | Edit | D1 データベースの作成・マイグレーション |
 | Account > KV Storage | Edit | KV Namespace の作成・データ操作 |
-| Account > R2 Storage | Edit | R2 バケットの作成・オブジェクト操作 |
 | Account > Email Routing Addresses | Read | Send Email バインディングの利用 |
 
 > **注意:** Email Routing の Send Email バインディングを使用するには、対象ドメインで Cloudflare Email Routing が有効になっている必要があります。

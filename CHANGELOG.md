@@ -18,5 +18,4 @@
 - React 19 + Vite + TailwindCSS によるフロントエンド
 - Cloudflare D1（SQLite）によるデータベース
 - Cloudflare KV によるセッション管理・キャッシュ
-- Cloudflare R2 によるスキャン結果ファイル保存
 - Cloudflare Queues によるバックグラウンドジョブ処理
