@@ -51,8 +51,9 @@ jobs:
           cache: pnpm
       - run: sudo apt-get install -y libatomic1
       - run: pnpm install --frozen-lockfile
-      # @cloudflare/vitest-pool-workers はローカル D1 を使用するため
-      # 実際の Cloudflare 認証情報は不要
+      # wrangler.toml は .gitignore 対象のためサンプルからコピー
+      # @cloudflare/vitest-pool-workers はローカル D1 を使用するため実際の ID は不要
+      - run: cp wrangler.toml.example wrangler.toml
       - run: pnpm test:worker
 
   build:
