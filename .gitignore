@@ -2,6 +2,7 @@ node_modules/
 dist/
 .wrangler/
 .dev.vars
+wrangler.toml
 *.local
 .env
 
@@ -9,6 +10,7 @@ dist/
 apps/web/.env.production
 
 # 内部実装計画ドキュメント
+CLAUDE.md
 plan.md
 
 # TypeScriptビルドキャッシュ
