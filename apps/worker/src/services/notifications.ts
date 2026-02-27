@@ -210,7 +210,7 @@ function generateEmailBodyText(payload: NotificationPayload): string {
       ...(data.vendor ? [`ベンダー: ${data.vendor}`] : []),
       `EOL日: ${data.eol_date}`,
       '',
-      `通知日時: ${new Date(timestamp).toLocaleString('ja-JP')}`,
+      `通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}`,
     ].join('\n');
   }
 
@@ -226,14 +226,14 @@ function generateEmailBodyText(payload: NotificationPayload): string {
       ...(data.vendor ? [`ベンダー: ${data.vendor}`] : []),
       `EOL日: ${data.eol_date}`,
       '',
-      `通知日時: ${new Date(timestamp).toLocaleString('ja-JP')}`,
+      `通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}`,
     ].join('\n');
   }
 
   return [
     `Vulflare Notification: ${eventType}`,
     '',
-    `Timestamp: ${new Date(timestamp).toLocaleString('ja-JP')}`,
+    `Timestamp: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}`,
     '',
     'Event Data:',
     JSON.stringify(data, null, 2),
@@ -276,7 +276,7 @@ function generateEmailBody(payload: NotificationPayload): string {
     </div>
     <div class="content">
       <p><strong>Event Type:</strong> <span class="event-type">${eventType}</span></p>
-      <p class="timestamp"><strong>Timestamp:</strong> ${new Date(timestamp).toLocaleString('ja-JP')}</p>
+      <p class="timestamp"><strong>Timestamp:</strong> ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>
       <h3>Event Data:</h3>
       <pre>${JSON.stringify(data, null, 2)}</pre>
     </div>
@@ -346,7 +346,7 @@ function generateEolApproachingEmail(data: Record<string, unknown>, timestamp: s
       </div>
 
       <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">
-        通知日時: ${new Date(timestamp).toLocaleString('ja-JP')}
+        通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}
       </p>
     </div>
   </div>
@@ -412,7 +412,7 @@ function generateEolExpiredEmail(data: Record<string, unknown>, timestamp: strin
       </div>
 
       <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">
-        通知日時: ${new Date(timestamp).toLocaleString('ja-JP')}
+        通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}
       </p>
     </div>
   </div>

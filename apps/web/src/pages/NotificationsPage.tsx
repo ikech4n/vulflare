@@ -689,7 +689,7 @@ export function NotificationsPage() {
               {logs.map((log) => (
                 <tr key={log.id}>
                   <td className="px-6 py-4 text-sm text-gray-900">
-                    {new Date(log.sent_at).toLocaleString('ja-JP')}
+                    {new Date(log.sent_at.replace(' ', 'T') + 'Z').toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">{EVENT_LABELS[log.event_type]}</td>
                   <td className="px-6 py-4">
