@@ -109,27 +109,26 @@ describe('Vulnerability Schemas', () => {
 
 describe('Sync Settings Schema', () => {
   describe('updateSyncSettingsSchema', () => {
+    const baseValid = {
+      vendorSelections: [],
+      keywords: ['apache', 'nginx'],
+      excludeKeywords: [],
+      fullSyncDays: 30,
+      retentionDays: 90,
+      dataSources: { jvn: true },
+    };
+
     it('should accept valid sync settings', () => {
-      const valid = {
-        keywords: ['apache', 'nginx'],
-        fullSyncDays: 30,
-      };
-      expect(() => updateSyncSettingsSchema.parse(valid)).not.toThrow();
+      expect(() => updateSyncSettingsSchema.parse(baseValid)).not.toThrow();
     });
 
     it('should reject negative fullSyncDays', () => {
-      const invalid = {
-        keywords: ['apache'],
-        fullSyncDays: -1,
-      };
+      const invalid = { ...baseValid, fullSyncDays: -1 };
       expect(() => updateSyncSettingsSchema.parse(invalid)).toThrow();
     });
 
     it('should reject empty keyword', () => {
-      const invalid = {
-        keywords: ['apache', ''],
-        fullSyncDays: 30,
-      };
+      const invalid = { ...baseValid, keywords: ['apache', ''] };
       expect(() => updateSyncSettingsSchema.parse(invalid)).toThrow();
     });
   });
