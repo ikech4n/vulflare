@@ -271,7 +271,7 @@ export function SyncPage() {
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">JVN取得</h1>
+        <h1 className="text-2xl font-bold text-gray-900">データソース</h1>
       </div>
 
       {/* 全体ステータス */}
@@ -652,7 +652,7 @@ export function SyncPage() {
 
       {/* 説明 */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="text-sm font-semibold text-blue-900 mb-2">JVN取得について</h3>
+        <h3 className="text-sm font-semibold text-blue-900 mb-2">データソースについて</h3>
         <div className="text-sm text-blue-800 space-y-1">
           <p>• JVN (Japan Vulnerability Notes) から脆弱性情報を取得します</p>
           <p>• 自動取得は毎日10:00 (JST) に実行されます</p>
