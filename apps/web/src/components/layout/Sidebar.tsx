@@ -3,7 +3,6 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   ShieldAlert,
-  RefreshCw,
   Settings,
   LogOut,
   User,
@@ -17,24 +16,21 @@ interface NavChild {
   to: string;
   icon: ElementType;
   label: string;
+  end?: boolean;
 }
 
-interface NavItem {
-  to: string;
-  icon: ElementType;
-  label: string;
-  end?: boolean;
-  children?: NavChild[];
-}
+type NavItem =
+  | { to: string; icon: ElementType; label: string; end?: boolean; children?: never }
+  | { to?: never; icon: ElementType; label: string; end?: never; children: NavChild[] };
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/', icon: LayoutDashboard, label: 'ダッシュボード', end: true },
   {
-    to: '/vulnerabilities',
     icon: ShieldAlert,
     label: '脆弱性',
     children: [
-      { to: '/sync', icon: RefreshCw, label: 'JVN取得' },
+      { to: '/vulnerabilities', icon: ShieldAlert, label: '脆弱性一覧', end: false },
+      { to: '/sync', icon: Settings, label: '設定' },
     ],
   },
   { to: '/eol', icon: Calendar, label: 'EOL 管理' },
@@ -68,29 +64,28 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 p-3 space-y-1">
-        {NAV_ITEMS.map(({ to, icon: Icon, label, end, children }) => (
-          <div key={to}>
-            <NavLink
-              to={to}
-              end={end}
-              className={navLinkClass}
-            >
-              <Icon size={16} />
-              {label}
-            </NavLink>
-            {children && (
-              <div className="ml-4 mt-1 space-y-1">
-                {children.map(({ to: childTo, icon: ChildIcon, label: childLabel }) => (
-                  <NavLink
-                    key={childTo}
-                    to={childTo}
-                    className={navLinkClass}
-                  >
-                    <ChildIcon size={16} />
-                    {childLabel}
-                  </NavLink>
-                ))}
-              </div>
+        {NAV_ITEMS.map((item) => (
+          <div key={item.label}>
+            {item.to !== undefined ? (
+              <NavLink to={item.to} end={item.end} className={navLinkClass}>
+                <item.icon size={16} />
+                {item.label}
+              </NavLink>
+            ) : (
+              <>
+                <div className="flex items-center gap-3 px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <item.icon size={14} />
+                  {item.label}
+                </div>
+                <div className="ml-4 space-y-1">
+                  {item.children.map(({ to, icon: ChildIcon, label, end }) => (
+                    <NavLink key={to} to={to} end={end} className={navLinkClass}>
+                      <ChildIcon size={16} />
+                      {label}
+                    </NavLink>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         ))}
