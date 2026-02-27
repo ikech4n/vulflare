@@ -138,17 +138,19 @@ async function sendEmail(
     throw new Error('Email to addresses are required');
   }
 
-  const subjectTemplate = (config.subject as string) || '[Vulflare] {eventType}';
+  const subjectTemplate = (config.subject as string) || 'Vulflare: {eventType}';
   const subject = subjectTemplate.replace('{eventType}', payload.eventType);
   const htmlBody = generateEmailBody(payload);
+  const textBody = generateEmailBodyText(payload);
 
   try {
     const { EmailMessage } = await import('cloudflare:email');
 
     for (const recipient of to) {
-      // MIMEメッセージを構築
+      // MIMEメッセージを構築（multipart/alternative形式）
       const messageId = `<${crypto.randomUUID()}@${from.split('@')[1]}>`;
       const date = new Date().toUTCString();
+      const boundary = `boundary_${crypto.randomUUID().replace(/-/g, '')}`;
 
       let mimeMessage = `From: ${from}\r\n`;
       mimeMessage += `To: ${recipient}\r\n`;
@@ -161,9 +163,25 @@ async function sendEmail(
       mimeMessage += `Date: ${date}\r\n`;
       mimeMessage += `Message-ID: ${messageId}\r\n`;
       mimeMessage += `MIME-Version: 1.0\r\n`;
+      mimeMessage += `List-Unsubscribe: <mailto:${from}?subject=unsubscribe>\r\n`;
+      mimeMessage += `Content-Type: multipart/alternative; boundary="${boundary}"\r\n`;
+      mimeMessage += `\r\n`;
+
+      // プレーンテキストパート
+      mimeMessage += `--${boundary}\r\n`;
+      mimeMessage += `Content-Type: text/plain; charset=utf-8\r\n`;
+      mimeMessage += `\r\n`;
+      mimeMessage += textBody;
+      mimeMessage += `\r\n`;
+
+      // HTMLパート
+      mimeMessage += `--${boundary}\r\n`;
       mimeMessage += `Content-Type: text/html; charset=utf-8\r\n`;
       mimeMessage += `\r\n`;
       mimeMessage += htmlBody;
+      mimeMessage += `\r\n`;
+
+      mimeMessage += `--${boundary}--\r\n`;
 
       const message = new EmailMessage(from, recipient, mimeMessage);
       await env.SEND_EMAIL.send(message);
@@ -172,6 +190,54 @@ async function sendEmail(
     console.error('Email send error:', error);
     throw new Error(`Failed to send email: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
+}
+
+/**
+ * メール本文の生成（プレーンテキスト版）
+ */
+function generateEmailBodyText(payload: NotificationPayload): string {
+  const { eventType, data, timestamp } = payload;
+
+  if (eventType === 'eol_approaching') {
+    return [
+      '⚠️ EOL期限が近づいています - Vulflare',
+      '',
+      `${data.display_name} (${data.cycle}) のサポート終了が ${data.days_until_eol}日後 に迫っています。`,
+      '',
+      `プロダクト: ${data.display_name} (${data.product_name})`,
+      `バージョン: ${data.cycle}`,
+      `カテゴリ: ${data.category}`,
+      ...(data.vendor ? [`ベンダー: ${data.vendor}`] : []),
+      `EOL日: ${data.eol_date}`,
+      '',
+      `通知日時: ${new Date(timestamp).toLocaleString('ja-JP')}`,
+    ].join('\n');
+  }
+
+  if (eventType === 'eol_expired') {
+    return [
+      '🔴 サポート終了（EOL） - Vulflare',
+      '',
+      `${data.display_name} (${data.cycle}) のサポートが終了しました。早急な対応が必要です。`,
+      '',
+      `プロダクト: ${data.display_name} (${data.product_name})`,
+      `バージョン: ${data.cycle}`,
+      `カテゴリ: ${data.category}`,
+      ...(data.vendor ? [`ベンダー: ${data.vendor}`] : []),
+      `EOL日: ${data.eol_date}`,
+      '',
+      `通知日時: ${new Date(timestamp).toLocaleString('ja-JP')}`,
+    ].join('\n');
+  }
+
+  return [
+    `Vulflare Notification: ${eventType}`,
+    '',
+    `Timestamp: ${new Date(timestamp).toLocaleString('ja-JP')}`,
+    '',
+    'Event Data:',
+    JSON.stringify(data, null, 2),
+  ].join('\n');
 }
 
 /**
