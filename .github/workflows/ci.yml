@@ -49,6 +49,7 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
+      - run: sudo apt-get install -y libatomic1
       - run: pnpm install --frozen-lockfile
       # @cloudflare/vitest-pool-workers はローカル D1 を使用するため
       # 実際の Cloudflare 認証情報は不要
