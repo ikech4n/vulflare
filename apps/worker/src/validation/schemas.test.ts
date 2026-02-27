@@ -10,7 +10,6 @@ describe('Authentication Schemas', () => {
   describe('registerSchema', () => {
     it('should accept valid registration data', () => {
       const valid = {
-        email: 'test@example.com',
         username: 'testuser',
         password: 'TestPass123!',
       };
@@ -19,7 +18,6 @@ describe('Authentication Schemas', () => {
 
     it('should reject weak passwords', () => {
       const weak = {
-        email: 'test@example.com',
         username: 'testuser',
         password: 'weak',
       };
@@ -28,7 +26,6 @@ describe('Authentication Schemas', () => {
 
     it('should reject password without uppercase', () => {
       const noUpper = {
-        email: 'test@example.com',
         username: 'testuser',
         password: 'testpass123!',
       };
@@ -37,33 +34,30 @@ describe('Authentication Schemas', () => {
 
     it('should reject password without special character', () => {
       const noSpecial = {
-        email: 'test@example.com',
         username: 'testuser',
         password: 'TestPass123',
       };
       expect(() => registerSchema.parse(noSpecial)).toThrow(/special character/);
     });
 
-    it('should reject invalid email', () => {
+    it('should reject missing username', () => {
       const invalid = {
-        email: 'not-an-email',
-        username: 'testuser',
         password: 'TestPass123!',
       };
-      expect(() => registerSchema.parse(invalid)).toThrow(/email/);
+      expect(() => registerSchema.parse(invalid)).toThrow();
     });
   });
 
   describe('loginSchema', () => {
     it('should accept valid login data', () => {
       const valid = {
-        email: 'test@example.com',
+        username: 'testuser',
         password: 'anypassword',
       };
       expect(() => loginSchema.parse(valid)).not.toThrow();
     });
 
-    it('should reject missing email', () => {
+    it('should reject missing username', () => {
       const invalid = { password: 'test' };
       expect(() => loginSchema.parse(invalid)).toThrow();
     });

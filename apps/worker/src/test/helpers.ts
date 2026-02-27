@@ -7,14 +7,12 @@ import { hashPassword, makeAccessToken } from '../services/auth.ts';
 export async function createTestUser(
   db: D1Database,
   options: {
-    email?: string;
     username?: string;
     password?: string;
     role?: 'admin' | 'editor' | 'viewer';
   } = {}
 ) {
   const id = crypto.randomUUID();
-  const email = options.email ?? `test-${id}@example.com`;
   const username = options.username ?? `testuser-${id.slice(0, 8)}`;
   const password = options.password ?? 'TestPassword123!';
   const role = options.role ?? 'viewer';
@@ -23,12 +21,12 @@ export async function createTestUser(
 
   await db
     .prepare(
-      'INSERT INTO users (id, email, username, password_hash, role, is_active) VALUES (?, ?, ?, ?, ?, 1)'
+      'INSERT INTO users (id, username, password_hash, role, is_active) VALUES (?, ?, ?, ?, 1)'
     )
-    .bind(id, email, username, passwordHash, role)
+    .bind(id, username, passwordHash, role)
     .run();
 
-  return { id, email, username, password, role };
+  return { id, username, password, role };
 }
 
 /**
@@ -36,11 +34,10 @@ export async function createTestUser(
  */
 export async function createTestToken(
   userId: string,
-  email: string,
   role: 'admin' | 'editor' | 'viewer',
   jwtSecret: string
 ): Promise<string> {
-  return makeAccessToken(userId, email, role, jwtSecret);
+  return makeAccessToken(userId, role, jwtSecret);
 }
 
 /**
@@ -68,7 +65,7 @@ export async function createTestVulnerability(
   const cveId = options.cveId ?? null;
   const title = options.title ?? `Test Vulnerability ${id.slice(0, 8)}`;
   const severity = options.severity ?? 'medium';
-  const status = options.status ?? 'active';
+  const status = options.status ?? 'new';
 
   await db
     .prepare(

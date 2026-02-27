@@ -13,7 +13,6 @@ export async function authMiddleware(c: HonoCtx, next: Next): Promise<Response |
   const token = authHeader.slice(7);
   const payload = await verifyJwt<{
     sub: string;
-    email: string;
     role: string;
     type: string;
   }>(token, c.env.JWT_SECRET);
@@ -23,7 +22,6 @@ export async function authMiddleware(c: HonoCtx, next: Next): Promise<Response |
   }
 
   c.set('userId', payload.sub);
-  c.set('email', payload.email);
   c.set('role', payload.role as JwtVariables['role']);
   await next();
 }

@@ -73,13 +73,12 @@ export async function verifyJwt<T extends Record<string, unknown>>(
 
 export function makeAccessToken(
   userId: string,
-  email: string,
   role: string,
   secret: string,
 ): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   return signJwt(
-    { sub: userId, email, role, type: 'access', iat: now, exp: now + 15 * 60 },
+    { sub: userId, role, type: 'access', iat: now, exp: now + 15 * 60 },
     secret,
   );
 }

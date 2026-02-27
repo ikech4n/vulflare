@@ -9,7 +9,6 @@ export const handlers = [
       accessToken: 'mock-access-token',
       user: {
         id: '1',
-        email: 'test@example.com',
         username: 'testuser',
         role: 'admin',
       },
@@ -46,7 +45,7 @@ export const handlers = [
           cveId: 'CVE-2024-12345',
           title: 'Test Vulnerability',
           severity: 'high',
-          status: 'active',
+          status: 'new',
           createdAt: '2024-01-01T00:00:00Z',
         },
       ],

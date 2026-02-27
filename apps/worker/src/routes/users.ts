@@ -15,7 +15,6 @@ userRoutes.get('/', authMiddleware, requireRole('admin'), async (c) => {
   const result = await userRepo.list(c.env.DB);
   return c.json(result.results.map((u) => ({
     id: u.id,
-    email: u.email,
     username: u.username,
     role: u.role,
     isActive: u.is_active === 1,
@@ -25,11 +24,11 @@ userRoutes.get('/', authMiddleware, requireRole('admin'), async (c) => {
 
 // Create user - admin only
 userRoutes.post('/', authMiddleware, requireRole('admin'), validate(createUserSchema), async (c) => {
-  const body = c.get('validatedBody') as { email: string; username: string; password: string; role?: string };
+  const body = c.get('validatedBody') as { username: string; password: string; role?: string };
 
-  const existing = await userRepo.findByEmail(c.env.DB, body.email);
+  const existing = await userRepo.findByUsername(c.env.DB, body.username);
   if (existing) {
-    return c.json({ error: 'Email already registered' }, 409);
+    return c.json({ error: 'Username already registered' }, 409);
   }
 
   const id = crypto.randomUUID();
@@ -38,20 +37,19 @@ userRoutes.post('/', authMiddleware, requireRole('admin'), validate(createUserSc
 
   await userRepo.create(c.env.DB, {
     id,
-    email: body.email,
     username: body.username,
     password_hash: passwordHash,
     role,
     is_active: 1,
   });
 
-  return c.json({ id, email: body.email, username: body.username, role }, 201);
+  return c.json({ id, username: body.username, role }, 201);
 });
 
 // Update user role/status/profile - admin only
 userRoutes.patch('/:id', authMiddleware, requireRole('admin'), validate(updateUserSchema), async (c) => {
   const id = c.req.param('id');
-  const body = c.get('validatedBody') as { role?: string; isActive?: boolean; username?: string; email?: string };
+  const body = c.get('validatedBody') as { role?: string; isActive?: boolean; username?: string };
 
   const user = await userRepo.findById(c.env.DB, id);
   if (!user) return c.json({ error: 'User not found' }, 404);
@@ -66,15 +64,8 @@ userRoutes.patch('/:id', authMiddleware, requireRole('admin'), validate(updateUs
   if (body.isActive !== undefined) {
     await userRepo.setActive(c.env.DB, id, body.isActive ? 1 : 0);
   }
-  if (body.username || body.email) {
-    if (body.email && body.email !== user.email) {
-      const existing = await userRepo.findByEmail(c.env.DB, body.email);
-      if (existing) return c.json({ error: 'このメールアドレスはすでに使用されています' }, 409);
-    }
-    await userRepo.updateProfile(c.env.DB, id, {
-      ...(body.username !== undefined && { username: body.username }),
-      ...(body.email !== undefined && { email: body.email }),
-    });
+  if (body.username) {
+    await userRepo.updateProfile(c.env.DB, id, { username: body.username });
   }
 
   return c.json({ message: 'Updated' });

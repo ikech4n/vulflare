@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api.ts';
 
 export function RegisterPage() {
-  const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -15,7 +14,7 @@ export function RegisterPage() {
     setError('');
     setLoading(true);
     try {
-      await api.post('/auth/register', { email, username, password });
+      await api.post('/auth/register', { username, password });
       void navigate('/login');
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
@@ -29,16 +28,6 @@ export function RegisterPage() {
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">アカウント作成</h2>
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">メールアドレス</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-          />
-        </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">ユーザー名</label>
           <input

@@ -25,7 +25,7 @@ authRoutes.get('/initialized', async (c) => {
 });
 
 authRoutes.post('/register', rateLimitPresets.register, validate(registerSchema), async (c) => {
-  const body = c.get('validatedBody') as { email: string; username: string; password: string };
+  const body = c.get('validatedBody') as { username: string; password: string };
 
   const countResult = await c.env.DB.prepare('SELECT COUNT(*) as cnt FROM users').first<{ cnt: number }>();
   const userCount = countResult?.cnt ?? 0;
@@ -43,9 +43,8 @@ authRoutes.post('/register', rateLimitPresets.register, validate(registerSchema)
     }
   }
 
-  const existing = await userRepo.findByEmail(c.env.DB, body.email);
+  const existing = await userRepo.findByUsername(c.env.DB, body.username);
   if (existing) {
-    // Phase 1D: 情報漏洩修正 - メール重複エラーを汎用メッセージに変更
     return c.json({ error: 'Registration failed. Please check your input.' }, 400);
   }
 
@@ -55,7 +54,6 @@ authRoutes.post('/register', rateLimitPresets.register, validate(registerSchema)
 
   await userRepo.create(c.env.DB, {
     id,
-    email: body.email,
     username: body.username,
     password_hash: passwordHash,
     role,
@@ -66,9 +64,9 @@ authRoutes.post('/register', rateLimitPresets.register, validate(registerSchema)
 });
 
 authRoutes.post('/login', rateLimitPresets.login, validate(loginSchema), async (c) => {
-  const body = c.get('validatedBody') as { email: string; password: string };
+  const body = c.get('validatedBody') as { username: string; password: string };
 
-  const user = await userRepo.findByEmail(c.env.DB, body.email);
+  const user = await userRepo.findByUsername(c.env.DB, body.username);
   if (!user || !user.is_active) {
     return c.json({ error: 'Invalid credentials' }, 401);
   }
@@ -78,7 +76,7 @@ authRoutes.post('/login', rateLimitPresets.login, validate(loginSchema), async (
     return c.json({ error: 'Invalid credentials' }, 401);
   }
 
-  const accessToken = await makeAccessToken(user.id, user.email, user.role, c.env.JWT_SECRET);
+  const accessToken = await makeAccessToken(user.id, user.role, c.env.JWT_SECRET);
 
   const jti = crypto.randomUUID();
   const refreshToken = await makeRefreshToken(user.id, jti, c.env.JWT_SECRET);
@@ -97,7 +95,7 @@ authRoutes.post('/login', rateLimitPresets.login, validate(loginSchema), async (
 
   return c.json({
     accessToken,
-    user: { id: user.id, email: user.email, username: user.username, role: user.role },
+    user: { id: user.id, username: user.username, role: user.role },
   });
 });
 
@@ -129,7 +127,7 @@ authRoutes.post('/refresh', rateLimitPresets.refresh, async (c) => {
     return c.json({ error: 'User not found' }, 401);
   }
 
-  const accessToken = await makeAccessToken(user.id, user.email, user.role, c.env.JWT_SECRET);
+  const accessToken = await makeAccessToken(user.id, user.role, c.env.JWT_SECRET);
   return c.json({ accessToken });
 });
 
@@ -155,7 +153,6 @@ authRoutes.get('/me', authMiddleware, async (c) => {
   if (!user) return c.json({ error: 'User not found' }, 404);
   return c.json({
     id: user.id,
-    email: user.email,
     username: user.username,
     role: user.role,
     createdAt: user.created_at,

@@ -6,7 +6,6 @@ type DB = Env['DB'];
 
 export interface DbUser {
   id: string;
-  email: string;
   username: string;
   password_hash: string;
   role: string;
@@ -16,8 +15,8 @@ export interface DbUser {
 }
 
 export const userRepo = {
-  findByEmail(db: DB, email: string) {
-    return db.prepare('SELECT * FROM users WHERE email = ?').bind(email).first<DbUser>();
+  findByUsername(db: DB, username: string) {
+    return db.prepare('SELECT * FROM users WHERE username = ?').bind(username).first<DbUser>();
   },
   findById(db: DB, id: string) {
     return db.prepare('SELECT * FROM users WHERE id = ?').bind(id).first<DbUser>();
@@ -25,14 +24,14 @@ export const userRepo = {
   create(db: DB, user: Omit<DbUser, 'created_at' | 'updated_at'>) {
     return db
       .prepare(
-        'INSERT INTO users (id, email, username, password_hash, role, is_active) VALUES (?, ?, ?, ?, ?, ?)',
+        'INSERT INTO users (id, username, password_hash, role, is_active) VALUES (?, ?, ?, ?, ?)',
       )
-      .bind(user.id, user.email, user.username, user.password_hash, user.role, user.is_active)
+      .bind(user.id, user.username, user.password_hash, user.role, user.is_active)
       .run();
   },
   list(db: DB) {
     return db
-      .prepare('SELECT id, email, username, role, is_active, created_at FROM users ORDER BY created_at ASC')
+      .prepare('SELECT id, username, role, is_active, created_at FROM users ORDER BY created_at ASC')
       .all<Omit<DbUser, 'password_hash'>>();
   },
   updatePassword(db: DB, id: string, passwordHash: string) {
@@ -53,11 +52,10 @@ export const userRepo = {
       .bind(isActive, id)
       .run();
   },
-  updateProfile(db: DB, id: string, fields: { username?: string; email?: string }) {
+  updateProfile(db: DB, id: string, fields: { username?: string }) {
     const sets: string[] = ["updated_at = datetime('now')"];
     const params: unknown[] = [];
     if (fields.username) { sets.push('username = ?'); params.push(fields.username); }
-    if (fields.email) { sets.push('email = ?'); params.push(fields.email); }
     params.push(id);
     return db.prepare(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`).bind(...params).run();
   },
@@ -233,7 +231,8 @@ export const vulnRepo = {
            SUM(CASE WHEN severity = 'medium' THEN 1 ELSE 0 END) as medium,
            SUM(CASE WHEN severity = 'low' THEN 1 ELSE 0 END) as low,
            SUM(CASE WHEN severity = 'informational' THEN 1 ELSE 0 END) as informational,
-           SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active,
+           SUM(CASE WHEN status = 'new' THEN 1 ELSE 0 END) as new,
+           SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) as open,
            SUM(CASE WHEN status = 'fixed' THEN 1 ELSE 0 END) as fixed,
            SUM(CASE WHEN status = 'accepted_risk' THEN 1 ELSE 0 END) as accepted_risk,
            SUM(CASE WHEN status = 'false_positive' THEN 1 ELSE 0 END) as false_positive,

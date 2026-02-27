@@ -69,10 +69,6 @@ export function ProfilePage() {
             <span className="text-gray-900 dark:text-gray-100">{user?.username}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-500 dark:text-gray-400">メールアドレス</span>
-            <span className="text-gray-900 dark:text-gray-100">{user?.email}</span>
-          </div>
-          <div className="flex justify-between">
             <span className="text-gray-500 dark:text-gray-400">ロール</span>
             <span className="text-gray-900 dark:text-gray-100">{ROLE_LABELS[user?.role ?? ''] ?? user?.role}</span>
           </div>

@@ -3,7 +3,6 @@ import { persist } from 'zustand/middleware';
 
 interface AuthUser {
   id: string;
-  email: string;
   username: string;
   role: 'admin' | 'editor' | 'viewer';
 }

@@ -11,7 +11,6 @@ export interface Env {
 
 export interface JwtVariables {
   userId: string;
-  email: string;
   role: 'admin' | 'editor' | 'viewer';
   validatedBody?: unknown;
 }

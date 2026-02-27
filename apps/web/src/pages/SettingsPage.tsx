@@ -12,7 +12,6 @@ const ROLE_LABELS: Record<string, string> = {
 
 interface UserItem {
   id: string;
-  email: string;
   username: string;
   role: string;
   isActive: boolean;
@@ -31,14 +30,12 @@ export function SettingsPage() {
   // ユーザー情報編集
   const [editUserId, setEditUserId] = useState<string | null>(null);
   const [editUsername, setEditUsername] = useState('');
-  const [editEmail, setEditEmail] = useState('');
   const [editError, setEditError] = useState('');
 
   // 同期データ削除
   const [deleteSuccess, setDeleteSuccess] = useState('');
 
   // ユーザー追加フォーム
-  const [addEmail, setAddEmail] = useState('');
   const [addUsername, setAddUsername] = useState('');
   const [addPassword, setAddPassword] = useState('');
   const [addRole, setAddRole] = useState('viewer');
@@ -53,11 +50,10 @@ export function SettingsPage() {
 
 
   const addUserMutation = useMutation({
-    mutationFn: (body: { email: string; username: string; password: string; role: string }) =>
+    mutationFn: (body: { username: string; password: string; role: string }) =>
       api.post('/users', body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['users'] });
-      setAddEmail('');
       setAddUsername('');
       setAddPassword('');
       setAddRole('viewer');
@@ -78,13 +74,12 @@ export function SettingsPage() {
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: ({ id, username, email }: { id: string; username: string; email: string }) =>
-      api.patch(`/users/${id}`, { username, email }),
+    mutationFn: ({ id, username }: { id: string; username: string }) =>
+      api.patch(`/users/${id}`, { username }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['users'] });
       setEditUserId(null);
       setEditUsername('');
-      setEditEmail('');
       setEditError('');
     },
     onError: (err: unknown) => {
@@ -126,7 +121,7 @@ export function SettingsPage() {
   const handleAddUser = (e: FormEvent) => {
     e.preventDefault();
     setAddError('');
-    addUserMutation.mutate({ email: addEmail, username: addUsername, password: addPassword, role: addRole });
+    addUserMutation.mutate({ username: addUsername, password: addPassword, role: addRole });
   };
 
   if (user?.role !== 'admin') {
@@ -150,17 +145,6 @@ export function SettingsPage() {
         </h2>
         <form onSubmit={handleAddUser} className="space-y-3" autoComplete="off">
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">メールアドレス</label>
-              <input
-                type="email"
-                value={addEmail}
-                onChange={(e) => setAddEmail(e.target.value)}
-                required
-                autoComplete="off"
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-              />
-            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">ユーザー名</label>
               <input
@@ -218,7 +202,6 @@ export function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{u.username}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{u.email}</p>
                 </div>
                 <div className="flex items-center gap-2 ml-4 shrink-0">
                   <button
@@ -229,7 +212,6 @@ export function SettingsPage() {
                       } else {
                         setEditUserId(u.id);
                         setEditUsername(u.username);
-                        setEditEmail(u.email);
                         setEditError('');
                         setResetPwUserId(null);
                       }
@@ -284,25 +266,18 @@ export function SettingsPage() {
                       placeholder="ユーザー名"
                       className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     />
-                    <input
-                      type="email"
-                      value={editEmail}
-                      onChange={(e) => setEditEmail(e.target.value)}
-                      placeholder="メールアドレス"
-                      className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                    />
                   </div>
                   {editError && <p className="text-xs text-red-600">{editError}</p>}
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => updateProfileMutation.mutate({ id: u.id, username: editUsername, email: editEmail })}
-                      disabled={!editUsername || !editEmail || updateProfileMutation.isPending}
+                      onClick={() => updateProfileMutation.mutate({ id: u.id, username: editUsername })}
+                      disabled={!editUsername || updateProfileMutation.isPending}
                       className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 shrink-0"
                     >
                       {updateProfileMutation.isPending ? '保存中...' : '保存'}
                     </button>
                     <button
-                      onClick={() => { setEditUserId(null); setEditError(''); }}
+                      onClick={() => { setEditUserId(null); setEditUsername(''); setEditError(''); }}
                       className="px-3 py-1.5 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0"
                     >
                       キャンセル

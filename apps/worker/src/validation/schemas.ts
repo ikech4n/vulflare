@@ -22,7 +22,7 @@ const cvssScoreSchema = z
 
 // 共通エンタム
 const severitySchema = z.enum(['critical', 'high', 'medium', 'low', 'informational']);
-const statusSchema = z.enum(['active', 'fixed', 'accepted_risk', 'false_positive']);
+const statusSchema = z.enum(['new', 'open', 'fixed', 'accepted_risk', 'false_positive']);
 const roleSchema = z.enum(['admin', 'editor', 'viewer']);
 
 // ========================================
@@ -30,13 +30,12 @@ const roleSchema = z.enum(['admin', 'editor', 'viewer']);
 // ========================================
 
 export const registerSchema = z.object({
-  email: z.string().email('Invalid email format'),
   username: z.string().min(1, 'Username is required').max(100, 'Username too long'),
   password: passwordSchema,
 });
 
 export const loginSchema = z.object({
-  email: z.string().email('Invalid email format'),
+  username: z.string().min(1, 'Username is required'),
   password: z.string().min(1, 'Password is required'),
 });
 
@@ -76,7 +75,6 @@ export const updateVulnerabilitySchema = z.object({
 // ========================================
 
 export const createUserSchema = z.object({
-  email: z.string().email('Invalid email format'),
   username: z.string().min(1, 'Username is required').max(100, 'Username too long'),
   password: passwordSchema,
   role: roleSchema.optional(),
@@ -86,7 +84,6 @@ export const updateUserSchema = z.object({
   role: roleSchema.optional(),
   isActive: z.boolean().optional(),
   username: z.string().min(1, 'Username is required').max(100, 'Username too long').optional(),
-  email: z.string().email('Invalid email format').optional(),
 });
 
 export const resetPasswordSchema = z.object({

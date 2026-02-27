@@ -5,7 +5,7 @@ import { useAuthStore } from '@/store/authStore.ts';
 import type { LoginResponse } from '@vulflare/shared/types';
 
 export function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,11 +24,11 @@ export function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const { data } = await api.post<LoginResponse>('/auth/login', { email, password });
+      const { data } = await api.post<LoginResponse>('/auth/login', { username, password });
       login(data.accessToken, data.user);
       void navigate('/');
     } catch {
-      setError('メールアドレスまたはパスワードが正しくありません');
+      setError('ユーザー名またはパスワードが正しくありません');
     } finally {
       setLoading(false);
     }
@@ -39,14 +39,13 @@ export function LoginPage() {
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">ログイン</h2>
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">メールアドレス</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">ユーザー名</label>
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
             className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-            placeholder="you@example.com"
           />
         </div>
         <div>
