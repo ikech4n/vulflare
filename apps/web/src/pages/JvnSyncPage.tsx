@@ -94,7 +94,7 @@ export function JvnSyncPage() {
       ) : (
         <div className="space-y-4">
           <div className="bg-white border border-gray-200 rounded-xl p-5">
-            <h2 className="text-sm font-semibold text-gray-700 mb-3">取得ステータス</h2>
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">ステータス</h2>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-500">前回の取得</span>

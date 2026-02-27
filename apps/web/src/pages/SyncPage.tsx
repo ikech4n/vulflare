@@ -277,7 +277,7 @@ export function SyncPage() {
       {/* 全体ステータス */}
       <div className="bg-white border border-gray-200 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">取得ステータス</h2>
+          <h2 className="text-lg font-semibold text-gray-900">ステータス</h2>
           {user?.role === 'admin' && (
             <div className="flex gap-2">
               <button
@@ -346,7 +346,7 @@ export function SyncPage() {
             onClick={() => setShowSettings(!showSettings)}
             className="flex items-center justify-between w-full text-left"
           >
-            <h2 className="text-lg font-semibold text-gray-900">取得設定</h2>
+            <h2 className="text-lg font-semibold text-gray-900">設定</h2>
             {showSettings ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </button>
 
