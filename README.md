@@ -1,5 +1,9 @@
 # Vulflare - Vulnerability Management Platform
 
+<p align="center">
+  <img src="docs/images/logo.png" alt="Vulflare Logo" width="600" />
+</p>
+
 [![CI](https://github.com/ikech4n/vulflare/actions/workflows/ci.yml/badge.svg)](https://github.com/ikech4n/vulflare/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
