@@ -235,19 +235,19 @@ export function NotificationsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">通知設定</h1>
-        <p className="text-gray-600 mt-1">イベント通知のチャネルとルールを管理します</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">通知設定</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">イベント通知のチャネルとルールを管理します</p>
       </div>
 
       {/* タブ */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-200 dark:border-gray-700">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('channels')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'channels'
                 ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300'
             }`}
           >
             チャネル
@@ -257,7 +257,7 @@ export function NotificationsPage() {
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'rules'
                 ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300'
             }`}
           >
             ルール
@@ -267,7 +267,7 @@ export function NotificationsPage() {
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'logs'
                 ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300'
             }`}
           >
             ログ
@@ -289,26 +289,26 @@ export function NotificationsPage() {
           </div>
 
           {showChannelForm && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4">新規チャネル</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold dark:text-white mb-4">新規チャネル</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">名前</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">名前</label>
                   <input
                     type="text"
                     value={channelName}
                     onChange={(e) => setChannelName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
                     placeholder="Slack通知など"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">タイプ</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">タイプ</label>
                   <select
                     value={channelType}
                     onChange={(e) => setChannelType(e.target.value as 'webhook' | 'email')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
                   >
                     <option value="webhook">Webhook</option>
                     <option value="email">Email</option>
@@ -317,12 +317,12 @@ export function NotificationsPage() {
 
                 {channelType === 'webhook' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Webhook URL</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Webhook URL</label>
                     <input
                       type="url"
                       value={webhookUrl}
                       onChange={(e) => setWebhookUrl(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
                       placeholder="https://hooks.slack.com/..."
                     />
                   </div>
@@ -331,32 +331,32 @@ export function NotificationsPage() {
                 {channelType === 'email' && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">送信元アドレス</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">送信元アドレス</label>
                       <input
                         type="email"
                         value={emailFrom}
                         onChange={(e) => setEmailFrom(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
                         placeholder="notifications@vulflare.example.com"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">宛先アドレス（カンマ区切り）</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">宛先アドレス（カンマ区切り）</label>
                       <input
                         type="text"
                         value={emailTo}
                         onChange={(e) => setEmailTo(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
                         placeholder="security@example.com, admin@example.com"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">CC（オプション、カンマ区切り）</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">CC（オプション、カンマ区切り）</label>
                       <input
                         type="text"
                         value={emailCc}
                         onChange={(e) => setEmailCc(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
                         placeholder="manager@example.com"
                       />
                     </div>
@@ -377,7 +377,7 @@ export function NotificationsPage() {
                   </button>
                   <button
                     onClick={() => setShowChannelForm(false)}
-                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                    className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500"
                   >
                     キャンセル
                   </button>
@@ -388,44 +388,44 @@ export function NotificationsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {channels.map((channel) => (
-              <div key={channel.id} className="bg-white rounded-lg shadow p-6">
+              <div key={channel.id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 {editingChannelId === channel.id ? (
                   // 編集モード
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">チャネル編集</h3>
+                    <h3 className="text-lg font-semibold dark:text-white mb-4">チャネル編集</h3>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">名前</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">名前</label>
                         <input
                           type="text"
                           value={editChannelName}
                           onChange={(e) => setEditChannelName(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
                           placeholder="Slack通知など"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">タイプ</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">タイプ</label>
                         <select
                           value={channel.type}
                           disabled
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-600 cursor-not-allowed dark:text-gray-300"
                         >
                           <option value="webhook">Webhook</option>
                           <option value="email">Email</option>
                         </select>
-                        <p className="text-xs text-gray-500 mt-1">タイプは変更できません</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">タイプは変更できません</p>
                       </div>
 
                       {channel.type === 'webhook' && (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Webhook URL</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Webhook URL</label>
                           <input
                             type="url"
                             value={editWebhookUrl}
                             onChange={(e) => setEditWebhookUrl(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
                             placeholder="https://hooks.slack.com/..."
                           />
                         </div>
@@ -434,32 +434,32 @@ export function NotificationsPage() {
                       {channel.type === 'email' && (
                         <>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">送信元アドレス</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">送信元アドレス</label>
                             <input
                               type="email"
                               value={editEmailFrom}
                               onChange={(e) => setEditEmailFrom(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
                               placeholder="notifications@vulflare.example.com"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">宛先アドレス（カンマ区切り）</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">宛先アドレス（カンマ区切り）</label>
                             <input
                               type="text"
                               value={editEmailTo}
                               onChange={(e) => setEditEmailTo(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
                               placeholder="security@example.com, admin@example.com"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">CC（オプション、カンマ区切り）</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">CC（オプション、カンマ区切り）</label>
                             <input
                               type="text"
                               value={editEmailCc}
                               onChange={(e) => setEditEmailCc(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
                               placeholder="manager@example.com"
                             />
                           </div>
@@ -474,7 +474,7 @@ export function NotificationsPage() {
                             onChange={(e) => setEditIsActive(e.target.checked)}
                             className="mr-2"
                           />
-                          <span className="text-sm font-medium text-gray-700">有効</span>
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">有効</span>
                         </label>
                       </div>
 
@@ -492,7 +492,7 @@ export function NotificationsPage() {
                         </button>
                         <button
                           onClick={handleCancelEdit}
-                          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                          className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500"
                         >
                           キャンセル
                         </button>
@@ -503,8 +503,8 @@ export function NotificationsPage() {
                   // 通常モード
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900">{channel.name}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{channel.type}</p>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{channel.name}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{channel.type}</p>
                       <div className="mt-2">
                         <span
                           className={`px-2 py-1 text-xs rounded ${
@@ -518,21 +518,21 @@ export function NotificationsPage() {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => testChannelMutation.mutate(channel.id)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                        className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
                         title="テスト送信"
                       >
                         <Send className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleEditChannel(channel)}
-                        className="p-2 text-green-600 hover:bg-green-50 rounded"
+                        className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
                         title="編集"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => deleteChannelMutation.mutate(channel.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded"
+                        className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
                         title="削除"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -560,15 +560,15 @@ export function NotificationsPage() {
           </div>
 
           {showRuleForm && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4">新規ルール</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold dark:text-white mb-4">新規ルール</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">チャネル</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">チャネル</label>
                   <select
                     value={ruleChannelId}
                     onChange={(e) => setRuleChannelId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
                   >
                     <option value="">選択してください</option>
                     {channels.map((ch) => (
@@ -580,11 +580,11 @@ export function NotificationsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">イベント</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">イベント</label>
                   <select
                     value={ruleEventType}
                     onChange={(e) => setRuleEventType(e.target.value as EventType)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
                   >
                     {Object.entries(EVENT_LABELS).map(([key, label]) => (
                       <option key={key} value={key}>
@@ -604,7 +604,7 @@ export function NotificationsPage() {
                   </button>
                   <button
                     onClick={() => setShowRuleForm(false)}
-                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                    className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500"
                   >
                     キャンセル
                   </button>
@@ -613,23 +613,23 @@ export function NotificationsPage() {
             </div>
           )}
 
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">チャネル</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">イベント</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">状態</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">操作</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">チャネル</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">イベント</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">状態</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">操作</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {rules.map((rule) => {
                   const channel = channels.find((ch) => ch.id === rule.channel_id);
                   return (
                     <tr key={rule.id}>
-                      <td className="px-6 py-4 text-sm text-gray-900">{channel?.name || 'Unknown'}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{EVENT_LABELS[rule.event_type]}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">{channel?.name || 'Unknown'}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">{EVENT_LABELS[rule.event_type]}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-2">
                           <span
@@ -675,23 +675,23 @@ export function NotificationsPage() {
 
       {/* ログタブ */}
       {activeTab === 'logs' && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">送信日時</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">イベント</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">状態</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">エラー</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">送信日時</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">イベント</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">状態</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">エラー</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {logs.map((log) => (
                 <tr key={log.id}>
-                  <td className="px-6 py-4 text-sm text-gray-900">
+                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                     {new Date(log.sent_at.replace(' ', 'T') + 'Z').toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{EVENT_LABELS[log.event_type]}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">{EVENT_LABELS[log.event_type]}</td>
                   <td className="px-6 py-4">
                     <span
                       className={`flex items-center px-2 py-1 text-xs rounded ${
@@ -710,7 +710,7 @@ export function NotificationsPage() {
                       {log.status === 'sent' ? '成功' : log.status === 'failed' ? '失敗' : '保留中'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{log.error_message || '-'}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{log.error_message || '-'}</td>
                 </tr>
               ))}
             </tbody>

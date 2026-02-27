@@ -37,8 +37,8 @@ export function EolProductDetailPage() {
         </Link>
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{product.display_name}</h1>
-            <p className="text-gray-600 mt-1">{product.product_name}</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{product.display_name}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">{product.product_name}</p>
           </div>
           {product.link && (
             <a
@@ -55,20 +55,20 @@ export function EolProductDetailPage() {
       </div>
 
       {/* プロダクト情報 */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">プロダクト情報</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">プロダクト情報</h2>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <dt className="text-sm font-medium text-gray-500">カテゴリ</dt>
-            <dd className="mt-1 text-sm text-gray-900">{product.category}</dd>
+            <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">カテゴリ</dt>
+            <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">{product.category}</dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-500">ベンダー</dt>
-            <dd className="mt-1 text-sm text-gray-900">{product.vendor || '-'}</dd>
+            <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">ベンダー</dt>
+            <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">{product.vendor || '-'}</dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-500">データソース</dt>
-            <dd className="mt-1 text-sm text-gray-900">
+            <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">データソース</dt>
+            <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
               {product.eol_api_id ? (
                 <span className="text-green-600">endoflife.date ({product.eol_api_id})</span>
               ) : (
@@ -80,11 +80,11 @@ export function EolProductDetailPage() {
       </div>
 
       {/* バージョンサイクル一覧 */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">バージョンサイクル</h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">バージョンサイクル</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               {product.cycles.length} 件のバージョン
             </p>
           </div>
@@ -100,22 +100,22 @@ export function EolProductDetailPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">バージョン</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">コードネーム</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">リリース日</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">EOL日</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ステータス</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">LTS</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">最新版</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">バージョン</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">コードネーム</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">リリース日</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">EOL日</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ステータス</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">LTS</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">最新版</th>
                 {!product.eol_api_id && (
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">操作</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">操作</th>
                 )}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {product.cycles.length === 0 ? (
                 <tr>
                   <td colSpan={!product.eol_api_id ? 8 : 7} className="px-4 py-8 text-center text-gray-500">
@@ -124,17 +124,17 @@ export function EolProductDetailPage() {
                 </tr>
               ) : (
                 product.cycles.map((cycle) => (
-                  <tr key={cycle.id} className="hover:bg-gray-50">
+                  <tr key={cycle.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td className="px-4 py-4">
-                      <span className="font-medium text-gray-900">{cycle.cycle}</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{cycle.cycle}</span>
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-700">
+                    <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
                       {cycle.codename || '-'}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-700">
+                    <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
                       {cycle.release_date ? formatDate(cycle.release_date) : '-'}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-700">
+                    <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
                       {cycle.eol_date ? (
                         <span className="flex items-center gap-2">
                           <Calendar className="w-4 h-4 text-gray-400" />
@@ -149,14 +149,14 @@ export function EolProductDetailPage() {
                     </td>
                     <td className="px-4 py-4 text-sm">
                       {cycle.lts === 1 ? (
-                        <span className="px-2 py-1 text-xs font-semibold rounded bg-blue-100 text-blue-800">
+                        <span className="px-2 py-1 text-xs font-semibold rounded bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
                           LTS
                         </span>
                       ) : (
                         '-'
                       )}
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-700">
+                    <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
                       {cycle.latest_version || '-'}
                     </td>
                     {!product.eol_api_id && (
@@ -259,79 +259,79 @@ function AddCycleModal({ productId, onClose }: { productId: string; onClose: () 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">サイクル追加</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">サイクル追加</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">バージョン*</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">バージョン*</label>
             <input
               type="text"
               value={formData.cycle}
               onChange={(e) => setFormData({ ...formData, cycle: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
               placeholder="例: 22.04"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">コードネーム</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">コードネーム</label>
             <input
               type="text"
               value={formData.codename}
               onChange={(e) => setFormData({ ...formData, codename: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
               placeholder="例: Jammy Jellyfish"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">リリース日</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">リリース日</label>
             <input
               type="date"
               value={formData.release_date}
               onChange={(e) => setFormData({ ...formData, release_date: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">EOL日</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">EOL日</label>
             <input
               type="date"
               value={formData.eol_date}
               onChange={(e) => setFormData({ ...formData, eol_date: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">サポート終了日</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">サポート終了日</label>
             <input
               type="date"
               value={formData.support_date}
               onChange={(e) => setFormData({ ...formData, support_date: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">延長サポート終了日</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">延長サポート終了日</label>
             <input
               type="date"
               value={formData.extended_support_date}
               onChange={(e) => setFormData({ ...formData, extended_support_date: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">最新バージョン</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">最新バージョン</label>
             <input
               type="text"
               value={formData.latest_version}
               onChange={(e) => setFormData({ ...formData, latest_version: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
               placeholder="例: 22.04.3"
             />
           </div>
@@ -342,9 +342,9 @@ function AddCycleModal({ productId, onClose }: { productId: string; onClose: () 
               id="lts"
               checked={formData.lts}
               onChange={(e) => setFormData({ ...formData, lts: e.target.checked })}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+              className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded"
             />
-            <label htmlFor="lts" className="ml-2 text-sm font-medium text-gray-700">
+            <label htmlFor="lts" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-200">
               LTS版
             </label>
           </div>
@@ -353,7 +353,7 @@ function AddCycleModal({ productId, onClose }: { productId: string; onClose: () 
         <div className="flex justify-end gap-3 mt-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+            className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
           >
             キャンセル
           </button>
@@ -407,79 +407,79 @@ function EditCycleModal({ cycle, productId, onClose }: { cycle: EolCycle; produc
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">サイクル編集</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">サイクル編集</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">バージョン*</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">バージョン*</label>
             <input
               type="text"
               value={formData.cycle}
               onChange={(e) => setFormData({ ...formData, cycle: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
               placeholder="例: 22.04"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">コードネーム</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">コードネーム</label>
             <input
               type="text"
               value={formData.codename}
               onChange={(e) => setFormData({ ...formData, codename: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
               placeholder="例: Jammy Jellyfish"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">リリース日</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">リリース日</label>
             <input
               type="date"
               value={formData.release_date}
               onChange={(e) => setFormData({ ...formData, release_date: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">EOL日</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">EOL日</label>
             <input
               type="date"
               value={formData.eol_date}
               onChange={(e) => setFormData({ ...formData, eol_date: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">サポート終了日</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">サポート終了日</label>
             <input
               type="date"
               value={formData.support_date}
               onChange={(e) => setFormData({ ...formData, support_date: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">延長サポート終了日</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">延長サポート終了日</label>
             <input
               type="date"
               value={formData.extended_support_date}
               onChange={(e) => setFormData({ ...formData, extended_support_date: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">最新バージョン</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">最新バージョン</label>
             <input
               type="text"
               value={formData.latest_version}
               onChange={(e) => setFormData({ ...formData, latest_version: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
               placeholder="例: 22.04.3"
             />
           </div>
@@ -490,9 +490,9 @@ function EditCycleModal({ cycle, productId, onClose }: { cycle: EolCycle; produc
               id="edit-lts"
               checked={formData.lts}
               onChange={(e) => setFormData({ ...formData, lts: e.target.checked })}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+              className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded"
             />
-            <label htmlFor="edit-lts" className="ml-2 text-sm font-medium text-gray-700">
+            <label htmlFor="edit-lts" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-200">
               LTS版
             </label>
           </div>
@@ -501,7 +501,7 @@ function EditCycleModal({ cycle, productId, onClose }: { cycle: EolCycle; produc
         <div className="flex justify-end gap-3 mt-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+            className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
           >
             キャンセル
           </button>

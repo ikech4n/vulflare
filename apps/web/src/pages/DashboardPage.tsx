@@ -56,7 +56,7 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">ダッシュボード</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ダッシュボード</h1>
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -88,8 +88,8 @@ export function DashboardPage() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h2 className="text-sm font-semibold text-gray-700 mb-4">深刻度の分布</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">深刻度の分布</h2>
           <ResponsiveContainer width="100%" height={240}>
             <PieChart margin={{ top: 20, right: 60, bottom: 20, left: 60 }}>
               <Pie
@@ -113,8 +113,8 @@ export function DashboardPage() {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h2 className="text-sm font-semibold text-gray-700 mb-4">ステータス概要</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">ステータス概要</h2>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={statusData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -140,42 +140,42 @@ export function DashboardPage() {
 
       {/* EOL Summary */}
       {eolStats && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-gray-700">EOL管理サマリー</h2>
+            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">EOL管理サマリー</h2>
             <Link to="/eol" className="text-sm text-blue-600 hover:underline">
               詳細を見る
             </Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Link to="/eol" className="text-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <div className="text-2xl font-bold text-gray-900">{eolStats.total_products}</div>
-              <div className="text-xs text-gray-600 mt-1">登録プロダクト</div>
+            <Link to="/eol" className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">{eolStats.total_products}</div>
+              <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">登録プロダクト</div>
             </Link>
             <Link to="/eol?status=eol" className="text-center p-3 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
               <div className="text-2xl font-bold text-red-600">{eolStats.eol_count}</div>
-              <div className="text-xs text-gray-600 mt-1">EOL済み</div>
+              <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">EOL済み</div>
             </Link>
             <Link to="/eol?status=approaching_30d" className="text-center p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
               <div className="text-2xl font-bold text-orange-600">{eolStats.approaching_eol_30d}</div>
-              <div className="text-xs text-gray-600 mt-1">30日以内EOL</div>
+              <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">30日以内EOL</div>
             </Link>
             <div className="text-center p-3 bg-green-50 rounded-lg">
               <div className="text-2xl font-bold text-green-600">{eolStats.supported_count}</div>
-              <div className="text-xs text-gray-600 mt-1">サポート中</div>
+              <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">サポート中</div>
             </div>
           </div>
 
           {/* 近日EOL予定リスト */}
           {eolTimeline && eolTimeline.filter(item => item.days_until_eol <= 30).length > 0 && (
-            <div className="mt-4 border-t border-gray-100 pt-4">
+            <div className="mt-4 border-t border-gray-100 dark:border-gray-700 pt-4">
               <p className="text-xs font-medium text-orange-700 mb-2">30日以内にEOLを迎えるバージョン</p>
               <ul className="space-y-1.5">
                 {eolTimeline.filter(item => item.days_until_eol <= 30).slice(0, 5).map(item => (
                   <li key={`${item.product_name}-${item.cycle}`} className="flex items-center justify-between text-sm">
-                    <span className="text-gray-800">
+                    <span className="text-gray-800 dark:text-gray-200">
                       <span className="font-medium">{item.display_name}</span>
-                      <span className="text-gray-500 ml-1">{item.cycle}</span>
+                      <span className="text-gray-500 dark:text-gray-400 ml-1">{item.cycle}</span>
                     </span>
                     <span className={`text-xs font-medium ${item.days_until_eol <= 7 ? 'text-red-600' : 'text-orange-600'}`}>
                       {item.days_until_eol === 0 ? '本日' : `${item.days_until_eol}日後`} ({item.eol_date})
@@ -205,12 +205,12 @@ function StatCard({
   return (
     <Link
       to={href}
-      className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4 hover:border-blue-300 transition-colors"
+      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 flex items-center gap-4 hover:border-blue-300 dark:hover:border-blue-500 transition-colors"
     >
-      <div className="p-2 bg-gray-50 rounded-lg">{icon}</div>
+      <div className="p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">{icon}</div>
       <div>
-        <div className="text-2xl font-bold text-gray-900">{value}</div>
-        <div className="text-xs text-gray-500">{label}</div>
+        <div className="text-2xl font-bold text-gray-900 dark:text-white">{value}</div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">{label}</div>
       </div>
     </Link>
   );

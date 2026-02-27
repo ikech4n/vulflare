@@ -116,7 +116,7 @@ export function VulnerabilitiesPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">脆弱性一覧</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">脆弱性一覧</h1>
         <Link
           to="/vulnerabilities/new"
           className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
@@ -127,7 +127,7 @@ export function VulnerabilitiesPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-wrap gap-3">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-48">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -136,7 +136,7 @@ export function VulnerabilitiesPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') setFilter('q', q); }}
-            className="w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
           />
         </div>
 
@@ -149,7 +149,7 @@ export function VulnerabilitiesPage() {
               className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
                 selectedSeverities.includes(s)
                   ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+                  : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-gray-400'
               }`}
             >
               {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -169,7 +169,7 @@ export function VulnerabilitiesPage() {
         <select
           value={status}
           onChange={(e) => setFilter('status', e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
         >
           <option value="">すべてのステータス</option>
           <option value="active">対応中</option>
@@ -226,14 +226,14 @@ export function VulnerabilitiesPage() {
       )}
 
       {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-gray-500 text-sm">読み込み中...</div>
+          <div className="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">読み込み中...</div>
         ) : (data?.data.length ?? 0) === 0 ? (
-          <div className="p-8 text-center text-gray-500 text-sm">脆弱性が見つかりませんでした</div>
+          <div className="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">脆弱性が見つかりませんでした</div>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
               <tr>
                 <th className="px-4 py-3 w-12">
                   <input
@@ -243,17 +243,17 @@ export function VulnerabilitiesPage() {
                     className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">CVE / タイトル</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-28">深刻度</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-20">CVSS</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-32">ステータス</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-28">公開日</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-28">更新日</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">CVE / タイトル</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-28">深刻度</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-20">CVSS</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-32">ステータス</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-28">公開日</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-28">更新日</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {data?.data.map((vuln) => (
-                <tr key={vuln.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={vuln.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                   <td className="px-4 py-3">
                     <input
                       type="checkbox"
@@ -267,21 +267,21 @@ export function VulnerabilitiesPage() {
                       {vuln.cveId ?? '—'}
                     </Link>
                     {vuln.title && vuln.title !== vuln.cveId && (
-                      <div className="text-gray-700 text-xs font-medium mt-0.5 line-clamp-1">{vuln.title}</div>
+                      <div className="text-gray-700 dark:text-gray-300 text-xs font-medium mt-0.5 line-clamp-1">{vuln.title}</div>
                     )}
                     {vuln.description && (
-                      <div className="text-gray-500 text-xs mt-0.5 line-clamp-2">{vuln.description}</div>
+                      <div className="text-gray-500 dark:text-gray-400 text-xs mt-0.5 line-clamp-2">{vuln.description}</div>
                     )}
                   </td>
                   <td className="px-4 py-3"><SeverityBadge severity={vuln.severity} /></td>
-                  <td className="px-4 py-3 text-gray-700">
+                  <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
                     {vuln.cvssV3Score != null ? vuln.cvssV3Score.toFixed(1) : '—'}
                   </td>
                   <td className="px-4 py-3"><StatusBadge status={vuln.status} /></td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">
+                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">
                     {vuln.publishedAt ? new Date(vuln.publishedAt).toLocaleDateString('ja-JP') : '—'}
                   </td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">
+                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">
                     {vuln.modifiedAt ? new Date(vuln.modifiedAt).toLocaleDateString('ja-JP') : '—'}
                   </td>
                 </tr>
@@ -294,21 +294,21 @@ export function VulnerabilitiesPage() {
       {/* Pagination */}
       {data && data.totalPages > 1 && (
         <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-500">
+          <span className="text-gray-500 dark:text-gray-400">
             全{data.total}件 / {data.page} / {data.totalPages}ページ
           </span>
           <div className="flex gap-2">
             <button
               onClick={() => setPage(page - 1)}
               disabled={page <= 1}
-              className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-gray-50"
+              className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300"
             >
               前へ
             </button>
             <button
               onClick={() => setPage(page + 1)}
               disabled={page >= data.totalPages}
-              className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-40 hover:bg-gray-50"
+              className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300"
             >
               次へ
             </button>

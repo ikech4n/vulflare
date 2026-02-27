@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { Sun, Moon, Monitor } from 'lucide-react';
 import { api } from '@/lib/api.ts';
 import { useAuthStore } from '@/store/authStore.ts';
+import { useThemeStore, type Theme } from '@/store/themeStore.ts';
 
 const ROLE_LABELS: Record<string, string> = {
   admin: '管理者',
@@ -9,8 +11,15 @@ const ROLE_LABELS: Record<string, string> = {
   viewer: '閲覧者',
 };
 
+const THEME_OPTIONS: { value: Theme; icon: typeof Sun; label: string }[] = [
+  { value: 'light', icon: Sun, label: 'ライト' },
+  { value: 'system', icon: Monitor, label: 'システム' },
+  { value: 'dark', icon: Moon, label: 'ダーク' },
+];
+
 export function ProfilePage() {
   const { user } = useAuthStore();
+  const { theme, setTheme } = useThemeStore();
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -49,60 +58,81 @@ export function ProfilePage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-900">プロフィール</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">プロフィール</h1>
 
       {/* Profile info */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">アカウント情報</h2>
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">アカウント情報</h2>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-gray-500">ユーザー名</span>
-            <span className="text-gray-900">{user?.username}</span>
+            <span className="text-gray-500 dark:text-gray-400">ユーザー名</span>
+            <span className="text-gray-900 dark:text-gray-100">{user?.username}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-500">メールアドレス</span>
-            <span className="text-gray-900">{user?.email}</span>
+            <span className="text-gray-500 dark:text-gray-400">メールアドレス</span>
+            <span className="text-gray-900 dark:text-gray-100">{user?.email}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-500">ロール</span>
-            <span className="text-gray-900">{ROLE_LABELS[user?.role ?? ''] ?? user?.role}</span>
+            <span className="text-gray-500 dark:text-gray-400">ロール</span>
+            <span className="text-gray-900 dark:text-gray-100">{ROLE_LABELS[user?.role ?? ''] ?? user?.role}</span>
           </div>
         </div>
       </div>
 
+      {/* Theme */}
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">テーマ</h2>
+        <div className="flex gap-2">
+          {THEME_OPTIONS.map(({ value, icon: Icon, label }) => (
+            <button
+              key={value}
+              onClick={() => setTheme(value)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                theme === value
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+              }`}
+            >
+              <Icon size={16} />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Change password */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">パスワードを変更</h2>
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">パスワードを変更</h2>
         <form onSubmit={handlePasswordChange} className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">現在のパスワード</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">現在のパスワード</label>
             <input
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">新しいパスワード</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">新しいパスワード</label>
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
               minLength={8}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">新しいパスワード（確認）</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">新しいパスワード（確認）</label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             />
           </div>
           {pwError && <p className="text-sm text-red-600">{pwError}</p>}

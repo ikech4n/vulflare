@@ -265,19 +265,19 @@ export function SyncPage() {
   };
 
   if (isLoading) {
-    return <div className="text-sm text-gray-500">読み込み中...</div>;
+    return <div className="text-sm text-gray-500 dark:text-gray-400">読み込み中...</div>;
   }
 
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">データソース</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">データソース</h1>
       </div>
 
       {/* 全体ステータス */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">ステータス</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">ステータス</h2>
           {user?.role === 'admin' && (
             <div className="flex gap-2">
               <button
@@ -306,20 +306,20 @@ export function SyncPage() {
               {getStatusIcon(latestLog.status)}
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {getStatusText(latestLog.status)}
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     ({getSyncTypeText(latestLog.sync_type)})
                   </span>
                   {latestLog.status === 'completed' && (
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
                       - {latestLog.total_fetched.toLocaleString()} 件取得、
                       {latestLog.total_created.toLocaleString()} 件新規作成
                     </span>
                   )}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   開始: {formatDateTime(latestLog.started_at)}
                   {latestLog.completed_at && (
                     <span className="ml-3">完了: {formatDateTime(latestLog.completed_at)}</span>
@@ -335,18 +335,18 @@ export function SyncPage() {
             </div>
           </div>
         ) : (
-          <p className="text-sm text-gray-500">取得履歴がありません</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">取得履歴がありません</p>
         )}
       </div>
 
       {/* 同期設定 */}
       {user?.role === 'admin' && (
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
           <button
             onClick={() => setShowSettings(!showSettings)}
             className="flex items-center justify-between w-full text-left"
           >
-            <h2 className="text-lg font-semibold text-gray-900">設定</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">設定</h2>
             {showSettings ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </button>
 
@@ -354,10 +354,10 @@ export function SyncPage() {
             <div className="mt-6 space-y-6">
               {/* ベンダー/製品選択 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                   ベンダー/製品選択
                 </label>
-                <p className="text-xs text-gray-500 mb-3">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
                   MyJVN APIから取得したベンダーと製品を選択できます。製品未選択の場合はそのベンダーの全製品が対象になります。
                 </p>
 
@@ -375,19 +375,19 @@ export function SyncPage() {
                         }}
                         onFocus={() => setShowVendorDropdown(true)}
                         placeholder="ベンダーを検索またはスクロール..."
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                       />
                     </div>
                   </div>
 
                   {/* 検索結果ドロップダウン */}
                   {showVendorDropdown && vendorSearchResults && vendorSearchResults.vendors.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto">
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-96 overflow-y-auto">
                       {vendorSearchResults.vendors.map(vendor => (
                         <button
                           key={vendor.vid}
                           onClick={() => addVendor(vendor)}
-                          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center justify-between"
+                          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-200 flex items-center justify-between"
                         >
                           <span>{vendor.vname}</span>
                           {vendorSelections.some(v => v.vendorId === vendor.vid) && (
@@ -403,18 +403,18 @@ export function SyncPage() {
                 {vendorSelections.length > 0 && (
                   <div className="space-y-2">
                     {vendorSelections.map(vendor => (
-                      <div key={vendor.vendorId} className="border border-gray-200 rounded-lg p-3">
+                      <div key={vendor.vendorId} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 flex-1">
                             <button
                               onClick={() => setExpandedVendorId(
                                 expandedVendorId === vendor.vendorId ? null : vendor.vendorId
                               )}
-                              className="text-sm font-medium text-gray-900 hover:text-blue-600"
+                              className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600"
                             >
                               {vendor.vendorName}
                             </button>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
                               {vendor.products.length > 0
                                 ? `${vendor.products.length}製品選択中`
                                 : '全製品対象'}
@@ -443,7 +443,7 @@ export function SyncPage() {
                                     [vendor.vendorId]: e.target.value
                                   })}
                                   placeholder="製品を検索..."
-                                  className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                  className="w-full pl-7 pr-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                                 />
                               </div>
                             )}
@@ -464,7 +464,7 @@ export function SyncPage() {
                                       onChange={() => toggleProduct(vendor.vendorId, product)}
                                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                     />
-                                    <span className="text-gray-700">{product.pname}</span>
+                                    <span className="text-gray-700 dark:text-gray-300">{product.pname}</span>
                                   </label>
                                 ))}
                             </div>
@@ -478,10 +478,10 @@ export function SyncPage() {
 
               {/* キーワードフィルター */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                   キーワードフィルター
                 </label>
-                <p className="text-xs text-gray-500 mb-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                   追加のキーワードで脆弱性を検索します。ベンダー/製品選択と併用できます。
                 </p>
                 <div className="flex gap-2 mb-2">
@@ -491,12 +491,12 @@ export function SyncPage() {
                     onChange={(e) => setKeywordInput(e.target.value)}
                     onKeyDown={handleKeywordKeyDown}
                     placeholder="例: Apache, MySQL, PHP"
-                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   />
                   <button
                     type="button"
                     onClick={addKeyword}
-                    className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-200"
+                    className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600"
                   >
                     追加
                   </button>
@@ -524,10 +524,10 @@ export function SyncPage() {
 
               {/* CVSS閾値 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                   CVSS最小スコア
                 </label>
-                <p className="text-xs text-gray-500 mb-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                   指定スコア以上の脆弱性のみをインポートします。0で無効（全て取得）。
                 </p>
                 <div className="flex items-center gap-4">
@@ -538,9 +538,9 @@ export function SyncPage() {
                     step="0.1"
                     value={cvssMinScore}
                     onChange={(e) => setCvssMinScore(parseFloat(e.target.value) || 0)}
-                    className="w-24 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-24 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   />
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
                     {cvssMinScore === 0 ? '無効（全て取得）' :
                      cvssMinScore >= 9 ? 'Critical のみ' :
                      cvssMinScore >= 7 ? 'High 以上' :
@@ -552,10 +552,10 @@ export function SyncPage() {
 
               {/* 除外キーワード */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                   除外キーワードフィルター
                 </label>
-                <p className="text-xs text-gray-500 mb-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                   タイトルまたは説明文に除外キーワードが含まれる脆弱性を除外します。
                 </p>
                 <div className="flex gap-2 mb-2">
@@ -565,12 +565,12 @@ export function SyncPage() {
                     onChange={(e) => setExcludeKeywordInput(e.target.value)}
                     onKeyDown={handleExcludeKeywordKeyDown}
                     placeholder="例: WordPress, Drupal"
-                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   />
                   <button
                     type="button"
                     onClick={addExcludeKeyword}
-                    className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-200"
+                    className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600"
                   >
                     追加
                   </button>
@@ -598,10 +598,10 @@ export function SyncPage() {
 
               {/* 初回同期期間 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                   初回取得期間
                 </label>
-                <p className="text-xs text-gray-500 mb-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                   初回取得時に取得する過去の期間を指定します。2回目以降は前回取得以降の更新のみを取得します。
                 </p>
                 <input
@@ -610,17 +610,17 @@ export function SyncPage() {
                   max="3650"
                   value={syncFullSyncDays}
                   onChange={(e) => setSyncFullSyncDays(parseInt(e.target.value) || 365)}
-                  className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-32 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 />
-                <span className="ml-2 text-sm text-gray-600">日</span>
+                <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">日</span>
               </div>
 
               {/* 保持期間 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                   データ保持期間
                 </label>
-                <p className="text-xs text-gray-500 mb-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                   指定日数より古いデータを自動削除します。0で無効化（削除しない）。
                 </p>
                 <input
@@ -629,13 +629,13 @@ export function SyncPage() {
                   max="3650"
                   value={syncRetentionDays}
                   onChange={(e) => setSyncRetentionDays(parseInt(e.target.value) || 0)}
-                  className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-32 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 />
-                <span className="ml-2 text-sm text-gray-600">日（0=無効）</span>
+                <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">日（0=無効）</span>
               </div>
 
               {/* 保存ボタン */}
-              <div className="flex justify-end pt-4 border-t">
+              <div className="flex justify-end pt-4 border-t dark:border-gray-700">
                 <button
                   onClick={handleSaveSettings}
                   disabled={updateSyncSettingsMut.isPending}
@@ -666,10 +666,10 @@ export function SyncPage() {
       {/* 全件同期確認モーダル */}
       {showFullSyncConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">全件取得の実行</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">全件取得の実行</h3>
             <div className="space-y-3 mb-6">
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
                 過去 <strong className="text-blue-600">{syncFullSyncDays}日分</strong> のデータを取得します。
               </p>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
@@ -681,7 +681,7 @@ export function SyncPage() {
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowFullSyncConfirm(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
               >
                 キャンセル
               </button>

@@ -132,48 +132,48 @@ export function SettingsPage() {
   if (user?.role !== 'admin') {
     return (
       <div className="space-y-6 max-w-2xl">
-        <h1 className="text-2xl font-bold text-gray-900">管理者設定</h1>
-        <p className="text-sm text-gray-500">この画面は管理者のみ利用できます。</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">管理者設定</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">この画面は管理者のみ利用できます。</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-900">管理者設定</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">管理者設定</h1>
 
       {/* Add user */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
           <UserPlus size={16} />
           ユーザーを追加
         </h2>
         <form onSubmit={handleAddUser} className="space-y-3" autoComplete="off">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">メールアドレス</label>
               <input
                 type="email"
                 value={addEmail}
                 onChange={(e) => setAddEmail(e.target.value)}
                 required
                 autoComplete="off"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">ユーザー名</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">ユーザー名</label>
               <input
                 type="text"
                 value={addUsername}
                 onChange={(e) => setAddUsername(e.target.value)}
                 required
                 autoComplete="off"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">パスワード</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">パスワード</label>
               <input
                 type="password"
                 value={addPassword}
@@ -181,15 +181,15 @@ export function SettingsPage() {
                 required
                 minLength={8}
                 autoComplete="new-password"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">ロール</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">ロール</label>
               <select
                 value={addRole}
                 onChange={(e) => setAddRole(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               >
                 <option value="viewer">閲覧者</option>
                 <option value="editor">編集者</option>
@@ -210,15 +210,15 @@ export function SettingsPage() {
       </div>
 
       {/* User list */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">ユーザー</h2>
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">ユーザー</h2>
         <div className="space-y-2">
           {users.map((u) => (
-            <div key={u.id} className="py-2 border-b border-gray-100 last:border-0">
+            <div key={u.id} className="py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
               <div className="flex items-center justify-between">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{u.username}</p>
-                  <p className="text-xs text-gray-500 truncate">{u.email}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{u.username}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{u.email}</p>
                 </div>
                 <div className="flex items-center gap-2 ml-4 shrink-0">
                   <button
@@ -266,7 +266,7 @@ export function SettingsPage() {
                     value={u.role}
                     disabled={u.id === user.id || updateRoleMutation.isPending}
                     onChange={(e) => updateRoleMutation.mutate({ id: u.id, role: e.target.value })}
-                    className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:text-gray-200"
                   >
                     <option value="viewer">閲覧者</option>
                     <option value="editor">編集者</option>
@@ -282,14 +282,14 @@ export function SettingsPage() {
                       value={editUsername}
                       onChange={(e) => setEditUsername(e.target.value)}
                       placeholder="ユーザー名"
-                      className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     />
                     <input
                       type="email"
                       value={editEmail}
                       onChange={(e) => setEditEmail(e.target.value)}
                       placeholder="メールアドレス"
-                      className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     />
                   </div>
                   {editError && <p className="text-xs text-red-600">{editError}</p>}
@@ -303,7 +303,7 @@ export function SettingsPage() {
                     </button>
                     <button
                       onClick={() => { setEditUserId(null); setEditError(''); }}
-                      className="px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:bg-gray-100 shrink-0"
+                      className="px-3 py-1.5 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0"
                     >
                       キャンセル
                     </button>
@@ -318,7 +318,7 @@ export function SettingsPage() {
                     onChange={(e) => setResetPwValue(e.target.value)}
                     placeholder="新しいパスワード（8文字以上）"
                     minLength={8}
-                    className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   />
                   <button
                     onClick={() => resetPasswordMutation.mutate({ id: u.id, password: resetPwValue })}
@@ -329,7 +329,7 @@ export function SettingsPage() {
                   </button>
                   <button
                     onClick={() => { setResetPwUserId(null); setResetPwValue(''); }}
-                    className="px-3 py-1.5 rounded-lg text-sm text-gray-500 hover:bg-gray-100 shrink-0"
+                    className="px-3 py-1.5 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0"
                   >
                     キャンセル
                   </button>
@@ -341,18 +341,18 @@ export function SettingsPage() {
       </div>
 
       {/* 同期データ管理セクション */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
           <Database size={16} />
           同期データ管理
         </h2>
-        <p className="text-xs text-gray-500 mb-4">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
           JVNから取得した脆弱性情報を削除します。この操作は元に戻せません。
         </p>
 
         <div className="space-y-3">
           <div className="flex items-center justify-between py-2">
-            <span className="text-sm text-gray-700">JVN (Japan Vulnerability Notes)</span>
+            <span className="text-sm text-gray-700 dark:text-gray-300">JVN (Japan Vulnerability Notes)</span>
             <button
               onClick={() => {
                 if (confirm('JVN のデータを削除しますか？\n\nこの操作は元に戻せません。削除後、再度同期を実行することで最新データを取得できます。')) {
@@ -369,7 +369,7 @@ export function SettingsPage() {
         </div>
 
         {deleteSuccess && (
-          <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+          <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
             <p className="text-sm text-green-700">
               {deleteSuccess}
             </p>

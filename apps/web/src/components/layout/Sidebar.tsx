@@ -48,7 +48,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
     isActive
       ? 'bg-blue-600 text-white'
-      : 'text-gray-400 hover:bg-zinc-800 hover:text-white'
+      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white'
   }`;
 
 export function Sidebar() {
@@ -96,13 +96,15 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-56 bg-zinc-950 text-white flex flex-col">
-      <div className="p-4 border-b border-zinc-800">
-        <img src="/logo.webp" alt="Vulflare" className="w-full" />
-        <p className="text-xs text-gray-400 mt-2">脆弱性管理プラットフォーム</p>
+    <aside className="w-56 h-screen sticky top-0 bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-zinc-800 flex flex-col">
+      <div className="p-4 border-b border-gray-200 dark:border-zinc-800">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <span className="text-orange-500">V</span>ulflare
+        </h1>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">脆弱性管理プラットフォーム</p>
       </div>
 
-      <nav className="flex-1 p-3 space-y-1">
+      <nav className="flex-1 overflow-y-auto p-3 space-y-1">
         {NAV_ITEMS.map((item) => (
           <div key={item.label}>
             {item.to !== undefined ? (
@@ -114,7 +116,7 @@ export function Sidebar() {
               <>
                 <button
                   onClick={() => toggleGroup(item.label)}
-                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-zinc-800 hover:text-white transition-colors"
+                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   <item.icon size={16} />
                   <span className="flex-1 text-left">{item.label}</span>
@@ -140,28 +142,28 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="p-3 border-t border-zinc-800 space-y-1">
+      <div className="p-3 border-t border-gray-200 dark:border-zinc-800 space-y-1">
         <NavLink
           to="/profile"
           className={({ isActive }) =>
             `flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm transition-colors ${
               isActive
                 ? 'bg-blue-600 text-white'
-                : 'text-gray-300 hover:bg-zinc-800 hover:text-white'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white'
             }`
           }
         >
           <User size={16} />
           <div className="min-w-0">
             <div className="font-medium truncate">{user?.username}</div>
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
               {user?.role === 'admin' ? '管理者' : user?.role === 'editor' ? '編集者' : '閲覧者'}
             </div>
           </div>
         </NavLink>
         <button
           onClick={() => void handleLogout()}
-          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-zinc-800 hover:text-white transition-colors"
+          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white transition-colors"
         >
           <LogOut size={16} />
           ログアウト

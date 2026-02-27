@@ -26,40 +26,40 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">アカウント作成</h2>
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
+      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">アカウント作成</h2>
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">メールアドレス</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">ユーザー名</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">ユーザー名</label>
           <input
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">パスワード</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">パスワード</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={8}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
           />
-          <p className="text-xs text-gray-500 mt-1">8文字以上で入力してください</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">8文字以上で入力してください</p>
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
@@ -70,7 +70,7 @@ export function RegisterPage() {
           {loading ? '作成中...' : 'アカウントを作成'}
         </button>
       </form>
-      <p className="text-sm text-gray-500 text-center mt-4">
+      <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-4">
         すでにアカウントをお持ちの方は{' '}
         <Link to="/login" className="text-blue-600 hover:underline">
           ログイン
