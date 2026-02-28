@@ -10,6 +10,9 @@ export interface DbUser {
   password_hash: string;
   role: string;
   is_active: number;
+  failed_login_attempts: number;
+  locked_at: string | null;
+  email: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -21,18 +24,21 @@ export const userRepo = {
   findById(db: DB, id: string) {
     return db.prepare('SELECT * FROM users WHERE id = ?').bind(id).first<DbUser>();
   },
-  create(db: DB, user: Omit<DbUser, 'created_at' | 'updated_at'>) {
+  create(db: DB, user: Omit<DbUser, 'created_at' | 'updated_at' | 'failed_login_attempts' | 'locked_at' | 'email'> & { email?: string | null }) {
     return db
       .prepare(
-        'INSERT INTO users (id, username, password_hash, role, is_active) VALUES (?, ?, ?, ?, ?)',
+        'INSERT INTO users (id, username, password_hash, role, is_active, email) VALUES (?, ?, ?, ?, ?, ?)',
       )
-      .bind(user.id, user.username, user.password_hash, user.role, user.is_active)
+      .bind(user.id, user.username, user.password_hash, user.role, user.is_active, user.email ?? null)
       .run();
   },
   list(db: DB) {
     return db
-      .prepare('SELECT id, username, role, is_active, created_at FROM users ORDER BY created_at ASC')
-      .all<Omit<DbUser, 'password_hash'>>();
+      .prepare('SELECT id, username, role, is_active, failed_login_attempts, locked_at, email, created_at FROM users ORDER BY created_at ASC')
+      .all<Omit<DbUser, 'password_hash' | 'updated_at'>>();
+  },
+  findByEmail(db: DB, email: string) {
+    return db.prepare('SELECT * FROM users WHERE email = ? AND is_active = 1').bind(email).first<DbUser>();
   },
   updatePassword(db: DB, id: string, passwordHash: string) {
     return db
@@ -52,15 +58,44 @@ export const userRepo = {
       .bind(isActive, id)
       .run();
   },
-  updateProfile(db: DB, id: string, fields: { username?: string }) {
+  updateProfile(db: DB, id: string, fields: { username?: string; email?: string | null }) {
     const sets: string[] = ["updated_at = datetime('now')"];
     const params: unknown[] = [];
     if (fields.username) { sets.push('username = ?'); params.push(fields.username); }
+    if (fields.email !== undefined) { sets.push('email = ?'); params.push(fields.email); }
     params.push(id);
     return db.prepare(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`).bind(...params).run();
   },
   delete(db: DB, id: string) {
     return db.prepare('DELETE FROM users WHERE id = ?').bind(id).run();
+  },
+  incrementFailedAttempts(db: DB, id: string) {
+    return db
+      .prepare(
+        `UPDATE users
+         SET failed_login_attempts = failed_login_attempts + 1,
+             locked_at = CASE WHEN failed_login_attempts + 1 >= 5 THEN datetime('now') ELSE locked_at END,
+             updated_at = datetime('now')
+         WHERE id = ?`,
+      )
+      .bind(id)
+      .run();
+  },
+  resetFailedAttempts(db: DB, id: string) {
+    return db
+      .prepare(
+        "UPDATE users SET failed_login_attempts = 0, locked_at = NULL, updated_at = datetime('now') WHERE id = ?",
+      )
+      .bind(id)
+      .run();
+  },
+  unlock(db: DB, id: string) {
+    return db
+      .prepare(
+        "UPDATE users SET failed_login_attempts = 0, locked_at = NULL, updated_at = datetime('now') WHERE id = ?",
+      )
+      .bind(id)
+      .run();
   },
 };
 
@@ -96,6 +131,33 @@ export const tokenRepo = {
     return db
       .prepare('UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?')
       .bind(userId)
+      .run();
+  },
+};
+
+// --- Password Reset Tokens ---
+
+export const passwordResetTokenRepo = {
+  create(db: DB, id: string, userId: string, tokenHash: string, expiresAt: string) {
+    return db
+      .prepare(
+        'INSERT INTO password_reset_tokens (id, user_id, token_hash, expires_at) VALUES (?, ?, ?, ?)',
+      )
+      .bind(id, userId, tokenHash, expiresAt)
+      .run();
+  },
+  findValidByHash(db: DB, tokenHash: string) {
+    return db
+      .prepare(
+        "SELECT * FROM password_reset_tokens WHERE token_hash = ? AND used_at IS NULL AND expires_at > datetime('now')",
+      )
+      .bind(tokenHash)
+      .first<{ id: string; user_id: string; token_hash: string; expires_at: string }>();
+  },
+  markUsed(db: DB, id: string) {
+    return db
+      .prepare("UPDATE password_reset_tokens SET used_at = datetime('now') WHERE id = ?")
+      .bind(id)
       .run();
   },
 };

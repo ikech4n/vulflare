@@ -18,13 +18,15 @@ userRoutes.get('/', authMiddleware, requireRole('admin'), async (c) => {
     username: u.username,
     role: u.role,
     isActive: u.is_active === 1,
+    lockedAt: u.locked_at ?? null,
+    email: u.email ?? null,
     createdAt: u.created_at,
   })));
 });
 
 // Create user - admin only
 userRoutes.post('/', authMiddleware, requireRole('admin'), validate(createUserSchema), async (c) => {
-  const body = c.get('validatedBody') as { username: string; password: string; role?: string };
+  const body = c.get('validatedBody') as { username: string; password: string; role?: string; email?: string };
 
   const existing = await userRepo.findByUsername(c.env.DB, body.username);
   if (existing) {
@@ -41,6 +43,7 @@ userRoutes.post('/', authMiddleware, requireRole('admin'), validate(createUserSc
     password_hash: passwordHash,
     role,
     is_active: 1,
+    email: body.email ?? null,
   });
 
   return c.json({ id, username: body.username, role }, 201);
@@ -49,7 +52,7 @@ userRoutes.post('/', authMiddleware, requireRole('admin'), validate(createUserSc
 // Update user role/status/profile - admin only
 userRoutes.patch('/:id', authMiddleware, requireRole('admin'), validate(updateUserSchema), async (c) => {
   const id = c.req.param('id');
-  const body = c.get('validatedBody') as { role?: string; isActive?: boolean; username?: string };
+  const body = c.get('validatedBody') as { role?: string; isActive?: boolean; username?: string; email?: string | null };
 
   const user = await userRepo.findById(c.env.DB, id);
   if (!user) return c.json({ error: 'User not found' }, 404);
@@ -64,11 +67,25 @@ userRoutes.patch('/:id', authMiddleware, requireRole('admin'), validate(updateUs
   if (body.isActive !== undefined) {
     await userRepo.setActive(c.env.DB, id, body.isActive ? 1 : 0);
   }
-  if (body.username) {
-    await userRepo.updateProfile(c.env.DB, id, { username: body.username });
+  if (body.username || body.email !== undefined) {
+    const profileFields: { username?: string; email?: string | null } = {};
+    if (body.username) profileFields.username = body.username;
+    if (body.email !== undefined) profileFields.email = body.email;
+    await userRepo.updateProfile(c.env.DB, id, profileFields);
   }
 
   return c.json({ message: 'Updated' });
+});
+
+// Unlock user account - admin only
+userRoutes.post('/:id/unlock', authMiddleware, requireRole('admin'), async (c) => {
+  const id = c.req.param('id');
+
+  const user = await userRepo.findById(c.env.DB, id);
+  if (!user) return c.json({ error: 'User not found' }, 404);
+
+  await userRepo.unlock(c.env.DB, id);
+  return c.json({ message: 'User unlocked' });
 });
 
 // Reset user password - admin only

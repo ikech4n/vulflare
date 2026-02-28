@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { UserPlus, Trash2, KeyRound, Pencil } from 'lucide-react';
+import { UserPlus, Trash2, KeyRound, Pencil, LockOpen } from 'lucide-react';
 import { api } from '@/lib/api.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 
@@ -15,6 +15,8 @@ interface UserItem {
   username: string;
   role: string;
   isActive: boolean;
+  lockedAt: string | null;
+  email: string | null;
   createdAt: string;
 }
 
@@ -30,12 +32,14 @@ export function SettingsPage() {
   // ユーザー情報編集
   const [editUserId, setEditUserId] = useState<string | null>(null);
   const [editUsername, setEditUsername] = useState('');
+  const [editEmail, setEditEmail] = useState('');
   const [editError, setEditError] = useState('');
 
   // ユーザー追加フォーム
   const [addUsername, setAddUsername] = useState('');
   const [addPassword, setAddPassword] = useState('');
   const [addRole, setAddRole] = useState('viewer');
+  const [addEmail, setAddEmail] = useState('');
   const [addError, setAddError] = useState('');
   const [addSuccess, setAddSuccess] = useState(false);
 
@@ -47,13 +51,14 @@ export function SettingsPage() {
 
 
   const addUserMutation = useMutation({
-    mutationFn: (body: { username: string; password: string; role: string }) =>
+    mutationFn: (body: { username: string; password: string; role: string; email?: string }) =>
       api.post('/users', body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['users'] });
       setAddUsername('');
       setAddPassword('');
       setAddRole('viewer');
+      setAddEmail('');
       setAddError('');
       setAddSuccess(true);
       setTimeout(() => setAddSuccess(false), 3000);
@@ -71,12 +76,13 @@ export function SettingsPage() {
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: ({ id, username }: { id: string; username: string }) =>
-      api.patch(`/users/${id}`, { username }),
+    mutationFn: ({ id, username, email }: { id: string; username: string; email: string }) =>
+      api.patch(`/users/${id}`, { username, email: email || null }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['users'] });
       setEditUserId(null);
       setEditUsername('');
+      setEditEmail('');
       setEditError('');
     },
     onError: (err: unknown) => {
@@ -99,10 +105,15 @@ export function SettingsPage() {
     },
   });
 
+  const unlockMutation = useMutation({
+    mutationFn: (id: string) => api.post(`/users/${id}/unlock`, {}),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['users'] }),
+  });
+
   const handleAddUser = (e: FormEvent) => {
     e.preventDefault();
     setAddError('');
-    addUserMutation.mutate({ username: addUsername, password: addPassword, role: addRole });
+    addUserMutation.mutate({ username: addUsername, password: addPassword, role: addRole, ...(addEmail ? { email: addEmail } : {}) });
   };
 
   if (user?.role !== 'admin') {
@@ -161,6 +172,17 @@ export function SettingsPage() {
                 <option value="admin">管理者</option>
               </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">メールアドレス（任意）</label>
+              <input
+                type="email"
+                value={addEmail}
+                onChange={(e) => setAddEmail(e.target.value)}
+                autoComplete="off"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                placeholder="example@example.com"
+              />
+            </div>
           </div>
           {addError && <p className="text-sm text-red-600">{addError}</p>}
           {addSuccess && <p className="text-sm text-green-600">ユーザーを追加しました</p>}
@@ -181,8 +203,13 @@ export function SettingsPage() {
           {users.map((u) => (
             <div key={u.id} className="py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
               <div className="flex items-center justify-between">
-                <div className="min-w-0">
+                <div className="min-w-0 flex items-center gap-2">
                   <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{u.username}</p>
+                  {u.lockedAt && (
+                    <span className="text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 px-1.5 py-0.5 rounded">
+                      ロック中
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 ml-4 shrink-0">
                   <button
@@ -193,6 +220,7 @@ export function SettingsPage() {
                       } else {
                         setEditUserId(u.id);
                         setEditUsername(u.username);
+                        setEditEmail(u.email ?? '');
                         setEditError('');
                         setResetPwUserId(null);
                       }
@@ -202,6 +230,16 @@ export function SettingsPage() {
                   >
                     <Pencil size={14} />
                   </button>
+                  {u.lockedAt && (
+                    <button
+                      onClick={() => unlockMutation.mutate(u.id)}
+                      disabled={unlockMutation.isPending}
+                      className="p-1 text-red-500 hover:text-green-600 transition-colors disabled:opacity-50"
+                      title="ロック解除"
+                    >
+                      <LockOpen size={14} />
+                    </button>
+                  )}
                   {u.id !== user.id && (
                     <button
                       onClick={() => { if (confirm(`${u.username} を削除しますか？この操作は元に戻せません。`)) deleteUserMutation.mutate(u.id); }}
@@ -248,17 +286,26 @@ export function SettingsPage() {
                       className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     />
                   </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="email"
+                      value={editEmail}
+                      onChange={(e) => setEditEmail(e.target.value)}
+                      placeholder="メールアドレス（任意）"
+                      className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
                   {editError && <p className="text-xs text-red-600">{editError}</p>}
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => updateProfileMutation.mutate({ id: u.id, username: editUsername })}
+                      onClick={() => updateProfileMutation.mutate({ id: u.id, username: editUsername, email: editEmail })}
                       disabled={!editUsername || updateProfileMutation.isPending}
                       className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 shrink-0"
                     >
                       {updateProfileMutation.isPending ? '保存中...' : '保存'}
                     </button>
                     <button
-                      onClick={() => { setEditUserId(null); setEditUsername(''); setEditError(''); }}
+                      onClick={() => { setEditUserId(null); setEditUsername(''); setEditEmail(''); setEditError(''); }}
                       className="px-3 py-1.5 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0"
                     >
                       キャンセル

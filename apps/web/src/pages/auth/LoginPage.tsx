@@ -27,8 +27,13 @@ export function LoginPage() {
       const { data } = await api.post<LoginResponse>('/auth/login', { username, password });
       login(data.accessToken, data.user);
       void navigate('/');
-    } catch {
-      setError('ユーザー名またはパスワードが正しくありません');
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 423) {
+        setError('アカウントがロックされています。管理者にお問い合わせください。');
+      } else {
+        setError('ユーザー名またはパスワードが正しくありません');
+      }
     } finally {
       setLoading(false);
     }
@@ -66,6 +71,11 @@ export function LoginPage() {
         >
           {loading ? 'ログイン中...' : 'ログイン'}
         </button>
+        <p className="text-sm text-center">
+          <Link to="/forgot-password" className="text-blue-600 hover:underline dark:text-blue-400">
+            パスワードを忘れた方はこちら
+          </Link>
+        </p>
       </form>
       {!initialized && (
         <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-4">

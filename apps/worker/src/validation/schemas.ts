@@ -44,6 +44,15 @@ export const changePasswordSchema = z.object({
   newPassword: passwordSchema,
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
+export const resetPasswordWithTokenSchema = z.object({
+  token: z.string().min(1, 'Token is required'),
+  password: passwordSchema,
+});
+
 // ========================================
 // 脆弱性スキーマ
 // ========================================
@@ -78,12 +87,14 @@ export const createUserSchema = z.object({
   username: z.string().min(1, 'Username is required').max(100, 'Username too long'),
   password: passwordSchema,
   role: roleSchema.optional(),
+  email: z.string().email('Invalid email address').optional(),
 });
 
 export const updateUserSchema = z.object({
   role: roleSchema.optional(),
   isActive: z.boolean().optional(),
   username: z.string().min(1, 'Username is required').max(100, 'Username too long').optional(),
+  email: z.string().email('Invalid email address').nullable().optional(),
 });
 
 export const resetPasswordSchema = z.object({

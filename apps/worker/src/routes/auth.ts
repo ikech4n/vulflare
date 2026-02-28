@@ -9,10 +9,11 @@ import {
   verifyJwt,
   hashToken,
 } from '../services/auth.ts';
-import { userRepo, tokenRepo } from '../db/repository.ts';
+import { userRepo, tokenRepo, passwordResetTokenRepo } from '../db/repository.ts';
 import { authMiddleware } from '../middleware/auth.ts';
 import { validate } from '../validation/middleware.ts';
-import { registerSchema, loginSchema, changePasswordSchema } from '../validation/schemas.ts';
+import { registerSchema, loginSchema, changePasswordSchema, forgotPasswordSchema, resetPasswordWithTokenSchema } from '../validation/schemas.ts';
+import { sendPasswordResetEmail } from '../services/email.ts';
 import { rateLimitPresets } from '../middleware/rateLimit.ts';
 
 const REFRESH_TOKEN_TTL_DAYS = 30;
@@ -71,10 +72,17 @@ authRoutes.post('/login', rateLimitPresets.login, validate(loginSchema), async (
     return c.json({ error: 'Invalid credentials' }, 401);
   }
 
+  if (user.locked_at) {
+    return c.json({ error: 'Account locked. Contact an administrator.' }, 423);
+  }
+
   const valid = await verifyPassword(body.password, user.password_hash);
   if (!valid) {
+    await userRepo.incrementFailedAttempts(c.env.DB, user.id);
     return c.json({ error: 'Invalid credentials' }, 401);
   }
+
+  await userRepo.resetFailedAttempts(c.env.DB, user.id);
 
   const accessToken = await makeAccessToken(user.id, user.role, c.env.JWT_SECRET);
 
@@ -157,6 +165,53 @@ authRoutes.get('/me', authMiddleware, async (c) => {
     role: user.role,
     createdAt: user.created_at,
   });
+});
+
+authRoutes.post('/forgot-password', rateLimitPresets.password, validate(forgotPasswordSchema), async (c) => {
+  const body = c.get('validatedBody') as { email: string };
+  const RESPONSE = { message: 'If the email exists, a reset link has been sent.' };
+
+  const user = await userRepo.findByEmail(c.env.DB, body.email);
+  if (user) {
+    const token = crypto.randomUUID();
+    const tokenHash = await hashToken(token);
+    const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString();
+    const id = crypto.randomUUID();
+
+    await passwordResetTokenRepo.create(c.env.DB, id, user.id, tokenHash, expiresAt);
+
+    const resetUrl = `${c.env.PAGES_URL}/reset-password?token=${token}`;
+    try {
+      await sendPasswordResetEmail(c.env, user.email!, resetUrl);
+    } catch (err) {
+      console.error('Failed to send password reset email:', err);
+    }
+  }
+
+  return c.json(RESPONSE, 200);
+});
+
+authRoutes.post('/reset-password', rateLimitPresets.password, validate(resetPasswordWithTokenSchema), async (c) => {
+  const body = c.get('validatedBody') as { token: string; password: string };
+
+  const tokenHash = await hashToken(body.token);
+  const resetToken = await passwordResetTokenRepo.findValidByHash(c.env.DB, tokenHash);
+  if (!resetToken) {
+    return c.json({ error: 'Invalid or expired token' }, 400);
+  }
+
+  const user = await userRepo.findById(c.env.DB, resetToken.user_id);
+  if (!user) {
+    return c.json({ error: 'User not found' }, 400);
+  }
+
+  const newHash = await hashPassword(body.password);
+  await userRepo.updatePassword(c.env.DB, user.id, newHash);
+  await passwordResetTokenRepo.markUsed(c.env.DB, resetToken.id);
+  await tokenRepo.revokeAllForUser(c.env.DB, user.id);
+  await userRepo.unlock(c.env.DB, user.id);
+
+  return c.json({ message: 'Password has been reset.' }, 200);
 });
 
 authRoutes.post('/change-password', authMiddleware, rateLimitPresets.password, validate(changePasswordSchema), async (c) => {

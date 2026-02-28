@@ -4,6 +4,8 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout.tsx';
 import { ProtectedRoute } from '@/components/ProtectedRoute.tsx';
 import { LoginPage } from '@/pages/auth/LoginPage.tsx';
 import { RegisterPage } from '@/pages/auth/RegisterPage.tsx';
+import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage.tsx';
+import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage.tsx';
 import { DashboardPage } from '@/pages/DashboardPage.tsx';
 import { VulnerabilitiesPage } from '@/pages/VulnerabilitiesPage.tsx';
 import { VulnerabilityDetailPage } from '@/pages/VulnerabilityDetailPage.tsx';
@@ -21,6 +23,8 @@ export const router = createBrowserRouter([
     children: [
       { path: '/login', element: <LoginPage /> },
       { path: '/register', element: <RegisterPage /> },
+      { path: '/forgot-password', element: <ForgotPasswordPage /> },
+      { path: '/reset-password', element: <ResetPasswordPage /> },
     ],
   },
   {
