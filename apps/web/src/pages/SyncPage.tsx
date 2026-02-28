@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, CheckCircle, XCircle, Clock, AlertCircle, ChevronDown, ChevronUp, Save, Search, X } from 'lucide-react';
+import { RefreshCw, CheckCircle, XCircle, Clock, AlertCircle, ChevronDown, ChevronUp, Save, Search, X, Trash2, Database } from 'lucide-react';
 import { api } from '@/lib/api.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useState, useEffect } from 'react';
@@ -52,6 +52,7 @@ export function SyncPage() {
   const queryClient = useQueryClient();
   const [showSettings, setShowSettings] = useState(false);
   const [showFullSyncConfirm, setShowFullSyncConfirm] = useState(false);
+  const [deleteSuccess, setDeleteSuccess] = useState('');
 
   // 設定の状態
   const [vendorSelections, setVendorSelections] = useState<JvnVendorSelection[]>([]);
@@ -111,6 +112,22 @@ export function SyncPage() {
     },
   });
 
+  const deleteSyncDataMutation = useMutation({
+    mutationFn: (source: string) =>
+      api.delete(`/sync/data/${source}`),
+    onSuccess: (response) => {
+      const data = response.data;
+      const count = data.totalDeleted ?? data.deleted ?? 0;
+      setDeleteSuccess(`${count}件のデータを削除しました`);
+      setTimeout(() => setDeleteSuccess(''), 5000);
+      void queryClient.invalidateQueries({ queryKey: ['vulnerabilities'] });
+    },
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      alert(`削除に失敗しました: ${msg ?? '不明なエラー'}`);
+    },
+  });
+
   const updateSyncSettingsMut = useMutation({
     mutationFn: (settings: SyncSettings) =>
       api.put('/sync/settings', {
@@ -134,6 +151,15 @@ export function SyncPage() {
       setSyncRetentionDays(syncSettingsData.retentionDays);
     }
   }, [syncSettingsData]);
+
+  if (user?.role === 'viewer') {
+    return (
+      <div className="space-y-6 max-w-2xl">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">データソース</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">この画面は編集者以上のみ利用できます。</p>
+      </div>
+    );
+  }
 
   // ベンダー追加
   const addVendor = (vendor: JvnVendor) => {
@@ -645,6 +671,45 @@ export function SyncPage() {
                   {updateSyncSettingsMut.isPending ? '保存中...' : '設定を保存'}
                 </button>
               </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* データ管理 */}
+      {user?.role === 'admin' && (
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+            <Database size={16} />
+            データ管理
+          </h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+            JVNから取得した脆弱性情報を削除します。この操作は元に戻せません。
+          </p>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between py-2">
+              <span className="text-sm text-gray-700 dark:text-gray-300">JVN (Japan Vulnerability Notes)</span>
+              <button
+                onClick={() => {
+                  if (confirm('JVN のデータを削除しますか？\n\nこの操作は元に戻せません。削除後、再度同期を実行することで最新データを取得できます。')) {
+                    deleteSyncDataMutation.mutate('jvn');
+                  }
+                }}
+                disabled={deleteSyncDataMutation.isPending}
+                className="flex items-center gap-1.5 text-red-600 hover:text-red-700 text-sm disabled:opacity-50"
+              >
+                <Trash2 size={14} />
+                削除
+              </button>
+            </div>
+          </div>
+
+          {deleteSuccess && (
+            <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <p className="text-sm text-green-700">
+                {deleteSuccess}
+              </p>
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
-import { useState, useEffect, type FormEvent, type KeyboardEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { UserPlus, Trash2, KeyRound, Database, Pencil } from 'lucide-react';
+import { UserPlus, Trash2, KeyRound, Pencil } from 'lucide-react';
 import { api } from '@/lib/api.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 
@@ -31,9 +31,6 @@ export function SettingsPage() {
   const [editUserId, setEditUserId] = useState<string | null>(null);
   const [editUsername, setEditUsername] = useState('');
   const [editError, setEditError] = useState('');
-
-  // 同期データ削除
-  const [deleteSuccess, setDeleteSuccess] = useState('');
 
   // ユーザー追加フォーム
   const [addUsername, setAddUsername] = useState('');
@@ -99,22 +96,6 @@ export function SettingsPage() {
     onSuccess: () => {
       setResetPwUserId(null);
       setResetPwValue('');
-    },
-  });
-
-  const deleteSyncDataMutation = useMutation({
-    mutationFn: (source: string) =>
-      api.delete(`/sync/data/${source}`),
-    onSuccess: (response) => {
-      const data = response.data;
-      const count = data.totalDeleted ?? data.deleted ?? 0;
-      setDeleteSuccess(`${count}件のデータを削除しました`);
-      setTimeout(() => setDeleteSuccess(''), 5000);
-      void queryClient.invalidateQueries({ queryKey: ['vulnerabilities'] });
-    },
-    onError: (err: unknown) => {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
-      alert(`削除に失敗しました: ${msg ?? '不明なエラー'}`);
     },
   });
 
@@ -313,43 +294,6 @@ export function SettingsPage() {
             </div>
           ))}
         </div>
-      </div>
-
-      {/* 同期データ管理セクション */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
-          <Database size={16} />
-          同期データ管理
-        </h2>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-          JVNから取得した脆弱性情報を削除します。この操作は元に戻せません。
-        </p>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between py-2">
-            <span className="text-sm text-gray-700 dark:text-gray-300">JVN (Japan Vulnerability Notes)</span>
-            <button
-              onClick={() => {
-                if (confirm('JVN のデータを削除しますか？\n\nこの操作は元に戻せません。削除後、再度同期を実行することで最新データを取得できます。')) {
-                  deleteSyncDataMutation.mutate('jvn');
-                }
-              }}
-              disabled={deleteSyncDataMutation.isPending}
-              className="flex items-center gap-1.5 text-red-600 hover:text-red-700 text-sm disabled:opacity-50"
-            >
-              <Trash2 size={14} />
-              削除
-            </button>
-          </div>
-        </div>
-
-        {deleteSuccess && (
-          <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-            <p className="text-sm text-green-700">
-              {deleteSuccess}
-            </p>
-          </div>
-        )}
       </div>
 
     </div>
