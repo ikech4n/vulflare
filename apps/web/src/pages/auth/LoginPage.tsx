@@ -71,8 +71,8 @@ export function LoginPage() {
         >
           {loading ? 'ログイン中...' : 'ログイン'}
         </button>
-        <p className="text-sm text-center">
-          <Link to="/forgot-password" className="text-blue-600 hover:underline dark:text-blue-400">
+        <p className="text-sm text-center text-gray-500 dark:text-gray-400">
+          <Link to="/forgot-password" className="text-blue-600 underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
             パスワードを忘れた方はこちら
           </Link>
         </p>
