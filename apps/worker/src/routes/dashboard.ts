@@ -41,7 +41,8 @@ dashboardRoutes.get('/trends', async (c) => {
       informational: row.informational_count,
     },
     byStatus: {
-      active: row.active_count,
+      new: row.new_count,
+      open: row.open_count,
       fixed: row.fixed_count,
       accepted_risk: row.accepted_risk_count,
       false_positive: row.false_positive_count,

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bell, Plus, Trash2, Send, CheckCircle, XCircle, Edit2 } from 'lucide-react';
 import { api } from '@/lib/api.ts';
+import { useAuthStore } from '@/store/authStore.ts';
 import type {
   NotificationChannel,
   NotificationRule,
@@ -17,6 +18,7 @@ const EVENT_LABELS: Record<EventType, string> = {
 };
 
 export function NotificationsPage() {
+  const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'channels' | 'rules' | 'logs'>('channels');
 
@@ -139,8 +141,8 @@ export function NotificationsPage() {
     onSuccess: () => {
       alert('テスト通知を送信しました。メールをご確認ください。');
     },
-    onError: (error: Error) => {
-      alert(`テスト送信に失敗しました: ${error.message}`);
+    onError: () => {
+      alert('テスト送信に失敗しました。設定を確認してください。');
     },
   });
 
@@ -177,10 +179,19 @@ export function NotificationsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications', 'rules'] });
     },
-    onError: (error: Error) => {
-      alert(`ルールの更新に失敗しました: ${error.message}`);
+    onError: () => {
+      alert('ルールの更新に失敗しました');
     },
   });
+
+  if (user?.role === 'viewer') {
+    return (
+      <div className="space-y-6 max-w-2xl">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">通知設定</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">この画面は編集者以上のみ利用できます。</p>
+      </div>
+    );
+  }
 
   // チャネル編集開始
   const handleEditChannel = (channel: NotificationChannel) => {

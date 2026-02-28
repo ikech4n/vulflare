@@ -25,8 +25,8 @@ notificationRoutes.get('/channels/:id', async (c) => {
   return c.json(channel);
 });
 
-// POST /api/notifications/channels - チャネル作成（admin限定）
-notificationRoutes.post('/channels', requireRole('admin'), async (c) => {
+// POST /api/notifications/channels - チャネル作成（editor以上）
+notificationRoutes.post('/channels', requireRole('editor'), async (c) => {
   const body = await c.req.json<{
     name: string;
     type: 'webhook' | 'email';
@@ -53,8 +53,8 @@ notificationRoutes.post('/channels', requireRole('admin'), async (c) => {
   return c.json({ id, message: 'Channel created' }, 201);
 });
 
-// PATCH /api/notifications/channels/:id - チャネル更新（admin限定）
-notificationRoutes.patch('/channels/:id', requireRole('admin'), async (c) => {
+// PATCH /api/notifications/channels/:id - チャネル更新（editor以上）
+notificationRoutes.patch('/channels/:id', requireRole('editor'), async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json<{
     name?: string;
@@ -83,8 +83,8 @@ notificationRoutes.delete('/channels/:id', requireRole('admin'), async (c) => {
   return c.json({ message: 'Channel deleted' });
 });
 
-// POST /api/notifications/channels/:id/test - テスト送信（admin限定）
-notificationRoutes.post('/channels/:id/test', requireRole('admin'), async (c) => {
+// POST /api/notifications/channels/:id/test - テスト送信（editor以上）
+notificationRoutes.post('/channels/:id/test', requireRole('editor'), async (c) => {
   const channel = await notificationRepo.findChannelById(c.env.DB, c.req.param('id'));
   if (!channel) return c.json({ error: 'Channel not found' }, 404);
 
@@ -93,10 +93,7 @@ notificationRoutes.post('/channels/:id/test', requireRole('admin'), async (c) =>
     return c.json({ message: 'Test notification sent' });
   } catch (error) {
     console.error('Test notification error:', error);
-    return c.json(
-      { error: 'Failed to send test notification', details: error instanceof Error ? error.message : 'Unknown error' },
-      500
-    );
+    return c.json({ error: 'Failed to send test notification' }, 500);
   }
 });
 
@@ -111,8 +108,8 @@ notificationRoutes.get('/rules', async (c) => {
   return c.json(rules);
 });
 
-// POST /api/notifications/rules - ルール作成（admin限定）
-notificationRoutes.post('/rules', requireRole('admin'), async (c) => {
+// POST /api/notifications/rules - ルール作成（editor以上）
+notificationRoutes.post('/rules', requireRole('editor'), async (c) => {
   const body = await c.req.json<{
     channelId: string;
     eventType: string;
@@ -146,8 +143,8 @@ notificationRoutes.post('/rules', requireRole('admin'), async (c) => {
   return c.json({ id, message: 'Rule created' }, 201);
 });
 
-// PATCH /api/notifications/rules/:id - ルール更新（admin限定）
-notificationRoutes.patch('/rules/:id', requireRole('admin'), async (c) => {
+// PATCH /api/notifications/rules/:id - ルール更新（editor以上）
+notificationRoutes.patch('/rules/:id', requireRole('editor'), async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json<{
     eventType?: string;

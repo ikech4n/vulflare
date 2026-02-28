@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import type { Env, JwtVariables } from '../types.ts';
-import { authMiddleware } from '../middleware/auth.ts';
+import { authMiddleware, requireRole } from '../middleware/auth.ts';
 import { vulnRepo } from '../db/repository.ts';
 import { cvssScoreToSeverity } from '@vulflare/shared/utils';
 import { validate } from '../validation/middleware.ts';
@@ -54,7 +54,8 @@ vulnerabilityRoutes.get('/stats', async (c) => {
       informational: row['informational'] ?? 0,
     },
     byStatus: {
-      active: row['active'] ?? 0,
+      new: row['new'] ?? 0,
+      open: row['open'] ?? 0,
       fixed: row['fixed'] ?? 0,
       accepted_risk: row['accepted_risk'] ?? 0,
       false_positive: row['false_positive'] ?? 0,
@@ -71,7 +72,7 @@ vulnerabilityRoutes.get('/:id', async (c) => {
 });
 
 // POST /api/vulnerabilities
-vulnerabilityRoutes.post('/', validate(createVulnerabilitySchema), async (c) => {
+vulnerabilityRoutes.post('/', requireRole('editor'), validate(createVulnerabilitySchema), async (c) => {
   const body = c.get('validatedBody') as {
     cveId?: string;
     title: string;
@@ -110,7 +111,7 @@ vulnerabilityRoutes.post('/', validate(createVulnerabilitySchema), async (c) => 
     published_at: body.publishedAt ?? null,
     modified_at: null,
     source: 'manual',
-    status: 'active',
+    status: 'new',
   });
 
   const created = await vulnRepo.findById(c.env.DB, id);
@@ -118,7 +119,7 @@ vulnerabilityRoutes.post('/', validate(createVulnerabilitySchema), async (c) => 
 });
 
 // PATCH /api/vulnerabilities/batch
-vulnerabilityRoutes.patch('/batch', validate(batchUpdateVulnerabilitiesSchema), async (c) => {
+vulnerabilityRoutes.patch('/batch', requireRole('editor'), validate(batchUpdateVulnerabilitiesSchema), async (c) => {
   const body = c.get('validatedBody') as {
     ids: string[];
     updates: {
@@ -154,7 +155,7 @@ vulnerabilityRoutes.patch('/batch', validate(batchUpdateVulnerabilitiesSchema), 
 });
 
 // PATCH /api/vulnerabilities/:id
-vulnerabilityRoutes.patch('/:id', validate(updateVulnerabilitySchema), async (c) => {
+vulnerabilityRoutes.patch('/:id', requireRole('editor'), validate(updateVulnerabilitySchema), async (c) => {
   const id = c.req.param('id');
   const existing = await vulnRepo.findById(c.env.DB, id);
   if (!existing) return c.json({ error: 'Not found' }, 404);
@@ -182,7 +183,7 @@ vulnerabilityRoutes.patch('/:id', validate(updateVulnerabilitySchema), async (c)
 });
 
 // DELETE /api/vulnerabilities/:id
-vulnerabilityRoutes.delete('/:id', async (c) => {
+vulnerabilityRoutes.delete('/:id', requireRole('admin'), async (c) => {
   const existing = await vulnRepo.findById(c.env.DB, c.req.param('id'));
   if (!existing) return c.json({ error: 'Not found' }, 404);
   await vulnRepo.delete(c.env.DB, c.req.param('id'));

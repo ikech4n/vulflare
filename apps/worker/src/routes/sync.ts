@@ -229,14 +229,14 @@ syncRoutes.post('/jvn-vendors/refresh', authMiddleware, requireRole('admin'), as
   }
 });
 
-// POST /api/sync/trigger - JVN同期の手動トリガー (admin only)
-syncRoutes.post('/trigger', authMiddleware, requireRole('admin'), async (c) => {
+// POST /api/sync/trigger - JVN同期の手動トリガー (editor以上)
+syncRoutes.post('/trigger', authMiddleware, requireRole('editor'), async (c) => {
   c.executionCtx.waitUntil(handleJvnSync(c.env));
   return c.json({ message: 'JVN sync triggered' }, 202);
 });
 
-// POST /api/sync/trigger-full - JVN全件同期の手動トリガー (admin only)
-syncRoutes.post('/trigger-full', authMiddleware, requireRole('admin'), async (c) => {
+// POST /api/sync/trigger-full - JVN全件同期の手動トリガー (editor以上)
+syncRoutes.post('/trigger-full', authMiddleware, requireRole('editor'), async (c) => {
   c.executionCtx.waitUntil(handleJvnSync(c.env, true));
   return c.json({ message: 'JVN full sync triggered' }, 202);
 });
@@ -247,8 +247,8 @@ syncRoutes.get('/settings', authMiddleware, async (c) => {
   return c.json(settings);
 });
 
-// PUT /api/sync/settings - admin 限定
-syncRoutes.put('/settings', authMiddleware, requireRole('admin'), validate(updateSyncSettingsSchema), async (c) => {
+// PUT /api/sync/settings - editor以上
+syncRoutes.put('/settings', authMiddleware, requireRole('editor'), validate(updateSyncSettingsSchema), async (c) => {
   const body = c.get('validatedBody') as SyncSettings;
 
   console.log('Received sync settings update:', JSON.stringify(body, null, 2));

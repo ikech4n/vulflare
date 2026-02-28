@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, RefreshCw, Trash2, Package, Calendar, Edit } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '@/lib/api.ts';
+import { useAuthStore } from '@/store/authStore.ts';
 import type { EolProduct, EolCategory, EolStats } from '@vulflare/shared/types';
 
 const CATEGORY_LABELS: Record<EolCategory, string> = {
@@ -25,6 +26,8 @@ const STATUS_LABELS: Record<EolStatusFilter, string> = {
 };
 
 export function EolPage() {
+  const { user } = useAuthStore();
+  const isViewer = user?.role === 'viewer';
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState<EolCategory | ''>('');
@@ -69,13 +72,15 @@ export function EolPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">EOL 管理</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">ソフトウェア・ハードウェアの EOL（サポート終了）を管理します</p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          <Plus className="w-4 h-4" />
-          プロダクト追加
-        </button>
+        {!isViewer && (
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            <Plus className="w-4 h-4" />
+            プロダクト追加
+          </button>
+        )}
       </div>
 
       {/* 統計サマリー */}
@@ -218,6 +223,7 @@ export function EolPage() {
 }
 
 function ProductActions({ product }: { product: EolProduct }) {
+  const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -246,14 +252,16 @@ function ProductActions({ product }: { product: EolProduct }) {
   return (
     <>
       <div className="flex items-center justify-end gap-2">
-        <button
-          onClick={() => setShowEditModal(true)}
-          className="p-1 text-gray-600 hover:text-gray-800"
-          title="編集"
-        >
-          <Edit className="w-4 h-4" />
-        </button>
-        {product.eol_api_id && (
+        {user?.role !== 'viewer' && (
+          <button
+            onClick={() => setShowEditModal(true)}
+            className="p-1 text-gray-600 hover:text-gray-800"
+            title="編集"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+        )}
+        {user?.role !== 'viewer' && product.eol_api_id && (
           <button
             onClick={() => syncMutation.mutate()}
             disabled={syncMutation.isPending}
@@ -263,17 +271,19 @@ function ProductActions({ product }: { product: EolProduct }) {
             <RefreshCw className={`w-4 h-4 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
           </button>
         )}
-        <button
-          onClick={() => {
-            if (confirm('本当に削除しますか?')) {
-              deleteMutation.mutate();
-            }
-          }}
-          className="p-1 text-red-600 hover:text-red-800"
-          title="削除"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        {user?.role === 'admin' && (
+          <button
+            onClick={() => {
+              if (confirm('本当に削除しますか?')) {
+                deleteMutation.mutate();
+              }
+            }}
+            className="p-1 text-red-600 hover:text-red-800"
+            title="削除"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
       </div>
       {showEditModal && (
         <EditProductModal product={product} onClose={() => setShowEditModal(false)} />

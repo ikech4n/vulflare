@@ -3,10 +3,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar, ExternalLink, Plus, Edit, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api.ts';
+import { useAuthStore } from '@/store/authStore.ts';
 import type { EolProductWithCycles, EolCycle } from '@vulflare/shared/types';
 import { EolStatusBadge } from '@/components/EolStatusBadge.tsx';
 
 export function EolProductDetailPage() {
+  const { user } = useAuthStore();
+  const isViewer = user?.role === 'viewer';
   const { id } = useParams<{ id: string }>();
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -40,7 +43,7 @@ export function EolProductDetailPage() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{product.display_name}</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">{product.product_name}</p>
           </div>
-          {product.link && (
+          {product.link && /^https?:\/\//i.test(product.link) && (
             <a
               href={product.link}
               target="_blank"
@@ -88,7 +91,7 @@ export function EolProductDetailPage() {
               {product.cycles.length} 件のバージョン
             </p>
           </div>
-          {!product.eol_api_id && (
+          {!product.eol_api_id && !isViewer && (
             <button
               onClick={() => setShowAddModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -110,7 +113,7 @@ export function EolProductDetailPage() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ステータス</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">LTS</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">最新版</th>
-                {!product.eol_api_id && (
+                {!product.eol_api_id && !isViewer && (
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">操作</th>
                 )}
               </tr>
@@ -118,7 +121,7 @@ export function EolProductDetailPage() {
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {product.cycles.length === 0 ? (
                 <tr>
-                  <td colSpan={!product.eol_api_id ? 8 : 7} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={!product.eol_api_id && !isViewer ? 8 : 7} className="px-4 py-8 text-center text-gray-500">
                     バージョン情報がありません
                   </td>
                 </tr>
@@ -159,7 +162,7 @@ export function EolProductDetailPage() {
                     <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
                       {cycle.latest_version || '-'}
                     </td>
-                    {!product.eol_api_id && (
+                    {!product.eol_api_id && !isViewer && (
                       <td className="px-4 py-4">
                         <CycleActions cycle={cycle} productId={product.id} />
                       </td>
@@ -180,6 +183,7 @@ export function EolProductDetailPage() {
 }
 
 function CycleActions({ cycle, productId }: { cycle: EolCycle; productId: string }) {
+  const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -202,17 +206,19 @@ function CycleActions({ cycle, productId }: { cycle: EolCycle; productId: string
         >
           <Edit className="w-4 h-4" />
         </button>
-        <button
-          onClick={() => {
-            if (confirm('本当に削除しますか?')) {
-              deleteMutation.mutate();
-            }
-          }}
-          className="p-1 text-red-600 hover:text-red-800"
-          title="削除"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        {user?.role === 'admin' && (
+          <button
+            onClick={() => {
+              if (confirm('本当に削除しますか?')) {
+                deleteMutation.mutate();
+              }
+            }}
+            className="p-1 text-red-600 hover:text-red-800"
+            title="削除"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
       </div>
       {showEditModal && (
         <EditCycleModal cycle={cycle} productId={productId} onClose={() => setShowEditModal(false)} />

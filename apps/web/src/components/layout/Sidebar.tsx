@@ -26,8 +26,8 @@ interface NavChild {
 }
 
 type NavItem =
-  | { to: string; icon: ElementType; label: string; end?: boolean; children?: never }
-  | { to?: never; icon: ElementType; label: string; end?: never; children: NavChild[] };
+  | { to: string; icon: ElementType; label: string; end?: boolean; children?: never; minRole?: never }
+  | { to?: never; icon: ElementType; label: string; end?: never; children: NavChild[]; minRole?: 'admin' | 'editor' };
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/', icon: LayoutDashboard, label: 'ダッシュボード', end: true },
@@ -36,6 +36,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     icon: Settings,
     label: '設定',
+    minRole: 'editor',
     children: [
       { to: '/data-sources', icon: Database, label: 'データソース' },
       { to: '/notifications', icon: Bell, label: '通知' },
@@ -55,6 +56,7 @@ export function Sidebar() {
   const { user, logout } = useAuthStore();
   const location = useLocation();
   const isAdmin = user?.role === 'admin';
+  const isEditorOrAbove = user?.role === 'admin' || user?.role === 'editor';
 
   const isChildActive = (children: NavChild[]) =>
     children.some(({ to }) => location.pathname.startsWith(to));
@@ -105,7 +107,11 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-        {NAV_ITEMS.map((item) => (
+        {NAV_ITEMS.filter((item) => {
+          if (item.minRole === 'admin') return isAdmin;
+          if (item.minRole === 'editor') return isEditorOrAbove;
+          return true;
+        }).map((item) => (
           <div key={item.label}>
             {item.to !== undefined ? (
               <NavLink to={item.to} end={item.end} className={navLinkClass}>

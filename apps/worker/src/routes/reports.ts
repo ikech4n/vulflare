@@ -95,7 +95,8 @@ reportRoutes.get('/vulnerabilities/json', async (c) => {
         informational: stats?.['informational'] ?? 0,
       },
       byStatus: {
-        active: stats?.['active'] ?? 0,
+        new: stats?.['new'] ?? 0,
+        open: stats?.['open'] ?? 0,
         fixed: stats?.['fixed'] ?? 0,
         accepted_risk: stats?.['accepted_risk'] ?? 0,
         false_positive: stats?.['false_positive'] ?? 0,
@@ -116,7 +117,7 @@ reportRoutes.get('/summary', async (c) => {
   ).first<{ cnt: number }>();
 
   const criticalActive = await c.env.DB.prepare(
-    `SELECT COUNT(*) as cnt FROM vulnerabilities WHERE severity = 'critical' AND status = 'active'`
+    `SELECT COUNT(*) as cnt FROM vulnerabilities WHERE severity = 'critical' AND status IN ('new', 'open')`
   ).first<{ cnt: number }>();
 
   return c.json({
@@ -130,7 +131,8 @@ reportRoutes.get('/summary', async (c) => {
         informational: vulnStats?.['informational'] ?? 0,
       },
       byStatus: {
-        active: vulnStats?.['active'] ?? 0,
+        new: vulnStats?.['new'] ?? 0,
+        open: vulnStats?.['open'] ?? 0,
         fixed: vulnStats?.['fixed'] ?? 0,
         accepted_risk: vulnStats?.['accepted_risk'] ?? 0,
         false_positive: vulnStats?.['false_positive'] ?? 0,

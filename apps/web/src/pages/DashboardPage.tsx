@@ -48,7 +48,8 @@ export function DashboardPage() {
 
   const severityData = Object.entries(stats.bySeverity).map(([name, value]) => ({ name, value }));
   const statusData = [
-    { name: '対応中', value: stats.byStatus.active, color: '#3b82f6' },
+    { name: '新規', value: stats.byStatus.new, color: '#f97316' },
+    { name: '対応中', value: stats.byStatus.open, color: '#3b82f6' },
     { name: '解決済み', value: stats.byStatus.fixed, color: '#22c55e' },
     { name: 'リスク受容', value: stats.byStatus.accepted_risk, color: '#a855f7' },
     { name: '誤検知', value: stats.byStatus.false_positive, color: '#6b7280' },
@@ -73,10 +74,10 @@ export function DashboardPage() {
           href="/vulnerabilities?severity=critical,high"
         />
         <StatCard
-          icon={<Clock className="text-blue-500" size={20} />}
-          label="対応中"
-          value={stats.byStatus.active ?? 0}
-          href="/vulnerabilities?status=active"
+          icon={<Clock className="text-orange-500" size={20} />}
+          label="新規（未確認）"
+          value={stats.byStatus.new ?? 0}
+          href="/vulnerabilities?status=new"
         />
         <StatCard
           icon={<CheckCircle2 className="text-green-500" size={20} />}
