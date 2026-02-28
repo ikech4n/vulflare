@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scrollbar-gutter: stable;
+}
+
 /* Recharts のセクターにブラウザデフォルトのフォーカス枠を表示しない */
 .recharts-sector:focus {
   outline: none;
