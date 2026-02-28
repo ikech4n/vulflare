@@ -1,5 +1,21 @@
 import type { Env } from '../types.ts';
 
+/** RFC 2047 Base64 エンコード（非ASCII ヘッダー用） */
+function encodeHeader(str: string): string {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return `=?UTF-8?B?${btoa(binary)}?=`;
+}
+
+/** Base64 エンコード＋76文字で折り返し（RFC 2045 準拠） */
+function encodeBody(str: string): string {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/(.{76})/g, '$1\r\n');
+}
+
 /**
  * パスワードリセットメールを送信する
  */
@@ -57,29 +73,34 @@ export async function sendPasswordResetEmail(
 
   const { EmailMessage } = await import('cloudflare:email');
 
-  const messageId = `<${crypto.randomUUID()}@${from.split('@')[1]}>`;
+  const domain = from.split('@')[1];
+  const messageId = `<${crypto.randomUUID()}@${domain}>`;
   const date = new Date().toUTCString();
   const boundary = `boundary_${crypto.randomUUID().replace(/-/g, '')}`;
 
-  let mimeMessage = `From: ${from}\r\n`;
+  let mimeMessage = `From: ${encodeHeader('Vulflare')} <${from}>\r\n`;
   mimeMessage += `To: ${to}\r\n`;
-  mimeMessage += `Subject: ${subject}\r\n`;
+  mimeMessage += `Subject: ${encodeHeader(subject)}\r\n`;
   mimeMessage += `Date: ${date}\r\n`;
   mimeMessage += `Message-ID: ${messageId}\r\n`;
   mimeMessage += `MIME-Version: 1.0\r\n`;
+  mimeMessage += `List-Unsubscribe: <mailto:${from}?subject=unsubscribe>\r\n`;
+  mimeMessage += `List-Unsubscribe-Post: List-Unsubscribe=One-Click\r\n`;
   mimeMessage += `Content-Type: multipart/alternative; boundary="${boundary}"\r\n`;
   mimeMessage += `\r\n`;
 
   mimeMessage += `--${boundary}\r\n`;
   mimeMessage += `Content-Type: text/plain; charset=utf-8\r\n`;
+  mimeMessage += `Content-Transfer-Encoding: base64\r\n`;
   mimeMessage += `\r\n`;
-  mimeMessage += textBody;
+  mimeMessage += encodeBody(textBody);
   mimeMessage += `\r\n`;
 
   mimeMessage += `--${boundary}\r\n`;
   mimeMessage += `Content-Type: text/html; charset=utf-8\r\n`;
+  mimeMessage += `Content-Transfer-Encoding: base64\r\n`;
   mimeMessage += `\r\n`;
-  mimeMessage += htmlBody;
+  mimeMessage += encodeBody(htmlBody);
   mimeMessage += `\r\n`;
 
   mimeMessage += `--${boundary}--\r\n`;
