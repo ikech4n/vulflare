@@ -106,7 +106,7 @@ export function JvnSyncPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">スケジュール</span>
-                <span className="text-gray-900">毎日 01:00 UTC（10:00 JST）</span>
+                <span className="text-gray-900">毎日 16:00 UTC（01:00 JST）</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">データソース</span>
