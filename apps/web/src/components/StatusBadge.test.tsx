@@ -3,8 +3,8 @@ import { render, screen } from '@/test/utils';
 import { StatusBadge } from './StatusBadge';
 
 describe('StatusBadge', () => {
-  it('renders active status correctly', () => {
-    render(<StatusBadge status="active" />);
+  it('renders open status correctly', () => {
+    render(<StatusBadge status="open" />);
     expect(screen.getByText('対応中')).toBeInTheDocument();
   });
 
@@ -23,8 +23,8 @@ describe('StatusBadge', () => {
     expect(screen.getByText('誤検知')).toBeInTheDocument();
   });
 
-  it('applies correct color classes for active', () => {
-    const { container } = render(<StatusBadge status="active" />);
+  it('applies correct color classes for open', () => {
+    const { container } = render(<StatusBadge status="open" />);
     const badge = container.querySelector('span');
     expect(badge).toHaveClass('bg-blue-100');
     expect(badge).toHaveClass('text-blue-800');
