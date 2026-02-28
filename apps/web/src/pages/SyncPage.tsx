@@ -49,6 +49,7 @@ interface SyncSettings {
 
 export function SyncPage() {
   const { user } = useAuthStore();
+  const isEditorOrAbove = user?.role === 'admin' || user?.role === 'editor';
   const queryClient = useQueryClient();
   const [showSettings, setShowSettings] = useState(false);
   const [showFullSyncConfirm, setShowFullSyncConfirm] = useState(false);
@@ -304,7 +305,7 @@ export function SyncPage() {
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">ステータス</h2>
-          {user?.role === 'admin' && (
+          {isEditorOrAbove && (
             <div className="flex gap-2">
               <button
                 onClick={() => triggerSyncMutation.mutate()}
@@ -366,7 +367,7 @@ export function SyncPage() {
       </div>
 
       {/* 同期設定 */}
-      {user?.role === 'admin' && (
+      {isEditorOrAbove && (
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
           <button
             onClick={() => setShowSettings(!showSettings)}
