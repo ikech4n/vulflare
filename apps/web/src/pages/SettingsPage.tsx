@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { UserPlus, Trash2, KeyRound, Pencil, LockOpen } from 'lucide-react';
+import { UserPlus, Trash2, KeyRound, Pencil, LockOpen, Mail } from 'lucide-react';
 import { api } from '@/lib/api.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 
@@ -25,6 +25,10 @@ export function SettingsPage() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
+  // メール設定
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [noreplyEmailInput, setNoreplyEmailInput] = useState('');
+
   // パスワードリセット
   const [resetPwUserId, setResetPwUserId] = useState<string | null>(null);
   const [resetPwValue, setResetPwValue] = useState('');
@@ -47,6 +51,20 @@ export function SettingsPage() {
     queryKey: ['users'],
     queryFn: () => api.get<UserItem[]>('/users').then((r) => r.data),
     enabled: user?.role === 'admin',
+  });
+
+  const { data: appSettings } = useQuery<{ noreplyEmail: string | null }>({
+    queryKey: ['app-settings'],
+    queryFn: () => api.get<{ noreplyEmail: string | null }>('/app-settings').then((r) => r.data),
+    enabled: user?.role === 'admin',
+  });
+
+  const updateAppSettingsMutation = useMutation({
+    mutationFn: (body: { noreplyEmail: string }) => api.patch('/app-settings', body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['app-settings'] });
+      setEditingEmail(false);
+    },
   });
 
 
@@ -128,6 +146,58 @@ export function SettingsPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white">管理者設定</h1>
+
+      {/* Email settings */}
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+          <Mail size={16} />
+          メール設定
+        </h2>
+        <div className="space-y-3">
+          <div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">パスワードリセットメールの送信元アドレス</p>
+            {editingEmail ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="email"
+                  value={noreplyEmailInput}
+                  onChange={(e) => setNoreplyEmailInput(e.target.value)}
+                  placeholder="noreply@example.com"
+                  className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                />
+                <button
+                  onClick={() => updateAppSettingsMutation.mutate({ noreplyEmail: noreplyEmailInput })}
+                  disabled={!noreplyEmailInput || updateAppSettingsMutation.isPending}
+                  className="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 shrink-0"
+                >
+                  {updateAppSettingsMutation.isPending ? '保存中...' : '保存'}
+                </button>
+                <button
+                  onClick={() => setEditingEmail(false)}
+                  className="px-3 py-2 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0"
+                >
+                  キャンセル
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-900 dark:text-white font-mono">
+                  {appSettings?.noreplyEmail ?? <span className="text-gray-400 italic">未設定</span>}
+                </span>
+                <button
+                  onClick={() => {
+                    setNoreplyEmailInput(appSettings?.noreplyEmail ?? '');
+                    setEditingEmail(true);
+                  }}
+                  className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                >
+                  変更
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Add user */}
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">

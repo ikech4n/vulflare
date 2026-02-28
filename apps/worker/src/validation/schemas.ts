@@ -44,6 +44,10 @@ export const changePasswordSchema = z.object({
   newPassword: passwordSchema,
 });
 
+export const updateAppSettingsSchema = z.object({
+  noreplyEmail: z.string().email('Invalid email address'),
+});
+
 export const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
 });

@@ -5,10 +5,10 @@ import type { Env } from '../types.ts';
  */
 export async function sendPasswordResetEmail(
   env: Env,
+  from: string,
   to: string,
   resetUrl: string,
 ): Promise<void> {
-  const from = env.NOREPLY_EMAIL;
   const subject = 'Vulflare: パスワードリセット';
 
   const textBody = [

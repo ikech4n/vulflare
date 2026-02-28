@@ -9,7 +9,7 @@ import {
   verifyJwt,
   hashToken,
 } from '../services/auth.ts';
-import { userRepo, tokenRepo, passwordResetTokenRepo } from '../db/repository.ts';
+import { userRepo, tokenRepo, passwordResetTokenRepo, appSettingsRepo } from '../db/repository.ts';
 import { authMiddleware } from '../middleware/auth.ts';
 import { validate } from '../validation/middleware.ts';
 import { registerSchema, loginSchema, changePasswordSchema, forgotPasswordSchema, resetPasswordWithTokenSchema } from '../validation/schemas.ts';
@@ -181,8 +181,10 @@ authRoutes.post('/forgot-password', rateLimitPresets.password, validate(forgotPa
     await passwordResetTokenRepo.create(c.env.DB, id, user.id, tokenHash, expiresAt);
 
     const resetUrl = `${c.env.PAGES_URL}/reset-password?token=${token}`;
+    const fromSetting = await appSettingsRepo.get(c.env.DB, 'noreply_email');
+    const fromEmail = fromSetting?.value ?? c.env.NOREPLY_EMAIL;
     try {
-      await sendPasswordResetEmail(c.env, user.email!, resetUrl);
+      await sendPasswordResetEmail(c.env, fromEmail, user.email!, resetUrl);
     } catch (err) {
       console.error('Failed to send password reset email:', err);
     }

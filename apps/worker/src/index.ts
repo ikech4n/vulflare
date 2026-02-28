@@ -11,6 +11,7 @@ import { notificationRoutes } from './routes/notifications.ts';
 import { reportRoutes } from './routes/reports.ts';
 import { dashboardRoutes } from './routes/dashboard.ts';
 import { eolRoutes } from './routes/eol.ts';
+import { appSettingsRoutes } from './routes/app-settings.ts';
 import { handleJvnSync } from './scheduled/jvn-sync.ts';
 import { handleEolSync } from './scheduled/eol-sync.ts';
 import { csrfProtection } from './middleware/csrf.ts';
@@ -44,6 +45,7 @@ app.route('/api/notifications', notificationRoutes);
 app.route('/api/reports', reportRoutes);
 app.route('/api/dashboard', dashboardRoutes);
 app.route('/api/eol', eolRoutes);
+app.route('/api/app-settings', appSettingsRoutes);
 
 app.notFound((c) => c.json({ error: 'Not found' }, 404));
 

@@ -135,6 +135,22 @@ export const tokenRepo = {
   },
 };
 
+// --- App Settings ---
+
+export const appSettingsRepo = {
+  get(db: DB, key: string) {
+    return db.prepare('SELECT value FROM sync_settings WHERE key = ?').bind(key).first<{ value: string }>();
+  },
+  set(db: DB, key: string, value: string) {
+    return db
+      .prepare(
+        "INSERT INTO sync_settings (key, value, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')",
+      )
+      .bind(key, value)
+      .run();
+  },
+};
+
 // --- Password Reset Tokens ---
 
 export const passwordResetTokenRepo = {
