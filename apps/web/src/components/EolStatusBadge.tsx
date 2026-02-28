@@ -21,8 +21,10 @@ export function EolStatusBadge({ eolDate, isEol }: EolStatusBadgeProps) {
   }
 
   const now = new Date();
-  const eol = new Date(eolDate);
-  const daysUntilEol = Math.floor((eol.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  // SQLite の date('now') と合わせるため UTC 基準の今日の午前0時で比較する
+  const todayUtcMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const eolUtcMs = new Date(eolDate).getTime(); // YYYY-MM-DD は UTC midnight として解析される
+  const daysUntilEol = Math.round((eolUtcMs - todayUtcMs) / (1000 * 60 * 60 * 24));
 
   if (daysUntilEol <= 30) {
     return (
