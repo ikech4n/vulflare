@@ -46,7 +46,6 @@ export function VulnerabilitiesPage() {
       void queryClient.invalidateQueries({ queryKey: ['vulnerabilities'] });
       setSelectedIds(new Set());
       setBatchStatus('');
-      alert(`${response.data.affectedRows}件の脆弱性を更新しました`);
     },
     onError: () => {
       alert('一括更新に失敗しました');
