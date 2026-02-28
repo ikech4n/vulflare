@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Plus, Search } from 'lucide-react';
 import { api } from '@/lib/api.ts';
+import { useAuthStore } from '@/store/authStore.ts';
 import { SeverityBadge } from '@/components/SeverityBadge.tsx';
 import { StatusBadge } from '@/components/StatusBadge.tsx';
 import type { Vulnerability, PaginatedResponse, BatchUpdateVulnerabilityRequest, BatchUpdateVulnerabilityResponse, Severity, VulnStatus } from '@vulflare/shared/types';
@@ -10,6 +11,8 @@ import type { Vulnerability, PaginatedResponse, BatchUpdateVulnerabilityRequest,
 const PAGE_SIZE = 20;
 
 export function VulnerabilitiesPage() {
+  const { user } = useAuthStore();
+  const isViewer = user?.role === 'viewer';
   const [searchParams, setSearchParams] = useSearchParams();
   const [q, setQ] = useState(searchParams.get('q') ?? '');
   const page = Number(searchParams.get('page') ?? 1);
@@ -117,13 +120,15 @@ export function VulnerabilitiesPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">脆弱性一覧</h1>
-        <Link
-          to="/vulnerabilities/new"
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-        >
-          <Plus size={16} />
-          脆弱性を追加
-        </Link>
+        {!isViewer && (
+          <Link
+            to="/vulnerabilities/new"
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+          >
+            <Plus size={16} />
+            脆弱性を追加
+          </Link>
+        )}
       </div>
 
       {/* Filters */}
@@ -155,15 +160,13 @@ export function VulnerabilitiesPage() {
               {s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
           ))}
-          {selectedSeverities.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setFilter('severity', '')}
-              className="px-2 py-1 text-xs text-gray-400 hover:text-gray-600"
-            >
-              ✕ クリア
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setFilter('severity', '')}
+            className={`px-2 py-1 text-xs text-gray-400 hover:text-gray-600 ${selectedSeverities.length === 0 ? 'invisible' : ''}`}
+          >
+            ✕ クリア
+          </button>
         </div>
 
         <select
@@ -172,14 +175,16 @@ export function VulnerabilitiesPage() {
           className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
         >
           <option value="">すべてのステータス</option>
-          <option value="active">対応中</option>
+          <option value="new">新規</option>
+          <option value="open">対応中</option>
           <option value="fixed">解決済み</option>
           <option value="accepted_risk">リスク受容</option>
+          <option value="false_positive">誤検知</option>
         </select>
       </div>
 
       {/* Batch update bar */}
-      {selectedIds.size > 0 && (
+      {!isViewer && selectedIds.size > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-4">
           <span className="text-sm font-medium text-blue-900">
             {selectedIds.size}件選択中
@@ -202,7 +207,8 @@ export function VulnerabilitiesPage() {
             className="border border-blue-300 bg-white rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">ステータスを変更...</option>
-            <option value="active">対応中</option>
+            <option value="new">新規</option>
+            <option value="open">対応中</option>
             <option value="fixed">解決済み</option>
             <option value="accepted_risk">リスク受容</option>
             <option value="false_positive">誤検知</option>
@@ -235,14 +241,16 @@ export function VulnerabilitiesPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
               <tr>
-                <th className="px-4 py-3 w-12">
-                  <input
-                    type="checkbox"
-                    checked={data?.data && data.data.length > 0 && selectedIds.size === data.data.length}
-                    onChange={toggleSelectAll}
-                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                </th>
+                {!isViewer && (
+                  <th className="px-4 py-3 w-12">
+                    <input
+                      type="checkbox"
+                      checked={data?.data && data.data.length > 0 && selectedIds.size === data.data.length}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </th>
+                )}
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">CVE / タイトル</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-28">深刻度</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-20">CVSS</th>
@@ -254,14 +262,16 @@ export function VulnerabilitiesPage() {
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {data?.data.map((vuln) => (
                 <tr key={vuln.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                  <td className="px-4 py-3">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(vuln.id)}
-                      onChange={() => toggleSelect(vuln.id)}
-                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                  </td>
+                  {!isViewer && (
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(vuln.id)}
+                        onChange={() => toggleSelect(vuln.id)}
+                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </td>
+                  )}
                   <td className="px-4 py-3">
                     <Link to={`/vulnerabilities/${vuln.id}`} className="font-medium text-blue-600 hover:underline block">
                       {vuln.cveId ?? '—'}
