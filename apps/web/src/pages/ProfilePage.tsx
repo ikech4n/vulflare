@@ -13,8 +13,8 @@ const ROLE_LABELS: Record<string, string> = {
 
 const THEME_OPTIONS: { value: Theme; icon: typeof Sun; label: string }[] = [
   { value: 'light', icon: Sun, label: 'ライト' },
-  { value: 'system', icon: Monitor, label: 'システム' },
   { value: 'dark', icon: Moon, label: 'ダーク' },
+  { value: 'system', icon: Monitor, label: 'システム' },
 ];
 
 export function ProfilePage() {
