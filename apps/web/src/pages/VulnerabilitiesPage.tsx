@@ -6,7 +6,7 @@ import { api } from '@/lib/api.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { SeverityBadge } from '@/components/SeverityBadge.tsx';
 import { StatusBadge } from '@/components/StatusBadge.tsx';
-import type { Vulnerability, PaginatedResponse, BatchUpdateVulnerabilityRequest, BatchUpdateVulnerabilityResponse, Severity, VulnStatus } from '@vulflare/shared/types';
+import type { Vulnerability, PaginatedResponse, BatchUpdateVulnerabilityRequest, BatchUpdateVulnerabilityResponse, VulnStatus } from '@vulflare/shared/types';
 
 const PAGE_SIZE = 20;
 
@@ -23,7 +23,6 @@ export function VulnerabilitiesPage() {
   const source = searchParams.get('source') ?? '';
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [batchSeverity, setBatchSeverity] = useState('');
   const [batchStatus, setBatchStatus] = useState('');
 
   const queryClient = useQueryClient();
@@ -46,7 +45,6 @@ export function VulnerabilitiesPage() {
     onSuccess: (response) => {
       void queryClient.invalidateQueries({ queryKey: ['vulnerabilities'] });
       setSelectedIds(new Set());
-      setBatchSeverity('');
       setBatchStatus('');
       alert(`${response.data.affectedRows}件の脆弱性を更新しました`);
     },
@@ -97,12 +95,8 @@ export function VulnerabilitiesPage() {
   const handleBatchUpdate = () => {
     if (selectedIds.size === 0) return;
 
-    const updates: { severity?: Severity; status?: VulnStatus } = {};
-    if (batchSeverity) updates.severity = batchSeverity as Severity;
-    if (batchStatus) updates.status = batchStatus as VulnStatus;
-
-    if (!updates.severity && !updates.status) {
-      alert('更新する項目を選択してください');
+    if (!batchStatus) {
+      alert('ステータスを選択してください');
       return;
     }
 
@@ -112,7 +106,7 @@ export function VulnerabilitiesPage() {
 
     batchUpdateMutation.mutate({
       ids: Array.from(selectedIds),
-      updates,
+      updates: { status: batchStatus as VulnStatus },
     });
   };
 
@@ -191,17 +185,6 @@ export function VulnerabilitiesPage() {
           </span>
 
           <select
-            value={batchSeverity}
-            onChange={(e) => setBatchSeverity(e.target.value)}
-            className="border border-blue-300 bg-white rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">深刻度を変更...</option>
-            {['critical', 'high', 'medium', 'low', 'informational'].map((s) => (
-              <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-            ))}
-          </select>
-
-          <select
             value={batchStatus}
             onChange={(e) => setBatchStatus(e.target.value)}
             className="border border-blue-300 bg-white rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -216,7 +199,7 @@ export function VulnerabilitiesPage() {
 
           <button
             onClick={handleBatchUpdate}
-            disabled={batchUpdateMutation.isPending || (!batchSeverity && !batchStatus)}
+            disabled={batchUpdateMutation.isPending || !batchStatus}
             className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {batchUpdateMutation.isPending ? '更新中...' : '一括更新'}
