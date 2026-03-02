@@ -32,6 +32,7 @@ export function SettingsPage() {
   // パスワードリセット
   const [resetPwUserId, setResetPwUserId] = useState<string | null>(null);
   const [resetPwValue, setResetPwValue] = useState('');
+  const [resetPwError, setResetPwError] = useState('');
 
   // ユーザー情報編集
   const [editUserId, setEditUserId] = useState<string | null>(null);
@@ -120,6 +121,11 @@ export function SettingsPage() {
     onSuccess: () => {
       setResetPwUserId(null);
       setResetPwValue('');
+      setResetPwError('');
+    },
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      setResetPwError(msg ?? 'パスワードのリセットに失敗しました');
     },
   });
 
@@ -384,28 +390,32 @@ export function SettingsPage() {
                 </div>
               )}
               {resetPwUserId === u.id && (
-                <div className="mt-2 flex items-center gap-2">
-                  <input
-                    type="password"
-                    value={resetPwValue}
-                    onChange={(e) => setResetPwValue(e.target.value)}
-                    placeholder="新しいパスワード（8文字以上）"
-                    minLength={8}
-                    className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                  <button
-                    onClick={() => resetPasswordMutation.mutate({ id: u.id, password: resetPwValue })}
-                    disabled={resetPwValue.length < 8 || resetPasswordMutation.isPending}
-                    className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 shrink-0"
-                  >
-                    {resetPasswordMutation.isPending ? 'リセット中...' : 'リセット'}
-                  </button>
-                  <button
-                    onClick={() => { setResetPwUserId(null); setResetPwValue(''); }}
-                    className="px-3 py-1.5 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0"
-                  >
-                    キャンセル
-                  </button>
+                <div className="mt-2 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="password"
+                      value={resetPwValue}
+                      onChange={(e) => { setResetPwValue(e.target.value); setResetPwError(''); }}
+                      placeholder="新しいパスワード（8文字以上）"
+                      className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                    <button
+                      onClick={() => resetPasswordMutation.mutate({ id: u.id, password: resetPwValue })}
+                      disabled={resetPwValue.length < 8 || resetPasswordMutation.isPending}
+                      className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 shrink-0"
+                    >
+                      {resetPasswordMutation.isPending ? 'リセット中...' : 'リセット'}
+                    </button>
+                    <button
+                      onClick={() => { setResetPwUserId(null); setResetPwValue(''); setResetPwError(''); }}
+                      className="px-3 py-1.5 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0"
+                    >
+                      キャンセル
+                    </button>
+                  </div>
+                  {resetPwError && (
+                    <p className="text-xs text-red-500">{resetPwError}</p>
+                  )}
                 </div>
               )}
             </div>
