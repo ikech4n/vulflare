@@ -13,6 +13,7 @@ export interface DbUser {
   failed_login_attempts: number;
   locked_at: string | null;
   email: string | null;
+  theme: string;
   created_at: string;
   updated_at: string;
 }
@@ -24,7 +25,7 @@ export const userRepo = {
   findById(db: DB, id: string) {
     return db.prepare('SELECT * FROM users WHERE id = ?').bind(id).first<DbUser>();
   },
-  create(db: DB, user: Omit<DbUser, 'created_at' | 'updated_at' | 'failed_login_attempts' | 'locked_at' | 'email'> & { email?: string | null }) {
+  create(db: DB, user: Omit<DbUser, 'created_at' | 'updated_at' | 'failed_login_attempts' | 'locked_at' | 'email' | 'theme'> & { email?: string | null }) {
     return db
       .prepare(
         'INSERT INTO users (id, username, password_hash, role, is_active, email) VALUES (?, ?, ?, ?, ?, ?)',
@@ -58,11 +59,12 @@ export const userRepo = {
       .bind(isActive, id)
       .run();
   },
-  updateProfile(db: DB, id: string, fields: { username?: string; email?: string | null }) {
+  updateProfile(db: DB, id: string, fields: { username?: string; email?: string | null; theme?: string }) {
     const sets: string[] = ["updated_at = datetime('now')"];
     const params: unknown[] = [];
     if (fields.username) { sets.push('username = ?'); params.push(fields.username); }
     if (fields.email !== undefined) { sets.push('email = ?'); params.push(fields.email); }
+    if (fields.theme !== undefined) { sets.push('theme = ?'); params.push(fields.theme); }
     params.push(id);
     return db.prepare(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`).bind(...params).run();
   },

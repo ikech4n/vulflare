@@ -1,5 +1,15 @@
 export type UserRole = 'admin' | 'editor' | 'viewer';
 
+export type Theme = 'light' | 'dark' | 'system';
+
+export interface MeResponse {
+  id: string;
+  username: string;
+  role: UserRole;
+  theme: Theme;
+  createdAt: string;
+}
+
 export interface User {
   id: string;
   username: string;

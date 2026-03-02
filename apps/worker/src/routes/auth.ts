@@ -12,7 +12,7 @@ import {
 import { userRepo, tokenRepo, passwordResetTokenRepo, appSettingsRepo } from '../db/repository.ts';
 import { authMiddleware } from '../middleware/auth.ts';
 import { validate } from '../validation/middleware.ts';
-import { registerSchema, loginSchema, changePasswordSchema, forgotPasswordSchema, resetPasswordWithTokenSchema } from '../validation/schemas.ts';
+import { registerSchema, loginSchema, changePasswordSchema, forgotPasswordSchema, resetPasswordWithTokenSchema, updateMeSchema } from '../validation/schemas.ts';
 import { sendPasswordResetEmail } from '../services/email.ts';
 import { rateLimitPresets } from '../middleware/rateLimit.ts';
 
@@ -163,8 +163,20 @@ authRoutes.get('/me', authMiddleware, async (c) => {
     id: user.id,
     username: user.username,
     role: user.role,
+    theme: user.theme,
     createdAt: user.created_at,
   });
+});
+
+authRoutes.patch('/me', authMiddleware, validate(updateMeSchema), async (c) => {
+  const body = c.get('validatedBody') as { theme?: string };
+  const userId = c.get('userId');
+  const user = await userRepo.findById(c.env.DB, userId);
+  if (!user) return c.json({ error: 'User not found' }, 404);
+  const updates: { theme?: string } = {};
+  if (body.theme !== undefined) updates.theme = body.theme;
+  await userRepo.updateProfile(c.env.DB, userId, updates);
+  return c.json({ message: 'Updated' });
 });
 
 authRoutes.post('/forgot-password', rateLimitPresets.password, validate(forgotPasswordSchema), async (c) => {

@@ -2,7 +2,8 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api.ts';
 import { useAuthStore } from '@/store/authStore.ts';
-import type { LoginResponse } from '@vulflare/shared/types';
+import type { LoginResponse, MeResponse } from '@vulflare/shared/types';
+import { useThemeStore } from '@/store/themeStore.ts';
 
 export function LoginPage() {
   const [username, setUsername] = useState('');
@@ -26,6 +27,12 @@ export function LoginPage() {
     try {
       const { data } = await api.post<LoginResponse>('/auth/login', { username, password });
       login(data.accessToken, data.user);
+      try {
+        const { data: me } = await api.get<MeResponse>('/auth/me');
+        useThemeStore.getState().syncFromServer(me.theme);
+      } catch {
+        // 失敗時はlocalStorageの値をそのまま使用
+      }
       void navigate('/');
     } catch (err) {
       const status = (err as { response?: { status?: number } })?.response?.status;

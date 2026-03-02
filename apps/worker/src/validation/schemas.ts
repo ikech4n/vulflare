@@ -105,6 +105,10 @@ export const resetPasswordSchema = z.object({
   password: passwordSchema,
 });
 
+export const updateMeSchema = z.object({
+  theme: z.enum(['light', 'dark', 'system']).optional(),
+});
+
 // ========================================
 // 同期設定スキーマ
 // ========================================
