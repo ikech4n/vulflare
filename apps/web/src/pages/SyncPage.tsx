@@ -51,7 +51,7 @@ export function SyncPage() {
   const { user } = useAuthStore();
   const isEditorOrAbove = user?.role === 'admin' || user?.role === 'editor';
   const queryClient = useQueryClient();
-  const [showSettings, setShowSettings] = useState(false);
+  const [showSettings, setShowSettings] = useState(true);
   const [showFullSyncConfirm, setShowFullSyncConfirm] = useState(false);
   const [deleteSuccess, setDeleteSuccess] = useState('');
 
