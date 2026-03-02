@@ -31,7 +31,7 @@ type NavItem =
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/', icon: LayoutDashboard, label: 'ダッシュボード', end: true },
-  { to: '/vulnerabilities', icon: ShieldAlert, label: '脆弱性一覧' },
+  { to: '/vulnerabilities?status=new,open', icon: ShieldAlert, label: '脆弱性一覧' },
   { to: '/eol', icon: Calendar, label: 'EOL管理' },
   {
     icon: Settings,

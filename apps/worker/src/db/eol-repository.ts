@@ -262,6 +262,7 @@ export const eolCycleRepo = {
         `SELECT COUNT(*) as count FROM eol_cycles
          WHERE is_eol = 0
          AND eol_date IS NOT NULL
+         AND eol_date > date('now')
          AND eol_date <= ?`,
       )
       .bind(futureDateStr)

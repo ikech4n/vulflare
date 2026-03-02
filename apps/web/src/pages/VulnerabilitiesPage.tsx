@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, ChevronDown } from 'lucide-react';
 import { api } from '@/lib/api.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { SeverityBadge } from '@/components/SeverityBadge.tsx';
@@ -20,7 +20,36 @@ export function VulnerabilitiesPage() {
   const severity = searchParams.get('severity') ?? '';
   const selectedSeverities = severity ? severity.split(',').filter(Boolean) : [];
   const status = searchParams.get('status') ?? '';
+  const selectedStatuses = status ? status.split(',').filter(Boolean) : [];
   const source = searchParams.get('source') ?? '';
+
+  // 初回マウント時にstatusが未指定なら「新規+対応中」をデフォルト設定
+  useEffect(() => {
+    if (!searchParams.has('status')) {
+      const next = new URLSearchParams(searchParams);
+      next.set('status', 'new,open');
+      setSearchParams(next, { replace: true });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [severityOpen, setSeverityOpen] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
+  const severityRef = useRef<HTMLDivElement>(null);
+  const statusRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (severityRef.current && !severityRef.current.contains(e.target as Node)) {
+        setSeverityOpen(false);
+      }
+      if (statusRef.current && !statusRef.current.contains(e.target as Node)) {
+        setStatusOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [batchStatus, setBatchStatus] = useState('');
@@ -57,6 +86,13 @@ export function VulnerabilitiesPage() {
     if (value) next.set(key, value); else next.delete(key);
     next.delete('page');
     setSearchParams(next);
+  };
+
+  const toggleStatus = (s: string) => {
+    const next = selectedStatuses.includes(s)
+      ? selectedStatuses.filter((x) => x !== s)
+      : [...selectedStatuses, s];
+    setFilter('status', next.join(','));
   };
 
   const toggleSeverity = (s: string) => {
@@ -138,42 +174,99 @@ export function VulnerabilitiesPage() {
           />
         </div>
 
-        <div className="flex items-center gap-1 flex-wrap">
-          {['critical', 'high', 'medium', 'low', 'informational'].map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => toggleSeverity(s)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
-                selectedSeverities.includes(s)
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-gray-400'
-              }`}
-            >
-              {s.charAt(0).toUpperCase() + s.slice(1)}
-            </button>
-          ))}
+        <div className="relative" ref={severityRef}>
           <button
             type="button"
-            onClick={() => setFilter('severity', '')}
-            className={`px-2 py-1 text-xs text-gray-400 hover:text-gray-600 ${selectedSeverities.length === 0 ? 'invisible' : ''}`}
+            onClick={() => setSeverityOpen(!severityOpen)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+              selectedSeverities.length > 0
+                ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300'
+                : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-gray-400'
+            }`}
           >
-            ✕ クリア
+            深刻度{selectedSeverities.length > 0 ? ` (${selectedSeverities.length})` : ''}
+            <ChevronDown size={14} className={`transition-transform ${severityOpen ? 'rotate-180' : ''}`} />
           </button>
+          {severityOpen && (
+            <div className="absolute top-full mt-1 left-0 z-20 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 min-w-36">
+              {['critical', 'high', 'medium', 'low', 'informational'].map((s) => (
+                <label
+                  key={s}
+                  className="flex items-center gap-2.5 px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-700 dark:text-gray-300"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedSeverities.includes(s)}
+                    onChange={() => toggleSeverity(s)}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                </label>
+              ))}
+              {selectedSeverities.length > 0 && (
+                <div className="border-t border-gray-100 dark:border-gray-700 mt-1 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setFilter('severity', '')}
+                    className="w-full text-left px-3 py-1.5 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  >
+                    クリア
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        <select
-          value={status}
-          onChange={(e) => setFilter('status', e.target.value)}
-          className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-        >
-          <option value="">すべてのステータス</option>
-          <option value="new">新規</option>
-          <option value="open">対応中</option>
-          <option value="fixed">解決済み</option>
-          <option value="accepted_risk">リスク受容</option>
-          <option value="false_positive">誤検知</option>
-        </select>
+        <div className="relative" ref={statusRef}>
+          <button
+            type="button"
+            onClick={() => setStatusOpen(!statusOpen)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+              selectedStatuses.length > 0
+                ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300'
+                : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-gray-400'
+            }`}
+          >
+            ステータス{selectedStatuses.length > 0 ? ` (${selectedStatuses.length})` : ''}
+            <ChevronDown size={14} className={`transition-transform ${statusOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {statusOpen && (
+            <div className="absolute top-full mt-1 left-0 z-20 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 min-w-36">
+              {[
+                { value: 'new', label: '新規' },
+                { value: 'open', label: '対応中' },
+                { value: 'fixed', label: '解決済み' },
+                { value: 'accepted_risk', label: 'リスク受容' },
+                { value: 'false_positive', label: '誤検知' },
+              ].map((s) => (
+                <label
+                  key={s.value}
+                  className="flex items-center gap-2.5 px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-700 dark:text-gray-300"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedStatuses.includes(s.value)}
+                    onChange={() => toggleStatus(s.value)}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  {s.label}
+                </label>
+              ))}
+              {selectedStatuses.length > 0 && (
+                <div className="border-t border-gray-100 dark:border-gray-700 mt-1 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setFilter('status', '')}
+                    className="w-full text-left px-3 py-1.5 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  >
+                    クリア
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Batch update bar */}

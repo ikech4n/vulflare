@@ -138,23 +138,6 @@ export async function updateSyncSettings(env: Env, settings: SyncSettings): Prom
   console.log('Batch result:', JSON.stringify(result));
 }
 
-// 後方互換性のためにgetDataSourceSettingsも提供
-export async function getDataSourceSettings(env: Env): Promise<DataSourceSettings> {
-  const settings = await getSyncSettings(env);
-  return settings.dataSources;
-}
-
-export async function updateDataSourceSettings(
-  env: Env,
-  dataSources: DataSourceSettings,
-): Promise<void> {
-  const currentSettings = await getSyncSettings(env);
-  await updateSyncSettings(env, {
-    ...currentSettings,
-    dataSources,
-  });
-}
-
 /**
  * 除外キーワードによるフィルタリング
  * タイトルまたは説明文に除外キーワードが含まれている場合はtrueを返す

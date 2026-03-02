@@ -6,6 +6,7 @@ import {
   Pie,
   Cell,
   Tooltip,
+  Legend,
   ResponsiveContainer,
   BarChart,
   Bar,
@@ -92,7 +93,7 @@ export function DashboardPage() {
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">深刻度の分布</h2>
           <ResponsiveContainer width="100%" height={240}>
-            <PieChart margin={{ top: 20, right: 60, bottom: 20, left: 60 }}>
+            <PieChart>
               <Pie
                 data={severityData}
                 cx="50%"
@@ -100,7 +101,7 @@ export function DashboardPage() {
                 innerRadius={55}
                 outerRadius={80}
                 dataKey="value"
-                label={({ name, value, percent }) => value > 0 && percent >= 0.03 ? `${name}: ${String(value)}` : ''}
+                nameKey="name"
               >
                 {severityData.map(({ name }) => (
                   <Cell
@@ -110,6 +111,7 @@ export function DashboardPage() {
                 ))}
               </Pie>
               <Tooltip />
+              <Legend />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -131,13 +133,6 @@ export function DashboardPage() {
           </ResponsiveContainer>
         </div>
       </div>
-
-      {stats.recentlyAdded > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
-          過去7日間で <strong>{stats.recentlyAdded}</strong> 件の新しい脆弱性が検出されました。{' '}
-          <Link to="/vulnerabilities" className="underline">今すぐ確認</Link>
-        </div>
-      )}
 
       {/* EOL Summary */}
       {eolStats && (

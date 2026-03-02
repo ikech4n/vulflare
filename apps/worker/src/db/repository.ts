@@ -235,7 +235,16 @@ export const vulnRepo = {
         params.push(...severities);
       }
     }
-    if (status) { conditions.push('status = ?'); params.push(status); }
+    if (status) {
+      const statuses = status.split(',').filter(Boolean);
+      if (statuses.length === 1) {
+        conditions.push('status = ?');
+        params.push(statuses[0]);
+      } else {
+        conditions.push(`status IN (${statuses.map(() => '?').join(',')})`);
+        params.push(...statuses);
+      }
+    }
     if (source) { conditions.push('source = ?'); params.push(source); }
     if (q) {
       conditions.push('(cve_id LIKE ? OR title LIKE ?)');

@@ -375,6 +375,7 @@ eolRoutes.get('/timeline', async (c) => {
       WHERE c.is_eol = 0
         AND c.eol_date IS NOT NULL
         AND c.eol_date > date('now')
+        AND c.eol_date <= date('now', '+30 days')
       ORDER BY c.eol_date ASC
       LIMIT 50`,
     )
