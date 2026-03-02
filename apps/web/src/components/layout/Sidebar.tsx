@@ -23,6 +23,7 @@ interface NavChild {
   label: string;
   end?: boolean;
   adminOnly?: boolean;
+  minRole?: 'admin' | 'editor';
 }
 
 type NavItem =
@@ -36,10 +37,9 @@ const NAV_ITEMS: NavItem[] = [
   {
     icon: Settings,
     label: '設定',
-    minRole: 'editor',
     children: [
       { to: '/data-sources', icon: Database, label: 'データソース' },
-      { to: '/notifications', icon: Bell, label: '通知' },
+      { to: '/notifications', icon: Bell, label: '通知', minRole: 'editor' },
       { to: '/users', icon: Users, label: 'ユーザー', adminOnly: true },
     ],
   },
@@ -133,7 +133,10 @@ export function Sidebar() {
                 {openGroups[item.label] && (
                   <div className="ml-4 mt-1 space-y-1">
                     {item.children
-                      .filter(({ adminOnly }) => !adminOnly || isAdmin)
+                      .filter(({ adminOnly, minRole }) =>
+                        (!adminOnly || isAdmin) &&
+                        (minRole !== 'editor' || isEditorOrAbove)
+                      )
                       .map(({ to, icon: ChildIcon, label, end }) => (
                         <NavLink key={to} to={to} end={end} className={navLinkClass}>
                           <ChildIcon size={16} />

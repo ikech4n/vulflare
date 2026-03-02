@@ -153,14 +153,6 @@ export function SyncPage() {
     }
   }, [syncSettingsData]);
 
-  if (user?.role === 'viewer') {
-    return (
-      <div className="space-y-6 max-w-2xl">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">データソース</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">この画面は編集者以上のみ利用できます。</p>
-      </div>
-    );
-  }
 
   // ベンダー追加
   const addVendor = (vendor: JvnVendor) => {
@@ -673,6 +665,70 @@ export function SyncPage() {
                 </button>
               </div>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* 同期設定（viewer: 読み取り専用） */}
+      {!isEditorOrAbove && (
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className="flex items-center justify-between w-full text-left"
+          >
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">設定</h2>
+            {showSettings ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </button>
+
+          {showSettings && (
+            <dl className="mt-6 space-y-4 text-sm divide-y divide-gray-100 dark:divide-gray-700">
+              <div className="pb-3">
+                <dt className="text-xs text-gray-500 dark:text-gray-400 mb-2">ベンダー/製品選択</dt>
+                <dd className="flex flex-wrap gap-1.5">
+                  {vendorSelections.length > 0
+                    ? vendorSelections.map((v) => (
+                        <span key={v.vendorId} className="inline-flex items-center bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs px-2 py-1 rounded-full">
+                          {v.vendorName}{v.products.length > 0 ? ` (${v.products.length}製品)` : ''}
+                        </span>
+                      ))
+                    : <span className="text-gray-400 dark:text-gray-500">未設定（全ベンダー対象）</span>}
+                </dd>
+              </div>
+              <div className="py-3">
+                <dt className="text-xs text-gray-500 dark:text-gray-400 mb-2">キーワードフィルター</dt>
+                <dd className="flex flex-wrap gap-1.5">
+                  {syncKeywords.length > 0
+                    ? syncKeywords.map((kw) => (
+                        <span key={kw} className="inline-flex items-center bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs px-2 py-1 rounded-full">{kw}</span>
+                      ))
+                    : <span className="text-gray-400 dark:text-gray-500">未設定</span>}
+                </dd>
+              </div>
+              <div className="py-3">
+                <dt className="text-xs text-gray-500 dark:text-gray-400 mb-2">除外キーワード</dt>
+                <dd className="flex flex-wrap gap-1.5">
+                  {syncExcludeKeywords.length > 0
+                    ? syncExcludeKeywords.map((kw) => (
+                        <span key={kw} className="inline-flex items-center bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs px-2 py-1 rounded-full">{kw}</span>
+                      ))
+                    : <span className="text-gray-400 dark:text-gray-500">未設定</span>}
+                </dd>
+              </div>
+              <div className="pt-3 grid grid-cols-3 gap-4">
+                <div>
+                  <dt className="text-xs text-gray-500 dark:text-gray-400 mb-1">CVSS最小スコア</dt>
+                  <dd className="text-gray-900 dark:text-gray-100">{cvssMinScore === 0 ? '無効（全て取得）' : String(cvssMinScore)}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-gray-500 dark:text-gray-400 mb-1">初回取得期間</dt>
+                  <dd className="text-gray-900 dark:text-gray-100">{syncFullSyncDays}日</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-gray-500 dark:text-gray-400 mb-1">データ保持期間</dt>
+                  <dd className="text-gray-900 dark:text-gray-100">{syncRetentionDays === 0 ? '無効' : `${syncRetentionDays}日`}</dd>
+                </div>
+              </div>
+            </dl>
           )}
         </div>
       )}
