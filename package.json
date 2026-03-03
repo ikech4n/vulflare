@@ -15,7 +15,13 @@
     "test:web": "pnpm --filter @vulflare/web test"
   },
   "devDependencies": {
-    "wrangler": "^3.114.0",
+    "wrangler": "^4.0.0",
     "typescript": "^5.7.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "rollup": ">=4.59.0",
+      "esbuild": ">=0.25.0"
+    }
   }
 }
