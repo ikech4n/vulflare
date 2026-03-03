@@ -52,9 +52,13 @@ app.notFound((c) => c.json({ error: 'Not found' }, 404));
 export default {
   fetch: app.fetch,
 
-  async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
-    // JVN同期処理
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+    // JVN同期処理: 毎時実行（増分同期）
     ctx.waitUntil(handleJvnSync(env));
-    ctx.waitUntil(handleEolSync(env));
+    // EOL同期処理: 毎日 01:00 JST (16:00 UTC) のみ実行
+    const scheduledHour = new Date(event.scheduledTime).getUTCHours();
+    if (scheduledHour === 16) {
+      ctx.waitUntil(handleEolSync(env));
+    }
   },
 };

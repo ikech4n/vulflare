@@ -777,7 +777,7 @@ export function SyncPage() {
         <h3 className="text-sm font-semibold text-blue-900 mb-2">データソースについて</h3>
         <div className="text-sm text-blue-800 space-y-1">
           <p>• JVN (Japan Vulnerability Notes) から脆弱性情報を取得します</p>
-          <p>• 自動取得は毎日 01:00 (JST) に実行されます</p>
+          <p>• 自動取得は毎時実行されます（増分同期）</p>
           <p>• <strong>増分取得</strong>: 前回取得以降の更新データのみ取得（通常運用）</p>
           <p>• <strong>全件取得</strong>: 設定期間の全データを再取得（製品追加時や過去データ補完に使用）</p>
           <p>• ベンダー/製品選択、キーワード、CVSS閾値を組み合わせてフィルタリングできます</p>
