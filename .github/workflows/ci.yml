@@ -71,6 +71,22 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm audit --audit-level moderate
 
+  build-worker:
+    name: Build Worker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: cp wrangler.toml.example wrangler.toml
+      - run: pnpm exec wrangler deploy --dry-run --env production
+
   build:
     name: Build Web
     runs-on: ubuntu-latest
