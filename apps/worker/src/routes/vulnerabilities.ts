@@ -80,9 +80,12 @@ vulnerabilityRoutes.post('/', requireRole('editor'), validate(createVulnerabilit
     severity?: string;
     cvssV3Score?: number;
     cvssV3Vector?: string;
+    cvssV4Score?: number;
+    cvssV4Vector?: string;
     cweIds?: string[];
     references?: unknown[];
     publishedAt?: string;
+    modifiedAt?: string;
   };
 
   if (body.cveId) {
@@ -92,7 +95,8 @@ vulnerabilityRoutes.post('/', requireRole('editor'), validate(createVulnerabilit
 
   const severity =
     body.severity ??
-    (body.cvssV3Score != null ? cvssScoreToSeverity(body.cvssV3Score) : 'informational');
+    (body.cvssV4Score != null ? cvssScoreToSeverity(body.cvssV4Score) :
+     body.cvssV3Score != null ? cvssScoreToSeverity(body.cvssV3Score) : 'informational');
 
   const id = crypto.randomUUID();
   await vulnRepo.create(c.env.DB, {
@@ -105,11 +109,13 @@ vulnerabilityRoutes.post('/', requireRole('editor'), validate(createVulnerabilit
     cvss_v3_vector: body.cvssV3Vector ?? null,
     cvss_v2_score: null,
     cvss_v2_vector: null,
+    cvss_v4_score: body.cvssV4Score ?? null,
+    cvss_v4_vector: body.cvssV4Vector ?? null,
     cwe_ids: JSON.stringify(body.cweIds ?? []),
     affected_products: '[]',
     vuln_references: JSON.stringify(body.references ?? []),
     published_at: body.publishedAt ?? null,
-    modified_at: null,
+    modified_at: body.modifiedAt ?? null,
     source: 'manual',
     status: 'new',
   });
@@ -167,6 +173,12 @@ vulnerabilityRoutes.patch('/:id', requireRole('editor'), validate(updateVulnerab
     status?: string;
     cvssV3Score?: number;
     cvssV3Vector?: string;
+    cvssV4Score?: number;
+    cvssV4Vector?: string;
+    cweIds?: string[];
+    references?: unknown[];
+    publishedAt?: string | null;
+    modifiedAt?: string | null;
   };
 
   await vulnRepo.update(c.env.DB, id, {
@@ -176,6 +188,12 @@ vulnerabilityRoutes.patch('/:id', requireRole('editor'), validate(updateVulnerab
     ...(body.status !== undefined && { status: body.status }),
     ...(body.cvssV3Score !== undefined && { cvss_v3_score: body.cvssV3Score }),
     ...(body.cvssV3Vector !== undefined && { cvss_v3_vector: body.cvssV3Vector }),
+    ...(body.cvssV4Score !== undefined && { cvss_v4_score: body.cvssV4Score }),
+    ...(body.cvssV4Vector !== undefined && { cvss_v4_vector: body.cvssV4Vector }),
+    ...(body.cweIds !== undefined && { cwe_ids: JSON.stringify(body.cweIds) }),
+    ...(body.references !== undefined && { vuln_references: JSON.stringify(body.references) }),
+    ...(body.publishedAt !== undefined && { published_at: body.publishedAt }),
+    ...(body.modifiedAt !== undefined && { modified_at: body.modifiedAt }),
   });
 
   const updated = await vulnRepo.findById(c.env.DB, id);
@@ -201,6 +219,8 @@ function mapVuln(v: Record<string, unknown>) {
     cvssV3Vector: v['cvss_v3_vector'],
     cvssV2Score: v['cvss_v2_score'],
     cvssV2Vector: v['cvss_v2_vector'],
+    cvssV4Score: v['cvss_v4_score'] ?? null,
+    cvssV4Vector: v['cvss_v4_vector'] ?? null,
     cweIds: safeParseJson(v['cwe_ids'] as string, []),
     affectedProducts: safeParseJson(v['affected_products'] as string, []),
     references: safeParseJson(v['vuln_references'] as string, []),

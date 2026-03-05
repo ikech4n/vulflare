@@ -654,7 +654,7 @@ export function SyncPage() {
               </div>
 
               {/* 保存ボタン */}
-              <div className="flex justify-end pt-4 border-t dark:border-gray-700">
+              <div className="flex justify-end pt-4">
                 <button
                   onClick={handleSaveSettings}
                   disabled={updateSyncSettingsMut.isPending}

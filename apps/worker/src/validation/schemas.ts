@@ -68,9 +68,12 @@ export const createVulnerabilitySchema = z.object({
   severity: severitySchema.optional(),
   cvssV3Score: cvssScoreSchema.optional(),
   cvssV3Vector: z.string().max(100, 'CVSS vector too long').optional(),
+  cvssV4Score: cvssScoreSchema.optional(),
+  cvssV4Vector: z.string().max(200, 'CVSS v4 vector too long').optional(),
   cweIds: z.array(z.string()).optional(),
   references: z.array(z.unknown()).optional(),
   publishedAt: z.string().datetime().optional(),
+  modifiedAt: z.string().datetime().optional(),
 });
 
 export const updateVulnerabilitySchema = z.object({
@@ -80,6 +83,12 @@ export const updateVulnerabilitySchema = z.object({
   status: statusSchema.optional(),
   cvssV3Score: cvssScoreSchema.optional(),
   cvssV3Vector: z.string().max(100, 'CVSS vector too long').optional(),
+  cvssV4Score: cvssScoreSchema.optional(),
+  cvssV4Vector: z.string().max(200, 'CVSS v4 vector too long').optional(),
+  cweIds: z.array(z.string()).optional(),
+  references: z.array(z.unknown()).optional(),
+  publishedAt: z.string().datetime().nullable().optional(),
+  modifiedAt: z.string().datetime().nullable().optional(),
 });
 
 

@@ -192,6 +192,8 @@ export interface DbVulnerability {
   cvss_v3_vector: string | null;
   cvss_v2_score: number | null;
   cvss_v2_vector: string | null;
+  cvss_v4_score: number | null;
+  cvss_v4_vector: string | null;
   cwe_ids: string;
   affected_products: string;
   vuln_references: string;
@@ -282,20 +284,22 @@ export const vulnRepo = {
       .prepare(
         `INSERT INTO vulnerabilities
           (id, cve_id, title, description, severity, cvss_v3_score, cvss_v3_vector,
-           cvss_v2_score, cvss_v2_vector, cwe_ids, affected_products, vuln_references,
+           cvss_v2_score, cvss_v2_vector, cvss_v4_score, cvss_v4_vector,
+           cwe_ids, affected_products, vuln_references,
            published_at, modified_at, source, status)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       )
       .bind(
         v.id, v.cve_id, v.title, v.description, v.severity,
         v.cvss_v3_score, v.cvss_v3_vector, v.cvss_v2_score, v.cvss_v2_vector,
+        v.cvss_v4_score, v.cvss_v4_vector,
         v.cwe_ids, v.affected_products, v.vuln_references,
         v.published_at, v.modified_at, v.source, v.status,
       )
       .run();
   },
 
-  update(db: DB, id: string, fields: Partial<Pick<DbVulnerability, 'title' | 'description' | 'severity' | 'status' | 'cvss_v3_score' | 'cvss_v3_vector'>>) {
+  update(db: DB, id: string, fields: Partial<Pick<DbVulnerability, 'title' | 'description' | 'severity' | 'status' | 'cvss_v3_score' | 'cvss_v3_vector' | 'cvss_v4_score' | 'cvss_v4_vector' | 'cwe_ids' | 'vuln_references' | 'published_at' | 'modified_at'>>) {
     const sets: string[] = ["updated_at = datetime('now')"];
     const params: unknown[] = [];
     for (const [k, v] of Object.entries(fields)) {
