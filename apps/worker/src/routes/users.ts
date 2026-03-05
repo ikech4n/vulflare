@@ -51,7 +51,7 @@ userRoutes.post('/', authMiddleware, requireRole('admin'), validate(createUserSc
 
 // Update user role/status/profile - admin only
 userRoutes.patch('/:id', authMiddleware, requireRole('admin'), validate(updateUserSchema), async (c) => {
-  const id = c.req.param('id');
+  const id = c.req.param('id')!;
   const body = c.get('validatedBody') as { role?: string; isActive?: boolean; username?: string; email?: string | null };
 
   const user = await userRepo.findById(c.env.DB, id);
@@ -79,7 +79,7 @@ userRoutes.patch('/:id', authMiddleware, requireRole('admin'), validate(updateUs
 
 // Unlock user account - admin only
 userRoutes.post('/:id/unlock', authMiddleware, requireRole('admin'), async (c) => {
-  const id = c.req.param('id');
+  const id = c.req.param('id')!;
 
   const user = await userRepo.findById(c.env.DB, id);
   if (!user) return c.json({ error: 'User not found' }, 404);
@@ -90,7 +90,7 @@ userRoutes.post('/:id/unlock', authMiddleware, requireRole('admin'), async (c) =
 
 // Reset user password - admin only
 userRoutes.post('/:id/reset-password', authMiddleware, requireRole('admin'), validate(resetPasswordSchema), async (c) => {
-  const id = c.req.param('id');
+  const id = c.req.param('id')!;
   const body = c.get('validatedBody') as { password: string };
 
   const user = await userRepo.findById(c.env.DB, id);
@@ -103,7 +103,7 @@ userRoutes.post('/:id/reset-password', authMiddleware, requireRole('admin'), val
 
 // Delete user - admin only
 userRoutes.delete('/:id', authMiddleware, requireRole('admin'), async (c) => {
-  const id = c.req.param('id');
+  const id = c.req.param('id')!;
 
   if (id === c.get('userId')) {
     return c.json({ error: '自分自身は削除できません' }, 400);

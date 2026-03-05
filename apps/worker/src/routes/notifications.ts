@@ -20,7 +20,7 @@ notificationRoutes.get('/channels', async (c) => {
 
 // GET /api/notifications/channels/:id - チャネル詳細
 notificationRoutes.get('/channels/:id', async (c) => {
-  const channel = await notificationRepo.findChannelById(c.env.DB, c.req.param('id'));
+  const channel = await notificationRepo.findChannelById(c.env.DB, c.req.param('id')!);
   if (!channel) return c.json({ error: 'Channel not found' }, 404);
   return c.json(channel);
 });
@@ -55,7 +55,7 @@ notificationRoutes.post('/channels', requireRole('editor'), async (c) => {
 
 // PATCH /api/notifications/channels/:id - チャネル更新（editor以上）
 notificationRoutes.patch('/channels/:id', requireRole('editor'), async (c) => {
-  const id = c.req.param('id');
+  const id = c.req.param('id')!;
   const body = await c.req.json<{
     name?: string;
     config?: Record<string, unknown>;
@@ -76,16 +76,16 @@ notificationRoutes.patch('/channels/:id', requireRole('editor'), async (c) => {
 
 // DELETE /api/notifications/channels/:id - チャネル削除（admin限定）
 notificationRoutes.delete('/channels/:id', requireRole('admin'), async (c) => {
-  const channel = await notificationRepo.findChannelById(c.env.DB, c.req.param('id'));
+  const channel = await notificationRepo.findChannelById(c.env.DB, c.req.param('id')!);
   if (!channel) return c.json({ error: 'Channel not found' }, 404);
 
-  await notificationRepo.deleteChannel(c.env.DB, c.req.param('id'));
+  await notificationRepo.deleteChannel(c.env.DB, c.req.param('id')!);
   return c.json({ message: 'Channel deleted' });
 });
 
 // POST /api/notifications/channels/:id/test - テスト送信（editor以上）
 notificationRoutes.post('/channels/:id/test', requireRole('editor'), async (c) => {
-  const channel = await notificationRepo.findChannelById(c.env.DB, c.req.param('id'));
+  const channel = await notificationRepo.findChannelById(c.env.DB, c.req.param('id')!);
   if (!channel) return c.json({ error: 'Channel not found' }, 404);
 
   try {
@@ -145,7 +145,7 @@ notificationRoutes.post('/rules', requireRole('editor'), async (c) => {
 
 // PATCH /api/notifications/rules/:id - ルール更新（editor以上）
 notificationRoutes.patch('/rules/:id', requireRole('editor'), async (c) => {
-  const id = c.req.param('id');
+  const id = c.req.param('id')!;
   const body = await c.req.json<{
     eventType?: string;
     filterConfig?: Record<string, unknown>;
@@ -166,10 +166,10 @@ notificationRoutes.patch('/rules/:id', requireRole('editor'), async (c) => {
 
 // DELETE /api/notifications/rules/:id - ルール削除（admin限定）
 notificationRoutes.delete('/rules/:id', requireRole('admin'), async (c) => {
-  const rule = await notificationRepo.findRuleById(c.env.DB, c.req.param('id'));
+  const rule = await notificationRepo.findRuleById(c.env.DB, c.req.param('id')!);
   if (!rule) return c.json({ error: 'Rule not found' }, 404);
 
-  await notificationRepo.deleteRule(c.env.DB, c.req.param('id'));
+  await notificationRepo.deleteRule(c.env.DB, c.req.param('id')!);
   return c.json({ message: 'Rule deleted' });
 });
 

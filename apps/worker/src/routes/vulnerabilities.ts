@@ -66,7 +66,7 @@ vulnerabilityRoutes.get('/stats', async (c) => {
 
 // GET /api/vulnerabilities/:id
 vulnerabilityRoutes.get('/:id', async (c) => {
-  const vuln = await vulnRepo.findById(c.env.DB, c.req.param('id'));
+  const vuln = await vulnRepo.findById(c.env.DB, c.req.param('id')!);
   if (!vuln) return c.json({ error: 'Not found' }, 404);
   return c.json(mapVuln(vuln as unknown as Record<string, unknown>));
 });
@@ -162,7 +162,7 @@ vulnerabilityRoutes.patch('/batch', requireRole('editor'), validate(batchUpdateV
 
 // PATCH /api/vulnerabilities/:id
 vulnerabilityRoutes.patch('/:id', requireRole('editor'), validate(updateVulnerabilitySchema), async (c) => {
-  const id = c.req.param('id');
+  const id = c.req.param('id')!;
   const existing = await vulnRepo.findById(c.env.DB, id);
   if (!existing) return c.json({ error: 'Not found' }, 404);
 
@@ -202,9 +202,9 @@ vulnerabilityRoutes.patch('/:id', requireRole('editor'), validate(updateVulnerab
 
 // DELETE /api/vulnerabilities/:id
 vulnerabilityRoutes.delete('/:id', requireRole('admin'), async (c) => {
-  const existing = await vulnRepo.findById(c.env.DB, c.req.param('id'));
+  const existing = await vulnRepo.findById(c.env.DB, c.req.param('id')!);
   if (!existing) return c.json({ error: 'Not found' }, 404);
-  await vulnRepo.delete(c.env.DB, c.req.param('id'));
+  await vulnRepo.delete(c.env.DB, c.req.param('id')!);
   return c.json({ message: 'Deleted' });
 });
 
