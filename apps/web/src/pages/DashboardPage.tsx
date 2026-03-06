@@ -25,6 +25,8 @@ const SEVERITY_COLORS = {
   informational: '#6b7280',
 };
 
+const SEVERITY_ORDER = ['critical', 'high', 'medium', 'low', 'informational'] as const;
+
 export function DashboardPage() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['vulnerability-stats'],
@@ -47,7 +49,9 @@ export function DashboardPage() {
 
   if (!stats) return null;
 
-  const severityData = Object.entries(stats.bySeverity).map(([name, value]) => ({ name, value }));
+  const severityData = SEVERITY_ORDER
+    .filter(key => (stats.bySeverity[key] ?? 0) > 0)
+    .map(key => ({ name: key, value: stats.bySeverity[key] ?? 0 }));
   const statusData = [
     { name: '新規', value: stats.byStatus.new, color: '#f97316' },
     { name: '対応中', value: stats.byStatus.open, color: '#3b82f6' },
@@ -111,9 +115,19 @@ export function DashboardPage() {
                 ))}
               </Pie>
               <Tooltip />
-              <Legend />
             </PieChart>
           </ResponsiveContainer>
+          <ul className="flex flex-wrap gap-x-4 gap-y-1.5 justify-center mt-2">
+            {severityData.map(({ name }) => (
+              <li key={name} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                <span
+                  className="w-3.5 h-3.5 rounded-sm inline-block shrink-0"
+                  style={{ backgroundColor: SEVERITY_COLORS[name as keyof typeof SEVERITY_COLORS] }}
+                />
+                {name}
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
