@@ -544,34 +544,6 @@ export function SyncPage() {
                 )}
               </div>
 
-              {/* CVSS閾値 */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  CVSS最小スコア
-                </label>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                  指定スコア以上の脆弱性のみをインポートします。0で無効（全て取得）。
-                </p>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="number"
-                    min="0"
-                    max="10"
-                    step="0.1"
-                    value={cvssMinScore}
-                    onChange={(e) => setCvssMinScore(parseFloat(e.target.value) || 0)}
-                    className="w-24 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {cvssMinScore === 0 ? '無効（全て取得）' :
-                     cvssMinScore >= 9 ? 'Critical のみ' :
-                     cvssMinScore >= 7 ? 'High 以上' :
-                     cvssMinScore >= 4 ? 'Medium 以上' :
-                     'Low 以上'}
-                  </span>
-                </div>
-              </div>
-
               {/* 除外キーワード */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
@@ -616,6 +588,34 @@ export function SyncPage() {
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* CVSS閾値 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  CVSS最小スコア
+                </label>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  指定スコア以上の脆弱性のみをインポートします。0で無効（全て取得）。
+                </p>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="number"
+                    min="0"
+                    max="10"
+                    step="0.1"
+                    value={cvssMinScore}
+                    onChange={(e) => setCvssMinScore(parseFloat(e.target.value) || 0)}
+                    className="w-24 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {cvssMinScore === 0 ? '無効（全て取得）' :
+                     cvssMinScore >= 9 ? 'Critical のみ' :
+                     cvssMinScore >= 7 ? 'High 以上' :
+                     cvssMinScore >= 4 ? 'Medium 以上' :
+                     'Low 以上'}
+                  </span>
+                </div>
               </div>
 
               {/* 初回同期期間 */}
