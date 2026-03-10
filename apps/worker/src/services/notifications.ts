@@ -15,6 +15,18 @@ export interface NotificationPayload {
 }
 
 /**
+ * HTML特殊文字をエスケープする（XSS対策）
+ */
+function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
  * 通知をディスパッチする
  */
 export async function dispatchNotification(
@@ -330,10 +342,10 @@ function generateEmailBody(payload: NotificationPayload): string {
       <h1>Vulflare Notification</h1>
     </div>
     <div class="content">
-      <p><strong>Event Type:</strong> <span class="event-type">${eventType}</span></p>
+      <p><strong>Event Type:</strong> <span class="event-type">${escapeHtml(eventType)}</span></p>
       <p class="timestamp"><strong>Timestamp:</strong> ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>
       <h3>Event Data:</h3>
-      <pre>${JSON.stringify(data, null, 2)}</pre>
+      <pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>
     </div>
   </div>
 </body>
@@ -354,7 +366,7 @@ function generateVulnerabilityCreatedEmail(data: Record<string, unknown>, timest
 
   const summary = count != null
     ? `新規脆弱性が <strong>${count}件</strong> 登録されました。${criticalCount ? `（うちCritical: <strong>${criticalCount}件</strong>）` : ''}`
-    : `脆弱性が登録されました: <strong>${vulnId ?? ''}</strong> ${title ?? ''}`;
+    : `脆弱性が登録されました: <strong>${escapeHtml(vulnId)}</strong> ${escapeHtml(title)}`;
 
   return `
 <!DOCTYPE html>
@@ -375,8 +387,8 @@ function generateVulnerabilityCreatedEmail(data: Record<string, unknown>, timest
     <div class="header"><h1>🆕 脆弱性が登録されました</h1></div>
     <div class="content">
       <p>${summary}</p>
-      ${vulnId ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${vulnId}</div></div>` : ''}
-      ${severity ? `<div class="info-item"><div class="info-label">深刻度</div><div>${severity}</div></div>` : ''}
+      ${vulnId ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${escapeHtml(vulnId)}</div></div>` : ''}
+      ${severity ? `<div class="info-item"><div class="info-label">深刻度</div><div>${escapeHtml(severity)}</div></div>` : ''}
       <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>
     </div>
   </div>
@@ -396,7 +408,7 @@ function generateVulnerabilityUpdatedEmail(data: Record<string, unknown>, timest
 
   const summary = count != null
     ? `<strong>${count}件</strong> の脆弱性が一括更新されました。`
-    : `脆弱性が更新されました: <strong>${vulnId ?? ''}</strong> ${title ?? ''}`;
+    : `脆弱性が更新されました: <strong>${escapeHtml(vulnId)}</strong> ${escapeHtml(title)}`;
 
   return `
 <!DOCTYPE html>
@@ -417,8 +429,8 @@ function generateVulnerabilityUpdatedEmail(data: Record<string, unknown>, timest
     <div class="header"><h1>✏️ 脆弱性が更新されました</h1></div>
     <div class="content">
       <p>${summary}</p>
-      ${vulnId ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${vulnId}</div></div>` : ''}
-      ${status ? `<div class="info-item"><div class="info-label">ステータス</div><div>${status}</div></div>` : ''}
+      ${vulnId ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${escapeHtml(vulnId)}</div></div>` : ''}
+      ${status ? `<div class="info-item"><div class="info-label">ステータス</div><div>${escapeHtml(status)}</div></div>` : ''}
       <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>
     </div>
   </div>
@@ -438,7 +450,7 @@ function generateVulnerabilityCriticalEmail(data: Record<string, unknown>, times
 
   const summary = criticalCount != null
     ? `Critical脆弱性が <strong>${criticalCount}件</strong> 検出されました。`
-    : `クリティカル脆弱性が検出されました: <strong>${vulnId ?? ''}</strong> ${title ?? ''}`;
+    : `クリティカル脆弱性が検出されました: <strong>${escapeHtml(vulnId)}</strong> ${escapeHtml(title)}`;
 
   return `
 <!DOCTYPE html>
@@ -460,8 +472,8 @@ function generateVulnerabilityCriticalEmail(data: Record<string, unknown>, times
     <div class="header"><h1>🚨 クリティカル脆弱性が検出されました</h1></div>
     <div class="content">
       <div class="alert">${summary}</div>
-      ${cveIds?.length ? `<div class="info-item"><div class="info-label">CVE ID一覧</div><div>${cveIds.join(', ')}</div></div>` : ''}
-      ${vulnId && !cveIds?.length ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${vulnId}</div></div>` : ''}
+      ${cveIds?.length ? `<div class="info-item"><div class="info-label">CVE ID一覧</div><div>${cveIds.map(escapeHtml).join(', ')}</div></div>` : ''}
+      ${vulnId && !cveIds?.length ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${escapeHtml(vulnId)}</div></div>` : ''}
       <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>
     </div>
   </div>
@@ -501,31 +513,31 @@ function generateEolApproachingEmail(data: Record<string, unknown>, timestamp: s
     </div>
     <div class="content">
       <div class="warning">
-        <strong>${data.display_name} (${data.cycle})</strong> のサポート終了が <strong>${data.days_until_eol}日後</strong> に迫っています。
+        <strong>${escapeHtml(data.display_name)} (${escapeHtml(data.cycle)})</strong> のサポート終了が <strong>${escapeHtml(data.days_until_eol)}日後</strong> に迫っています。
       </div>
 
       <div class="info-grid">
         <div class="info-item">
           <div class="info-label">プロダクト</div>
-          <div class="info-value">${data.display_name} (${data.product_name})</div>
+          <div class="info-value">${escapeHtml(data.display_name)} (${escapeHtml(data.product_name)})</div>
         </div>
         <div class="info-item">
           <div class="info-label">バージョン</div>
-          <div class="info-value">${data.cycle}</div>
+          <div class="info-value">${escapeHtml(data.cycle)}</div>
         </div>
         <div class="info-item">
           <div class="info-label">カテゴリ</div>
-          <div class="info-value">${data.category}</div>
+          <div class="info-value">${escapeHtml(data.category)}</div>
         </div>
         ${data.vendor ? `
         <div class="info-item">
           <div class="info-label">ベンダー</div>
-          <div class="info-value">${data.vendor}</div>
+          <div class="info-value">${escapeHtml(data.vendor)}</div>
         </div>
         ` : ''}
         <div class="info-item">
           <div class="info-label">EOL日</div>
-          <div class="info-value">${data.eol_date}</div>
+          <div class="info-value">${escapeHtml(data.eol_date)}</div>
         </div>
       </div>
 
@@ -567,31 +579,31 @@ function generateEolExpiredEmail(data: Record<string, unknown>, timestamp: strin
     </div>
     <div class="content">
       <div class="alert">
-        <strong>${data.display_name} (${data.cycle})</strong> のサポートが終了しました。早急な対応が必要です。
+        <strong>${escapeHtml(data.display_name)} (${escapeHtml(data.cycle)})</strong> のサポートが終了しました。早急な対応が必要です。
       </div>
 
       <div class="info-grid">
         <div class="info-item">
           <div class="info-label">プロダクト</div>
-          <div class="info-value">${data.display_name} (${data.product_name})</div>
+          <div class="info-value">${escapeHtml(data.display_name)} (${escapeHtml(data.product_name)})</div>
         </div>
         <div class="info-item">
           <div class="info-label">バージョン</div>
-          <div class="info-value">${data.cycle}</div>
+          <div class="info-value">${escapeHtml(data.cycle)}</div>
         </div>
         <div class="info-item">
           <div class="info-label">カテゴリ</div>
-          <div class="info-value">${data.category}</div>
+          <div class="info-value">${escapeHtml(data.category)}</div>
         </div>
         ${data.vendor ? `
         <div class="info-item">
           <div class="info-label">ベンダー</div>
-          <div class="info-value">${data.vendor}</div>
+          <div class="info-value">${escapeHtml(data.vendor)}</div>
         </div>
         ` : ''}
         <div class="info-item">
           <div class="info-label">EOL日</div>
-          <div class="info-value">${data.eol_date}</div>
+          <div class="info-value">${escapeHtml(data.eol_date)}</div>
         </div>
       </div>
 
