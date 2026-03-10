@@ -15,7 +15,7 @@
     "test:web": "pnpm --filter @vulflare/web test"
   },
   "devDependencies": {
-    "wrangler": "^4.0.0",
+    "wrangler": "^4.71.0",
     "typescript": "^5.7.0"
   },
   "pnpm": {
