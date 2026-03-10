@@ -119,6 +119,7 @@ vulnerabilityRoutes.post('/', requireRole('editor'), validate(createVulnerabilit
     modified_at: body.modifiedAt ?? null,
     source: 'manual',
     status: 'new',
+    memo: null,
   });
 
   const created = await vulnRepo.findById(c.env.DB, id);
@@ -196,6 +197,7 @@ vulnerabilityRoutes.patch('/:id', requireRole('editor'), validate(updateVulnerab
     references?: unknown[];
     publishedAt?: string | null;
     modifiedAt?: string | null;
+    memo?: string | null;
   };
 
   await vulnRepo.update(c.env.DB, id, {
@@ -211,6 +213,7 @@ vulnerabilityRoutes.patch('/:id', requireRole('editor'), validate(updateVulnerab
     ...(body.references !== undefined && { vuln_references: JSON.stringify(body.references) }),
     ...(body.publishedAt !== undefined && { published_at: body.publishedAt }),
     ...(body.modifiedAt !== undefined && { modified_at: body.modifiedAt }),
+    ...(body.memo !== undefined && { memo: body.memo }),
   });
 
   const updated = await vulnRepo.findById(c.env.DB, id);
@@ -254,6 +257,7 @@ function mapVuln(v: Record<string, unknown>) {
     modifiedAt: v['modified_at'],
     source: v['source'],
     status: v['status'],
+    memo: v['memo'] ?? null,
     createdAt: v['created_at'],
     updatedAt: v['updated_at'],
   };

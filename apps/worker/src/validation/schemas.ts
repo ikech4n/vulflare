@@ -89,6 +89,7 @@ export const updateVulnerabilitySchema = z.object({
   references: z.array(z.unknown()).optional(),
   publishedAt: z.string().datetime().nullable().optional(),
   modifiedAt: z.string().datetime().nullable().optional(),
+  memo: z.string().max(2000, 'Memo too long').nullable().optional(),
 });
 
 
@@ -171,6 +172,14 @@ export const deleteSyncDataSchema = z.object({
   source: z.enum(['jvn']),
 });
 
+
+// ========================================
+// メモスキーマ
+// ========================================
+
+export const createMemoSchema = z.object({
+  content: z.string().min(1, 'Content is required').max(2000, 'Content too long'),
+});
 
 // ========================================
 // 一括更新スキーマ

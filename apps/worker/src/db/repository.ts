@@ -201,6 +201,7 @@ export interface DbVulnerability {
   modified_at: string | null;
   source: string;
   status: string;
+  memo: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -299,7 +300,7 @@ export const vulnRepo = {
       .run();
   },
 
-  update(db: DB, id: string, fields: Partial<Pick<DbVulnerability, 'title' | 'description' | 'severity' | 'status' | 'cvss_v3_score' | 'cvss_v3_vector' | 'cvss_v4_score' | 'cvss_v4_vector' | 'cwe_ids' | 'vuln_references' | 'published_at' | 'modified_at'>>) {
+  update(db: DB, id: string, fields: Partial<Pick<DbVulnerability, 'title' | 'description' | 'severity' | 'status' | 'cvss_v3_score' | 'cvss_v3_vector' | 'cvss_v4_score' | 'cvss_v4_vector' | 'cwe_ids' | 'vuln_references' | 'published_at' | 'modified_at' | 'memo'>>) {
     const sets: string[] = ["updated_at = datetime('now')"];
     const params: unknown[] = [];
     for (const [k, v] of Object.entries(fields)) {
