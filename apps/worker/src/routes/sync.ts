@@ -153,7 +153,14 @@ syncRoutes.get('/jvn-vendors/:vid/products', authMiddleware, async (c) => {
 
     if (shouldRefetch) {
       console.log(`Fetching products for vendor ${vendorId} from MyJVN API...`);
-      const products = await fetchProductList(vendorId);
+      const { vendorName, products } = await fetchProductList(vendorId);
+
+      // 外部キー制約を満たすためベンダーをUPSERT
+      await c.env.DB.prepare(
+        `INSERT INTO jvn_vendor_cache (vid, vname, fetched_at)
+         VALUES (?, ?, datetime('now', '+9 hours'))
+         ON CONFLICT(vid) DO NOTHING`
+      ).bind(vendorId, vendorName || vendorId).run();
 
       // バッチでキャッシュに保存
       if (products.length > 0) {

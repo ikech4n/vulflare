@@ -77,12 +77,17 @@ export async function fetchVendorList(keyword?: string): Promise<MyjvnVendor[]> 
   return vendors;
 }
 
+export interface MyjvnProductListResult {
+  vendorName: string;
+  products: MyjvnProduct[];
+}
+
 /**
  * MyJVN API から指定ベンダーの製品一覧を取得
  * @param vendorId - ベンダーID (vid)
- * @returns 製品オブジェクトの配列
+ * @returns ベンダー名と製品オブジェクトの配列
  */
-export async function fetchProductList(vendorId: string): Promise<MyjvnProduct[]> {
+export async function fetchProductList(vendorId: string): Promise<MyjvnProductListResult> {
   const params = new URLSearchParams({
     method: 'getProductList',
     feed: 'hnd',
@@ -95,6 +100,10 @@ export async function fetchProductList(vendorId: string): Promise<MyjvnProduct[]
   }
 
   const xml = await res.text();
+
+  // <Vendor vname="..." vid="..." ...> からベンダー名を取得
+  const vendorMatch = xml.match(/<Vendor\s+[^>]*vname="([^"]+)"/);
+  const vendorName = vendorMatch?.[1] ? decodeEntities(vendorMatch[1]) : '';
 
   // <Product pid="..." pname="..." cpe="..." /> 形式の要素をパース
   const products: MyjvnProduct[] = [];
@@ -112,5 +121,5 @@ export async function fetchProductList(vendorId: string): Promise<MyjvnProduct[]
     }
   }
 
-  return products;
+  return { vendorName, products };
 }

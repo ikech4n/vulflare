@@ -32,6 +32,10 @@ CREATE TABLE IF NOT EXISTS jvn_product_cache (
   cpe TEXT NOT NULL DEFAULT '',   -- CPE文字列（JVN APIクエリに使用）
   vendor_vid TEXT NOT NULL,       -- 所属ベンダーのvid
   fetched_at TEXT NOT NULL DEFAULT (datetime('now', '+9 hours')),
+  -- [D1注意] D1はデフォルトでFOREIGN KEY制約が有効（PRAGMA foreign_keys=ON）。
+  -- このFKが有効なため、jvn_product_cacheへのINSERT前に必ずjvn_vendor_cacheへの
+  -- UPSERT（ON CONFLICT DO NOTHING等）を実行すること。
+  -- 順序を守らないとFOREIGN KEY constraint failedエラー（D1_ERROR: 7500）が発生する。
   FOREIGN KEY (vendor_vid) REFERENCES jvn_vendor_cache(vid) ON DELETE CASCADE
 );
 

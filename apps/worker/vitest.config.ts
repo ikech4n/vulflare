@@ -5,6 +5,10 @@ export default defineWorkersConfig({
     poolOptions: {
       workers: {
         wrangler: { configPath: '../../wrangler.toml' },
+        miniflare: {
+          // テスト用のシークレット（wrangler.tomlに定義されていないため個別に設定）
+          bindings: { JWT_SECRET: 'test-jwt-secret-for-unit-tests' },
+        },
       },
     },
   },

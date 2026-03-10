@@ -50,6 +50,8 @@ app.route('/api/app-settings', appSettingsRoutes);
 
 app.notFound((c) => c.json({ error: 'Not found' }, 404));
 
+export { app };
+
 export default {
   fetch: app.fetch,
 
