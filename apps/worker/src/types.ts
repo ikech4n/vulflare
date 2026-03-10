@@ -4,7 +4,6 @@ export interface Env {
   KV_CACHE: KVNamespace;
   SEND_EMAIL: SendEmail;
   JWT_SECRET: string;
-  NVD_API_KEY?: string;
   PAGES_URL: string;
   NOREPLY_EMAIL: string;
   ENVIRONMENT: 'development' | 'production';
