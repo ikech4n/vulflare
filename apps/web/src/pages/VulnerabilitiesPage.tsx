@@ -71,7 +71,7 @@ export function VulnerabilitiesPage() {
   const batchUpdateMutation = useMutation({
     mutationFn: (body: BatchUpdateVulnerabilityRequest) =>
       api.patch<BatchUpdateVulnerabilityResponse>('/vulnerabilities/batch', body),
-    onSuccess: (response) => {
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['vulnerabilities'] });
       setSelectedIds(new Set());
       setBatchStatus('');

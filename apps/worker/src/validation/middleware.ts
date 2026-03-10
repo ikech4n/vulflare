@@ -8,7 +8,6 @@ export function validate<T>(schema: ZodSchema<T>): MiddlewareHandler {
   return async (c, next) => {
     try {
       const body = await c.req.json();
-      console.log('Validating body:', JSON.stringify(body, null, 2));
       const validated = schema.parse(body);
       c.set('validatedBody', validated);
       await next();

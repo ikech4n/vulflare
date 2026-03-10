@@ -5,6 +5,7 @@ import { vulnRepo } from '../db/repository.ts';
 import { cvssScoreToSeverity } from '@vulflare/shared/utils';
 import { validate } from '../validation/middleware.ts';
 import { createVulnerabilitySchema, updateVulnerabilitySchema, batchUpdateVulnerabilitiesSchema } from '../validation/schemas.ts';
+import { dispatchNotification } from '../services/notifications.ts';
 
 export const vulnerabilityRoutes = new Hono<{ Bindings: Env; Variables: JwtVariables }>();
 
@@ -121,7 +122,15 @@ vulnerabilityRoutes.post('/', requireRole('editor'), validate(createVulnerabilit
   });
 
   const created = await vulnRepo.findById(c.env.DB, id);
-  return c.json(mapVuln(created! as unknown as Record<string, unknown>), 201);
+  const mapped = mapVuln(created! as unknown as Record<string, unknown>);
+
+  const notifData = { vuln_id: mapped.cveId ?? id, title: mapped.title, severity: mapped.severity };
+  c.executionCtx.waitUntil(dispatchNotification(c.env, 'vulnerability_created', notifData));
+  if (severity === 'critical') {
+    c.executionCtx.waitUntil(dispatchNotification(c.env, 'vulnerability_critical', notifData));
+  }
+
+  return c.json(mapped, 201);
 });
 
 // PATCH /api/vulnerabilities/batch
@@ -153,9 +162,17 @@ vulnerabilityRoutes.patch('/batch', requireRole('editor'), validate(batchUpdateV
     ...(body.updates.status !== undefined && { status: body.updates.status }),
   });
 
+  const affectedRows = result.meta?.changes ?? 0;
+
+  c.executionCtx.waitUntil(dispatchNotification(c.env, 'vulnerability_updated', {
+    count: affectedRows,
+    ids: body.ids,
+    updates: body.updates,
+  }));
+
   return c.json({
     message: 'Batch update successful',
-    affectedRows: result.meta?.changes ?? 0,
+    affectedRows,
     updatedIds: body.ids,
   });
 });
@@ -197,7 +214,16 @@ vulnerabilityRoutes.patch('/:id', requireRole('editor'), validate(updateVulnerab
   });
 
   const updated = await vulnRepo.findById(c.env.DB, id);
-  return c.json(mapVuln(updated! as unknown as Record<string, unknown>));
+  const mappedUpdated = mapVuln(updated! as unknown as Record<string, unknown>);
+
+  c.executionCtx.waitUntil(dispatchNotification(c.env, 'vulnerability_updated', {
+    vuln_id: mappedUpdated.cveId ?? id,
+    title: mappedUpdated.title,
+    severity: mappedUpdated.severity,
+    status: mappedUpdated.status,
+  }));
+
+  return c.json(mappedUpdated);
 });
 
 // DELETE /api/vulnerabilities/:id

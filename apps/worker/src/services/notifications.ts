@@ -214,6 +214,52 @@ function generateEmailBodyText(payload: NotificationPayload): string {
     ].join('\n');
   }
 
+  if (eventType === 'vulnerability_created') {
+    const count = data.created_count as number | undefined;
+    const criticalCount = data.critical_count as number | undefined;
+    const title = data.title as string | undefined;
+    const vulnId = data.vuln_id as string | undefined;
+    return [
+      '🆕 脆弱性が登録されました - Vulflare',
+      '',
+      count != null
+        ? `新規脆弱性が ${count}件 登録されました。${criticalCount ? `（うちCritical: ${criticalCount}件）` : ''}`
+        : `脆弱性が登録されました: ${vulnId ?? ''} ${title ?? ''}`.trim(),
+      '',
+      `通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}`,
+    ].join('\n');
+  }
+
+  if (eventType === 'vulnerability_updated') {
+    const count = data.count as number | undefined;
+    const title = data.title as string | undefined;
+    const vulnId = data.vuln_id as string | undefined;
+    return [
+      '✏️ 脆弱性が更新されました - Vulflare',
+      '',
+      count != null
+        ? `${count}件の脆弱性が一括更新されました。`
+        : `脆弱性が更新されました: ${vulnId ?? ''} ${title ?? ''}`.trim(),
+      '',
+      `通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}`,
+    ].join('\n');
+  }
+
+  if (eventType === 'vulnerability_critical') {
+    const criticalCount = data.critical_count as number | undefined;
+    const cveIds = data.cve_ids as string[] | undefined;
+    const vulnId = data.vuln_id as string | undefined;
+    return [
+      '🚨 クリティカル脆弱性が検出されました - Vulflare',
+      '',
+      criticalCount != null
+        ? `Critical脆弱性が ${criticalCount}件 検出されました。${cveIds?.length ? `\nCVE: ${cveIds.join(', ')}` : ''}`
+        : `クリティカル脆弱性: ${vulnId ?? ''}`,
+      '',
+      `通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}`,
+    ].join('\n');
+  }
+
   if (eventType === 'eol_expired') {
     return [
       '🔴 サポート終了（EOL） - Vulflare',
@@ -253,6 +299,15 @@ function generateEmailBody(payload: NotificationPayload): string {
     return generateEolExpiredEmail(data, timestamp);
   }
 
+  // 脆弱性関連イベント
+  if (eventType === 'vulnerability_created') {
+    return generateVulnerabilityCreatedEmail(data, timestamp);
+  } else if (eventType === 'vulnerability_updated') {
+    return generateVulnerabilityUpdatedEmail(data, timestamp);
+  } else if (eventType === 'vulnerability_critical') {
+    return generateVulnerabilityCriticalEmail(data, timestamp);
+  }
+
   // デフォルトのフォーマット
   return `
 <!DOCTYPE html>
@@ -279,6 +334,135 @@ function generateEmailBody(payload: NotificationPayload): string {
       <p class="timestamp"><strong>Timestamp:</strong> ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>
       <h3>Event Data:</h3>
       <pre>${JSON.stringify(data, null, 2)}</pre>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+/**
+ * 脆弱性作成メール本文
+ */
+function generateVulnerabilityCreatedEmail(data: Record<string, unknown>, timestamp: string): string {
+  const count = data.created_count as number | undefined;
+  const criticalCount = data.critical_count as number | undefined;
+  const title = data.title as string | undefined;
+  const vulnId = data.vuln_id as string | undefined;
+  const severity = data.severity as string | undefined;
+  const severityColor = severity === 'critical' ? '#dc2626' : '#1e40af';
+
+  const summary = count != null
+    ? `新規脆弱性が <strong>${count}件</strong> 登録されました。${criticalCount ? `（うちCritical: <strong>${criticalCount}件</strong>）` : ''}`
+    : `脆弱性が登録されました: <strong>${vulnId ?? ''}</strong> ${title ?? ''}`;
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: ${severityColor}; color: white; padding: 20px; border-radius: 5px; }
+    .content { padding: 20px; background: #f9fafb; margin-top: 20px; border-radius: 5px; }
+    .info-item { padding: 10px; background: white; border-radius: 3px; margin: 8px 0; }
+    .info-label { font-weight: bold; color: #6b7280; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header"><h1>🆕 脆弱性が登録されました</h1></div>
+    <div class="content">
+      <p>${summary}</p>
+      ${vulnId ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${vulnId}</div></div>` : ''}
+      ${severity ? `<div class="info-item"><div class="info-label">深刻度</div><div>${severity}</div></div>` : ''}
+      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+/**
+ * 脆弱性更新メール本文
+ */
+function generateVulnerabilityUpdatedEmail(data: Record<string, unknown>, timestamp: string): string {
+  const count = data.count as number | undefined;
+  const title = data.title as string | undefined;
+  const vulnId = data.vuln_id as string | undefined;
+  const status = data.status as string | undefined;
+
+  const summary = count != null
+    ? `<strong>${count}件</strong> の脆弱性が一括更新されました。`
+    : `脆弱性が更新されました: <strong>${vulnId ?? ''}</strong> ${title ?? ''}`;
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #0284c7; color: white; padding: 20px; border-radius: 5px; }
+    .content { padding: 20px; background: #f9fafb; margin-top: 20px; border-radius: 5px; }
+    .info-item { padding: 10px; background: white; border-radius: 3px; margin: 8px 0; }
+    .info-label { font-weight: bold; color: #6b7280; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header"><h1>✏️ 脆弱性が更新されました</h1></div>
+    <div class="content">
+      <p>${summary}</p>
+      ${vulnId ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${vulnId}</div></div>` : ''}
+      ${status ? `<div class="info-item"><div class="info-label">ステータス</div><div>${status}</div></div>` : ''}
+      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+/**
+ * クリティカル脆弱性メール本文
+ */
+function generateVulnerabilityCriticalEmail(data: Record<string, unknown>, timestamp: string): string {
+  const criticalCount = data.critical_count as number | undefined;
+  const cveIds = data.cve_ids as string[] | undefined;
+  const vulnId = data.vuln_id as string | undefined;
+  const title = data.title as string | undefined;
+
+  const summary = criticalCount != null
+    ? `Critical脆弱性が <strong>${criticalCount}件</strong> 検出されました。`
+    : `クリティカル脆弱性が検出されました: <strong>${vulnId ?? ''}</strong> ${title ?? ''}`;
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #dc2626; color: white; padding: 20px; border-radius: 5px; }
+    .content { padding: 20px; background: #f9fafb; margin-top: 20px; border-radius: 5px; }
+    .alert { background: #fee2e2; border-left: 4px solid #dc2626; padding: 15px; margin: 15px 0; }
+    .info-item { padding: 10px; background: white; border-radius: 3px; margin: 8px 0; }
+    .info-label { font-weight: bold; color: #6b7280; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header"><h1>🚨 クリティカル脆弱性が検出されました</h1></div>
+    <div class="content">
+      <div class="alert">${summary}</div>
+      ${cveIds?.length ? `<div class="info-item"><div class="info-label">CVE ID一覧</div><div>${cveIds.join(', ')}</div></div>` : ''}
+      ${vulnId && !cveIds?.length ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${vulnId}</div></div>` : ''}
+      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>
     </div>
   </div>
 </body>

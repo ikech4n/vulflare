@@ -247,6 +247,9 @@ function ProductActions({ product }: { product: EolProduct }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['eol'] });
     },
+    onError: () => {
+      alert('削除に失敗しました');
+    },
   });
 
   return (
@@ -346,13 +349,14 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
       queryClient.invalidateQueries({ queryKey: ['eol'] });
       onClose();
     },
-    onError: (error: any) => {
-      alert(error.response?.data?.error || '作成に失敗しました');
+    onError: (error: unknown) => {
+      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      alert(msg || '作成に失敗しました');
     },
   });
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">プロダクト追加</h2>
 
@@ -496,13 +500,14 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
       queryClient.invalidateQueries({ queryKey: ['eol'] });
       onClose();
     },
-    onError: (error: any) => {
-      alert(error.response?.data?.error || '更新に失敗しました');
+    onError: (error: unknown) => {
+      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      alert(msg || '更新に失敗しました');
     },
   });
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">プロダクト編集</h2>
 

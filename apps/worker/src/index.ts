@@ -14,6 +14,7 @@ import { eolRoutes } from './routes/eol.ts';
 import { appSettingsRoutes } from './routes/app-settings.ts';
 import { handleJvnSync } from './scheduled/jvn-sync.ts';
 import { handleEolSync } from './scheduled/eol-sync.ts';
+import { createDailySnapshot } from './scheduled/snapshot.ts';
 import { csrfProtection } from './middleware/csrf.ts';
 
 const app = new Hono<{ Bindings: Env }>();
@@ -55,10 +56,11 @@ export default {
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
     // JVN同期処理: 毎時実行（増分同期）
     ctx.waitUntil(handleJvnSync(env));
-    // EOL同期処理: 毎日 01:00 JST (16:00 UTC) のみ実行
+    // EOL同期処理と日次スナップショット: 毎日 01:00 JST (16:00 UTC) のみ実行
     const scheduledHour = new Date(event.scheduledTime).getUTCHours();
     if (scheduledHour === 16) {
       ctx.waitUntil(handleEolSync(env));
+      ctx.waitUntil(createDailySnapshot(env));
     }
   },
 };

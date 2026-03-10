@@ -15,7 +15,49 @@ const EVENT_LABELS: Record<EventType, string> = {
   vulnerability_updated: '脆弱性更新',
   vulnerability_critical: 'クリティカル脆弱性',
   eol_approaching: 'EOL期限接近',
+  eol_expired: 'EOL期限切れ',
 };
+
+function parsePayload(payloadStr: string): Record<string, unknown> {
+  try {
+    const parsed = JSON.parse(payloadStr);
+    return parsed.data ?? parsed;
+  } catch {
+    return {};
+  }
+}
+
+function LogDetail({ log }: { log: NotificationLog }) {
+  const data = parsePayload(log.payload);
+
+  if (log.event_type === 'eol_approaching' || log.event_type === 'eol_expired') {
+    const name = data.display_name as string | undefined;
+    const cycle = data.cycle as string | undefined;
+    const eolDate = data.eol_date as string | undefined;
+    const daysUntil = data.days_until_eol as number | undefined;
+    return (
+      <div className="text-sm text-gray-700 dark:text-gray-300 space-y-0.5">
+        {name && <div><span className="font-medium">{name}</span>{cycle ? ` (${cycle})` : ''}</div>}
+        {eolDate && <div className="text-xs text-gray-500 dark:text-gray-400">EOL: {eolDate}{daysUntil != null ? ` (残 ${daysUntil}日)` : ''}</div>}
+      </div>
+    );
+  }
+
+  if (log.event_type.startsWith('vulnerability_')) {
+    const title = data.title as string | undefined;
+    const vulnId = data.vuln_id as string | undefined;
+    const severity = data.severity as string | undefined;
+    const cvss = data.cvss_score as number | undefined;
+    return (
+      <div className="text-sm text-gray-700 dark:text-gray-300 space-y-0.5">
+        {(vulnId || title) && <div><span className="font-medium">{vulnId}</span>{title ? ` ${title}` : ''}</div>}
+        {(severity || cvss != null) && <div className="text-xs text-gray-500 dark:text-gray-400">{severity}{cvss != null ? ` CVSS: ${cvss}` : ''}</div>}
+      </div>
+    );
+  }
+
+  return <span className="text-gray-400">-</span>;
+}
 
 export function NotificationsPage() {
   const { user } = useAuthStore();
@@ -98,6 +140,9 @@ export function NotificationsPage() {
       setEmailTo('');
       setEmailCc('');
     },
+    onError: () => {
+      alert('チャネルの作成に失敗しました');
+    },
   });
 
   // チャネル削除
@@ -107,6 +152,9 @@ export function NotificationsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+    onError: () => {
+      alert('チャネルの削除に失敗しました');
     },
   });
 
@@ -159,6 +207,9 @@ export function NotificationsPage() {
       setShowRuleForm(false);
       setRuleChannelId('');
     },
+    onError: () => {
+      alert('ルールの作成に失敗しました');
+    },
   });
 
   // ルール削除
@@ -168,6 +219,9 @@ export function NotificationsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications', 'rules'] });
+    },
+    onError: () => {
+      alert('ルールの削除に失敗しました');
     },
   });
 
@@ -199,7 +253,12 @@ export function NotificationsPage() {
     setEditChannelName(channel.name);
     setEditIsActive(channel.is_active === 1);
 
-    const config = JSON.parse(channel.config);
+    let config: { url?: string; from?: string; to?: string[]; cc?: string[] };
+    try {
+      config = JSON.parse(channel.config) as typeof config;
+    } catch {
+      config = {};
+    }
     if (channel.type === 'webhook') {
       setEditWebhookUrl(config.url || '');
       setEditEmailFrom('');
@@ -542,7 +601,10 @@ export function NotificationsPage() {
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => deleteChannelMutation.mutate(channel.id)}
+                        onClick={() => {
+                          if (!confirm('このチャネルを削除しますか？')) return;
+                          deleteChannelMutation.mutate(channel.id);
+                        }}
                         className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
                         title="削除"
                       >
@@ -669,7 +731,10 @@ export function NotificationsPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button
-                          onClick={() => deleteRuleMutation.mutate(rule.id)}
+                          onClick={() => {
+                            if (!confirm('このルールを削除しますか？')) return;
+                            deleteRuleMutation.mutate(rule.id);
+                          }}
                           className="text-red-600 hover:text-red-900"
                         >
                           削除
@@ -691,39 +756,56 @@ export function NotificationsPage() {
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">送信日時</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">チャネル</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">イベント</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">詳細</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">状態</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">エラー</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {logs.map((log) => (
-                <tr key={log.id}>
-                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
-                    {new Date(log.sent_at.replace(' ', 'T') + 'Z').toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">{EVENT_LABELS[log.event_type]}</td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`flex items-center px-2 py-1 text-xs rounded ${
-                        log.status === 'sent'
-                          ? 'bg-green-100 text-green-800'
-                          : log.status === 'failed'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}
-                    >
-                      {log.status === 'sent' ? (
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                      ) : log.status === 'failed' ? (
-                        <XCircle className="w-3 h-3 mr-1" />
-                      ) : null}
-                      {log.status === 'sent' ? '成功' : log.status === 'failed' ? '失敗' : '保留中'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{log.error_message || '-'}</td>
-                </tr>
-              ))}
+              {logs.map((log) => {
+                const channel = channels.find((c) => c.id === log.channel_id);
+                return (
+                  <tr key={log.id}>
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                      {new Date(log.sent_at.replace(' ', 'T') + 'Z').toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                      {channel ? (
+                        <span>{channel.name}</span>
+                      ) : (
+                        <span className="text-xs text-gray-400">{log.channel_id.slice(0, 8)}…</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                      {EVENT_LABELS[log.event_type] ?? log.event_type}
+                    </td>
+                    <td className="px-6 py-4 min-w-48">
+                      <LogDetail log={log} />
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`flex items-center gap-1 px-2 py-1 text-xs rounded whitespace-nowrap ${
+                          log.status === 'sent'
+                            ? 'bg-green-100 text-green-800'
+                            : log.status === 'failed'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}
+                      >
+                        {log.status === 'sent' ? (
+                          <CheckCircle className="w-3 h-3" />
+                        ) : log.status === 'failed' ? (
+                          <XCircle className="w-3 h-3" />
+                        ) : null}
+                        {log.status === 'sent' ? '成功' : log.status === 'failed' ? '失敗' : '保留中'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{log.error_message || '-'}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

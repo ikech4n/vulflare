@@ -2,6 +2,7 @@ import type { Env } from '../types.ts';
 import { cvssScoreToSeverity } from '@vulflare/shared/utils';
 import { getSyncSettings, shouldExcludeByKeywords, shouldExcludeByCvss } from '../services/sync-settings.ts';
 import { extractVendorsAndProducts } from '../utils/cpe-parser.ts';
+import { dispatchNotification } from '../services/notifications.ts';
 
 const JVN_API_BASE = 'https://jvndb.jvn.jp/myjvn';
 const MAX_ITEMS_PER_PAGE = 50;
@@ -459,6 +460,33 @@ export async function handleJvnSync(env: Env, forceFullSync = false): Promise<vo
     ).bind(cancelled ? 'cancelled' : 'completed', totalFetched, totalCreated, syncLogId).run();
 
     console.log(`JVN sync done: fetched=${totalFetched}, created=${totalCreated}`);
+
+    // 新規作成された脆弱性がある場合は通知を発火
+    if (!cancelled && totalCreated > 0) {
+      // 同期開始時刻以降に作成されたCritical脆弱性を集計
+      const criticalRows = await env.DB.prepare(`
+        SELECT cve_id FROM vulnerabilities
+        WHERE source = 'jvn' AND severity = 'critical'
+          AND created_at >= ?
+      `).bind(nowStr).all<{ cve_id: string }>();
+
+      const criticalCount = criticalRows.results.length;
+      const criticalCveIds = criticalRows.results.map((r) => r.cve_id);
+
+      await dispatchNotification(env, 'vulnerability_created', {
+        source: 'jvn',
+        created_count: totalCreated,
+        critical_count: criticalCount,
+      });
+
+      if (criticalCount > 0) {
+        await dispatchNotification(env, 'vulnerability_critical', {
+          source: 'jvn',
+          critical_count: criticalCount,
+          cve_ids: criticalCveIds,
+        });
+      }
+    }
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     await env.DB.prepare(

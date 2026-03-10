@@ -76,7 +76,10 @@ export function SyncPage() {
   const { data: syncStatus, isLoading } = useQuery({
     queryKey: ['sync-status'],
     queryFn: () => api.get<{ latestLog: JvnSyncLog | null }>('/sync/status').then((r) => r.data),
-    refetchInterval: 10000, // 10秒ごとに自動更新
+    refetchInterval: (query) =>
+      (query.state.data as { latestLog: JvnSyncLog | null } | undefined)?.latestLog?.status === 'running'
+        ? 5000
+        : false,
   });
 
   const { data: syncSettingsData } = useQuery({
@@ -787,7 +790,7 @@ export function SyncPage() {
 
       {/* 全件同期確認モーダル */}
       {showFullSyncConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">全件取得の実行</h3>
             <div className="space-y-3 mb-6">

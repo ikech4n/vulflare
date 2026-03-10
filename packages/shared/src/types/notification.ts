@@ -4,7 +4,8 @@ export type EventType =
   | 'vulnerability_created'
   | 'vulnerability_updated'
   | 'vulnerability_critical'
-  | 'eol_approaching';
+  | 'eol_approaching'
+  | 'eol_expired';
 
 export interface NotificationChannel {
   id: string;

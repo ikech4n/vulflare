@@ -194,6 +194,9 @@ function CycleActions({ cycle, productId }: { cycle: EolCycle; productId: string
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['eol', 'products', productId] });
     },
+    onError: () => {
+      alert('削除に失敗しました');
+    },
   });
 
   return (
@@ -258,13 +261,14 @@ function AddCycleModal({ productId, onClose }: { productId: string; onClose: () 
       queryClient.invalidateQueries({ queryKey: ['eol', 'products', productId] });
       onClose();
     },
-    onError: (error: any) => {
-      alert(error.response?.data?.error || '作成に失敗しました');
+    onError: (error: unknown) => {
+      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      alert(msg || '作成に失敗しました');
     },
   });
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">サイクル追加</h2>
 
@@ -406,13 +410,14 @@ function EditCycleModal({ cycle, productId, onClose }: { cycle: EolCycle; produc
       queryClient.invalidateQueries({ queryKey: ['eol', 'products', productId] });
       onClose();
     },
-    onError: (error: any) => {
-      alert(error.response?.data?.error || '更新に失敗しました');
+    onError: (error: unknown) => {
+      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      alert(msg || '更新に失敗しました');
     },
   });
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">サイクル編集</h2>
 
