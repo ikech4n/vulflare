@@ -20,6 +20,11 @@ import { csrfProtection } from './middleware/csrf.ts';
 const app = new Hono<{ Bindings: Env }>();
 
 app.use('/*', logger());
+app.use('/*', (c, next) => {
+  c.header('X-Content-Type-Options', 'nosniff');
+  c.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  return next();
+});
 app.use('/api/*', cors({
   origin: (origin, c) => {
     const pagesUrl = c.env.PAGES_URL;
