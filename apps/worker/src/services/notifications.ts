@@ -152,8 +152,9 @@ async function sendEmail(
 
   const subjectTemplate = (config.subject as string) || 'Vulflare: {eventType}';
   const subject = subjectTemplate.replace('{eventType}', payload.eventType);
-  const htmlBody = generateEmailBody(payload);
-  const textBody = generateEmailBodyText(payload);
+  const appUrl = env.PAGES_URL ?? '';
+  const htmlBody = generateEmailBody(payload, appUrl);
+  const textBody = generateEmailBodyText(payload, appUrl);
 
   try {
     const { EmailMessage } = await import('cloudflare:email');
@@ -207,12 +208,12 @@ async function sendEmail(
 /**
  * メール本文の生成（プレーンテキスト版）
  */
-function generateEmailBodyText(payload: NotificationPayload): string {
+function generateEmailBodyText(payload: NotificationPayload, appUrl: string): string {
   const { eventType, data, timestamp } = payload;
 
   if (eventType === 'eol_approaching') {
     return [
-      '⚠️ EOL期限が近づいています - Vulflare',
+      'EOL期限が近づいています - Vulflare',
       '',
       `${data.display_name} (${data.cycle}) のサポート終了が ${data.days_until_eol}日後 に迫っています。`,
       '',
@@ -231,15 +232,17 @@ function generateEmailBodyText(payload: NotificationPayload): string {
     const criticalCount = data.critical_count as number | undefined;
     const title = data.title as string | undefined;
     const vulnId = data.vuln_id as string | undefined;
-    return [
-      '🆕 脆弱性が登録されました - Vulflare',
+    const lines = [
+      '脆弱性が登録されました - Vulflare',
       '',
       count != null
         ? `新規脆弱性が ${count}件 登録されました。${criticalCount ? `（うちCritical: ${criticalCount}件）` : ''}`
         : `脆弱性が登録されました: ${vulnId ?? ''} ${title ?? ''}`.trim(),
-      '',
-      `通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}`,
-    ].join('\n');
+    ];
+    if (title) lines.push('', `タイトル: ${title}`);
+    if (appUrl) lines.push('', `脆弱性一覧: ${appUrl}/vulnerabilities`);
+    lines.push('', `通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}`);
+    return lines.join('\n');
   }
 
   if (eventType === 'vulnerability_updated') {
@@ -247,7 +250,7 @@ function generateEmailBodyText(payload: NotificationPayload): string {
     const title = data.title as string | undefined;
     const vulnId = data.vuln_id as string | undefined;
     return [
-      '✏️ 脆弱性が更新されました - Vulflare',
+      '脆弱性が更新されました - Vulflare',
       '',
       count != null
         ? `${count}件の脆弱性が一括更新されました。`
@@ -262,7 +265,7 @@ function generateEmailBodyText(payload: NotificationPayload): string {
     const cveIds = data.cve_ids as string[] | undefined;
     const vulnId = data.vuln_id as string | undefined;
     return [
-      '🚨 クリティカル脆弱性が検出されました - Vulflare',
+      'クリティカル脆弱性が検出されました - Vulflare',
       '',
       criticalCount != null
         ? `Critical脆弱性が ${criticalCount}件 検出されました。${cveIds?.length ? `\nCVE: ${cveIds.join(', ')}` : ''}`
@@ -274,7 +277,7 @@ function generateEmailBodyText(payload: NotificationPayload): string {
 
   if (eventType === 'eol_expired') {
     return [
-      '🔴 サポート終了（EOL） - Vulflare',
+      'サポート終了（EOL） - Vulflare',
       '',
       `${data.display_name} (${data.cycle}) のサポートが終了しました。早急な対応が必要です。`,
       '',
@@ -301,7 +304,7 @@ function generateEmailBodyText(payload: NotificationPayload): string {
 /**
  * メール本文の生成
  */
-function generateEmailBody(payload: NotificationPayload): string {
+function generateEmailBody(payload: NotificationPayload, appUrl: string): string {
   const { eventType, data, timestamp } = payload;
 
   // EOL関連イベントの場合は専用のフォーマットを使用
@@ -313,7 +316,7 @@ function generateEmailBody(payload: NotificationPayload): string {
 
   // 脆弱性関連イベント
   if (eventType === 'vulnerability_created') {
-    return generateVulnerabilityCreatedEmail(data, timestamp);
+    return generateVulnerabilityCreatedEmail(data, timestamp, appUrl);
   } else if (eventType === 'vulnerability_updated') {
     return generateVulnerabilityUpdatedEmail(data, timestamp);
   } else if (eventType === 'vulnerability_critical') {
@@ -356,7 +359,7 @@ function generateEmailBody(payload: NotificationPayload): string {
 /**
  * 脆弱性作成メール本文
  */
-function generateVulnerabilityCreatedEmail(data: Record<string, unknown>, timestamp: string): string {
+function generateVulnerabilityCreatedEmail(data: Record<string, unknown>, timestamp: string, appUrl: string): string {
   const count = data.created_count as number | undefined;
   const criticalCount = data.critical_count as number | undefined;
   const title = data.title as string | undefined;
@@ -366,7 +369,7 @@ function generateVulnerabilityCreatedEmail(data: Record<string, unknown>, timest
 
   const summary = count != null
     ? `新規脆弱性が <strong>${count}件</strong> 登録されました。${criticalCount ? `（うちCritical: <strong>${criticalCount}件</strong>）` : ''}`
-    : `脆弱性が登録されました: <strong>${escapeHtml(vulnId)}</strong> ${escapeHtml(title)}`;
+    : `脆弱性が登録されました: <strong>${escapeHtml(vulnId)}</strong>`;
 
   return `
 <!DOCTYPE html>
@@ -380,15 +383,18 @@ function generateVulnerabilityCreatedEmail(data: Record<string, unknown>, timest
     .content { padding: 20px; background: #f9fafb; margin-top: 20px; border-radius: 5px; }
     .info-item { padding: 10px; background: white; border-radius: 3px; margin: 8px 0; }
     .info-label { font-weight: bold; color: #6b7280; font-size: 0.9em; }
+    .link-button { display: inline-block; margin-top: 16px; padding: 10px 20px; background: ${severityColor}; color: white !important; text-decoration: none; border-radius: 4px; font-weight: bold; }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header"><h1>🆕 脆弱性が登録されました</h1></div>
+    <div class="header"><h1>脆弱性が登録されました</h1></div>
     <div class="content">
       <p>${summary}</p>
       ${vulnId ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${escapeHtml(vulnId)}</div></div>` : ''}
+      ${title ? `<div class="info-item"><div class="info-label">タイトル</div><div>${escapeHtml(title)}</div></div>` : ''}
       ${severity ? `<div class="info-item"><div class="info-label">深刻度</div><div>${escapeHtml(severity)}</div></div>` : ''}
+      ${appUrl ? `<a href="${appUrl}/vulnerabilities" class="link-button">脆弱性一覧を確認する</a>` : ''}
       <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>
     </div>
   </div>
@@ -426,7 +432,7 @@ function generateVulnerabilityUpdatedEmail(data: Record<string, unknown>, timest
 </head>
 <body>
   <div class="container">
-    <div class="header"><h1>✏️ 脆弱性が更新されました</h1></div>
+    <div class="header"><h1>脆弱性が更新されました</h1></div>
     <div class="content">
       <p>${summary}</p>
       ${vulnId ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${escapeHtml(vulnId)}</div></div>` : ''}
@@ -469,7 +475,7 @@ function generateVulnerabilityCriticalEmail(data: Record<string, unknown>, times
 </head>
 <body>
   <div class="container">
-    <div class="header"><h1>🚨 クリティカル脆弱性が検出されました</h1></div>
+    <div class="header"><h1>クリティカル脆弱性が検出されました</h1></div>
     <div class="content">
       <div class="alert">${summary}</div>
       ${cveIds?.length ? `<div class="info-item"><div class="info-label">CVE ID一覧</div><div>${cveIds.map(escapeHtml).join(', ')}</div></div>` : ''}
@@ -509,7 +515,7 @@ function generateEolApproachingEmail(data: Record<string, unknown>, timestamp: s
 <body>
   <div class="container">
     <div class="header">
-      <h1>⚠️ EOL期限が近づいています</h1>
+      <h1>EOL期限が近づいています</h1>
     </div>
     <div class="content">
       <div class="warning">
@@ -575,7 +581,7 @@ function generateEolExpiredEmail(data: Record<string, unknown>, timestamp: strin
 <body>
   <div class="container">
     <div class="header">
-      <h1>🔴 サポート終了（EOL）</h1>
+      <h1>サポート終了（EOL）</h1>
     </div>
     <div class="content">
       <div class="alert">
@@ -628,7 +634,9 @@ export async function sendTestNotification(
     eventType: 'vulnerability_created',
     data: {
       test: true,
-      message: 'This is a test notification from Vulflare',
+      vuln_id: 'CVE-2024-00000',
+      title: 'これはテスト通知です（Vulflare）',
+      severity: 'high',
     },
     timestamp: new Date().toISOString(),
   };

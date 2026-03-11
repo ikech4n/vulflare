@@ -88,13 +88,12 @@ notificationRoutes.post('/channels/:id/test', requireRole('editor'), async (c) =
   const channel = await notificationRepo.findChannelById(c.env.DB, c.req.param('id')!);
   if (!channel) return c.json({ error: 'Channel not found' }, 404);
 
-  try {
-    await sendTestNotification(c.env, channel);
-    return c.json({ message: 'Test notification sent' });
-  } catch (error) {
-    console.error('Test notification error:', error);
-    return c.json({ error: 'Failed to send test notification' }, 500);
-  }
+  c.executionCtx.waitUntil(
+    sendTestNotification(c.env, channel).catch((error) => {
+      console.error('Test notification error:', error);
+    })
+  );
+  return c.json({ message: 'Test notification sent' });
 });
 
 // ========================================

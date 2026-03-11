@@ -48,9 +48,14 @@ function LogDetail({ log }: { log: NotificationLog }) {
     const vulnId = data.vuln_id as string | undefined;
     const severity = data.severity as string | undefined;
     const cvss = data.cvss_score as number | undefined;
+    const createdCount = data.created_count as number | undefined;
+    const criticalCount = data.critical_count as number | undefined;
+    const cveIds = data.cve_ids as string[] | undefined;
     return (
       <div className="text-sm text-gray-700 dark:text-gray-300 space-y-0.5">
         {(vulnId || title) && <div><span className="font-medium">{vulnId}</span>{title ? ` ${title}` : ''}</div>}
+        {createdCount != null && <div>{createdCount}件登録{criticalCount ? `（Critical: ${criticalCount}件）` : ''}</div>}
+        {cveIds?.length && <div className="text-xs text-gray-500 dark:text-gray-400">CVE: {cveIds.join(', ')}</div>}
         {(severity || cvss != null) && <div className="text-xs text-gray-500 dark:text-gray-400">{severity}{cvss != null ? ` CVSS: ${cvss}` : ''}</div>}
       </div>
     );
@@ -687,6 +692,7 @@ export function NotificationsPage() {
           )}
 
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
@@ -745,6 +751,7 @@ export function NotificationsPage() {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       )}
@@ -752,6 +759,7 @@ export function NotificationsPage() {
       {/* ログタブ */}
       {activeTab === 'logs' && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
@@ -808,6 +816,7 @@ export function NotificationsPage() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>
