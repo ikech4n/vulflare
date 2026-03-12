@@ -69,7 +69,7 @@ async function deleteSingleSource(env: Env, source: DataSource): Promise<number>
 
   // 3. KVキャッシュを削除 (last_sync_date)
   try {
-    await env.KV_CACHE.delete(`${source}:last_sync_date`);
+    await env.VULFLARE_KV_CACHE.delete(`${source}:last_sync_date`);
   } catch (error) {
     console.warn(`[deleteSingleSource] Error deleting KV cache for ${source}:`, error);
   }

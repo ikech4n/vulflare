@@ -101,39 +101,42 @@ export const userRepo = {
   },
 };
 
-// --- Refresh Tokens ---
+// --- Session Tokens (KV) ---
 
-export const tokenRepo = {
-  create(
-    db: DB,
-    id: string,
-    userId: string,
-    tokenHash: string,
-    expiresAt: string,
-  ) {
-    return db
-      .prepare(
-        'INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at) VALUES (?, ?, ?, ?)',
-      )
-      .bind(id, userId, tokenHash, expiresAt)
-      .run();
+type KV = KVNamespace;
+
+interface SessionTokenData {
+  userId: string;
+  jti: string;
+}
+
+interface UserTokenEntry {
+  jti: string;
+  tokenHash: string;
+}
+
+export const sessionTokenRepo = {
+  async create(kv: KV, jti: string, userId: string, tokenHash: string, ttlSeconds: number) {
+    await kv.put(`token:${tokenHash}`, JSON.stringify({ userId, jti }), { expirationTtl: ttlSeconds });
+    const userKey = `user:${userId}`;
+    const existing = (await kv.get<UserTokenEntry[]>(userKey, 'json')) ?? [];
+    existing.push({ jti, tokenHash });
+    await kv.put(userKey, JSON.stringify(existing));
   },
-  findByHash(db: DB, tokenHash: string) {
-    return db
-      .prepare(
-        'SELECT * FROM refresh_tokens WHERE token_hash = ? AND revoked = 0 AND expires_at > datetime(\'now\')',
-      )
-      .bind(tokenHash)
-      .first<{ id: string; user_id: string; token_hash: string; expires_at: string }>();
+
+  findByHash(kv: KV, tokenHash: string): Promise<SessionTokenData | null> {
+    return kv.get<SessionTokenData>(`token:${tokenHash}`, 'json');
   },
-  revoke(db: DB, id: string) {
-    return db.prepare('UPDATE refresh_tokens SET revoked = 1 WHERE id = ?').bind(id).run();
+
+  async revoke(kv: KV, tokenHash: string) {
+    await kv.delete(`token:${tokenHash}`);
   },
-  revokeAllForUser(db: DB, userId: string) {
-    return db
-      .prepare('UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?')
-      .bind(userId)
-      .run();
+
+  async revokeAllForUser(kv: KV, userId: string) {
+    const userKey = `user:${userId}`;
+    const tokens = (await kv.get<UserTokenEntry[]>(userKey, 'json')) ?? [];
+    await Promise.all(tokens.map(({ tokenHash }) => kv.delete(`token:${tokenHash}`)));
+    await kv.delete(userKey);
   },
 };
 

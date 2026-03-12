@@ -10,7 +10,7 @@ const CACHE_TTL = 24 * 60 * 60; // 24時間
  */
 export async function getAvailableProducts(env: Env): Promise<string[]> {
   const cacheKey = 'eol:available_products';
-  const cached = await env.KV_CACHE.get(cacheKey);
+  const cached = await env.VULFLARE_KV_CACHE.get(cacheKey);
   if (cached) {
     return JSON.parse(cached);
   }
@@ -21,7 +21,7 @@ export async function getAvailableProducts(env: Env): Promise<string[]> {
   }
 
   const products = (await res.json()) as string[];
-  await env.KV_CACHE.put(cacheKey, JSON.stringify(products), {
+  await env.VULFLARE_KV_CACHE.put(cacheKey, JSON.stringify(products), {
     expirationTtl: CACHE_TTL,
   });
 
@@ -36,7 +36,7 @@ export async function fetchProductCycles(
   productName: string,
 ): Promise<EndoflifeDateCycle[]> {
   const cacheKey = `eol:product:${productName}`;
-  const cached = await env.KV_CACHE.get(cacheKey);
+  const cached = await env.VULFLARE_KV_CACHE.get(cacheKey);
   if (cached) {
     return JSON.parse(cached);
   }
@@ -47,7 +47,7 @@ export async function fetchProductCycles(
   }
 
   const cycles = (await res.json()) as EndoflifeDateCycle[];
-  await env.KV_CACHE.put(cacheKey, JSON.stringify(cycles), {
+  await env.VULFLARE_KV_CACHE.put(cacheKey, JSON.stringify(cycles), {
     expirationTtl: CACHE_TTL,
   });
 

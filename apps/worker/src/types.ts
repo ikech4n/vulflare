@@ -1,7 +1,7 @@
 export interface Env {
   DB: D1Database;
-  KV_SESSIONS: KVNamespace;
-  KV_CACHE: KVNamespace;
+  VULFLARE_KV_SESSIONS: KVNamespace;
+  VULFLARE_KV_CACHE: KVNamespace;
   SEND_EMAIL: SendEmail;
   JWT_SECRET: string;
   PAGES_URL: string;

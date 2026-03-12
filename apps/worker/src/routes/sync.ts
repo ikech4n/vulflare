@@ -269,7 +269,7 @@ syncRoutes.put('/settings', authMiddleware, requireRole('editor'), validate(upda
 syncRoutes.post('/cancel', authMiddleware, requireRole('admin'), validate(cancelSyncSchema), async (c) => {
   const body = c.get('validatedBody') as { source: 'jvn' };
 
-  await c.env.KV_CACHE.put(`${body.source}:cancel_requested`, '1', { expirationTtl: 300 });
+  await c.env.VULFLARE_KV_CACHE.put(`${body.source}:cancel_requested`, '1', { expirationTtl: 300 });
   return c.json({ message: 'Cancel requested' });
 });
 

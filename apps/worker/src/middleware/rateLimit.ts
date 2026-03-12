@@ -17,7 +17,7 @@ interface RateLimitOptions {
 }
 
 /**
- * KV_CACHE を使ったスライディングウィンドウ方式のレート制限ミドルウェア
+ * VULFLARE_KV_CACHE を使ったスライディングウィンドウ方式のレート制限ミドルウェア
  */
 export function rateLimit(options: RateLimitOptions): MiddlewareHandler<{ Bindings: Env }> {
   return async (c, next) => {
@@ -27,7 +27,7 @@ export function rateLimit(options: RateLimitOptions): MiddlewareHandler<{ Bindin
     const windowMs = options.windowSeconds * 1000;
 
     // 現在のカウントと最初のリクエスト時刻を取得
-    const data = await c.env.KV_CACHE.get(key);
+    const data = await c.env.VULFLARE_KV_CACHE.get(key);
     let count = 0;
     let windowStart = now;
 
@@ -68,7 +68,7 @@ export function rateLimit(options: RateLimitOptions): MiddlewareHandler<{ Bindin
 
     // カウントを増やして保存
     const newCount = count + 1;
-    await c.env.KV_CACHE.put(
+    await c.env.VULFLARE_KV_CACHE.put(
       key,
       JSON.stringify({ count: newCount, windowStart }),
       { expirationTtl: options.windowSeconds + 60 } // 少し余裕を持たせる

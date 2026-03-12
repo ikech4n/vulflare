@@ -189,9 +189,9 @@ async function fetchAndUpsertJvn(
 
   while (startItem <= totalResults) {
     // キャンセルフラグを確認
-    const cancelFlag = await env.KV_CACHE.get('jvn:cancel_requested');
+    const cancelFlag = await env.VULFLARE_KV_CACHE.get('jvn:cancel_requested');
     if (cancelFlag) {
-      await env.KV_CACHE.delete('jvn:cancel_requested');
+      await env.VULFLARE_KV_CACHE.delete('jvn:cancel_requested');
       return { fetched: totalFetched, created: totalCreated, cancelled: true };
     }
 
@@ -324,7 +324,7 @@ async function updateVendorsAndProducts(env: Env): Promise<void> {
 
 export async function handleJvnSync(env: Env, forceFullSync = false): Promise<void> {
   const settings = await getSyncSettings(env);
-  const lastSyncDate = await env.KV_CACHE.get('jvn:last_sync_date');
+  const lastSyncDate = await env.VULFLARE_KV_CACHE.get('jvn:last_sync_date');
   const isFullSync = !lastSyncDate || forceFullSync;
   const syncLogId = crypto.randomUUID();
 
@@ -390,7 +390,7 @@ export async function handleJvnSync(env: Env, forceFullSync = false): Promise<vo
     if (!cancelled && settings.vendorSelections.length > 0) {
       console.log(`JVN Phase 1: Querying ${settings.vendorSelections.length} selected vendors`);
       for (const vendor of settings.vendorSelections) {
-        const cancelCheck = await env.KV_CACHE.get('jvn:cancel_requested');
+        const cancelCheck = await env.VULFLARE_KV_CACHE.get('jvn:cancel_requested');
         if (cancelCheck) { cancelled = true; break; }
 
         if (vendor.products.length > 0) {
@@ -420,7 +420,7 @@ export async function handleJvnSync(env: Env, forceFullSync = false): Promise<vo
     if (!cancelled && settings.keywords.length > 0) {
       console.log(`JVN Phase 2: Querying ${settings.keywords.length} keywords`);
       for (const keyword of settings.keywords) {
-        const cancelCheck = await env.KV_CACHE.get('jvn:cancel_requested');
+        const cancelCheck = await env.VULFLARE_KV_CACHE.get('jvn:cancel_requested');
         if (cancelCheck) { cancelled = true; break; }
 
         const params = new URLSearchParams(baseParams);
@@ -433,7 +433,7 @@ export async function handleJvnSync(env: Env, forceFullSync = false): Promise<vo
     }
 
     if (!cancelled) {
-      await env.KV_CACHE.put('jvn:last_sync_date', nowStr, {
+      await env.VULFLARE_KV_CACHE.put('jvn:last_sync_date', nowStr, {
         expirationTtl: 90 * 24 * 60 * 60,
       });
 

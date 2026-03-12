@@ -9,7 +9,7 @@ jvnRoutes.use('/*', authMiddleware);
 
 // GET /api/jvn/sync/status
 jvnRoutes.get('/sync/status', async (c) => {
-  const lastSyncDate = await c.env.KV_CACHE.get('jvn:last_sync_date');
+  const lastSyncDate = await c.env.VULFLARE_KV_CACHE.get('jvn:last_sync_date');
   const latest = await c.env.DB
     .prepare('SELECT * FROM jvn_sync_logs ORDER BY started_at DESC LIMIT 1')
     .first<Record<string, unknown>>();

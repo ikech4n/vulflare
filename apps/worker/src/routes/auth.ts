@@ -9,7 +9,7 @@ import {
   verifyJwt,
   hashToken,
 } from '../services/auth.ts';
-import { userRepo, tokenRepo, passwordResetTokenRepo, appSettingsRepo } from '../db/repository.ts';
+import { userRepo, sessionTokenRepo, passwordResetTokenRepo, appSettingsRepo } from '../db/repository.ts';
 import { authMiddleware } from '../middleware/auth.ts';
 import { validate } from '../validation/middleware.ts';
 import { registerSchema, loginSchema, changePasswordSchema, forgotPasswordSchema, resetPasswordWithTokenSchema, updateMeSchema } from '../validation/schemas.ts';
@@ -89,9 +89,8 @@ authRoutes.post('/login', rateLimitPresets.login, validate(loginSchema), async (
   const jti = crypto.randomUUID();
   const refreshToken = await makeRefreshToken(user.id, jti, c.env.JWT_SECRET);
   const tokenHash = await hashToken(refreshToken);
-  const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_DAYS * 86400 * 1000).toISOString();
 
-  await tokenRepo.create(c.env.DB, jti, user.id, tokenHash, expiresAt);
+  await sessionTokenRepo.create(c.env.VULFLARE_KV_SESSIONS, jti, user.id, tokenHash, REFRESH_TOKEN_TTL_DAYS * 86400);
 
   setCookie(c, 'refreshToken', refreshToken, {
     httpOnly: true,
@@ -125,12 +124,12 @@ authRoutes.post('/refresh', rateLimitPresets.refresh, async (c) => {
   }
 
   const tokenHash = await hashToken(refreshToken);
-  const storedToken = await tokenRepo.findByHash(c.env.DB, tokenHash);
+  const storedToken = await sessionTokenRepo.findByHash(c.env.VULFLARE_KV_SESSIONS, tokenHash);
   if (!storedToken) {
     return c.json({ error: 'Token revoked or expired' }, 401);
   }
 
-  const user = await userRepo.findById(c.env.DB, storedToken.user_id);
+  const user = await userRepo.findById(c.env.DB, storedToken.userId);
   if (!user || !user.is_active) {
     return c.json({ error: 'User not found' }, 401);
   }
@@ -146,10 +145,7 @@ authRoutes.post('/logout', async (c) => {
 
   if (refreshToken) {
     const tokenHash = await hashToken(refreshToken);
-    const stored = await tokenRepo.findByHash(c.env.DB, tokenHash);
-    if (stored) {
-      await tokenRepo.revoke(c.env.DB, stored.id);
-    }
+    await sessionTokenRepo.revoke(c.env.VULFLARE_KV_SESSIONS, tokenHash);
   }
 
   deleteCookie(c, 'refreshToken', { path: '/api/auth' });
@@ -222,7 +218,7 @@ authRoutes.post('/reset-password', rateLimitPresets.password, validate(resetPass
   const newHash = await hashPassword(body.password);
   await userRepo.updatePassword(c.env.DB, user.id, newHash);
   await passwordResetTokenRepo.markUsed(c.env.DB, resetToken.id);
-  await tokenRepo.revokeAllForUser(c.env.DB, user.id);
+  await sessionTokenRepo.revokeAllForUser(c.env.VULFLARE_KV_SESSIONS, user.id);
   await userRepo.unlock(c.env.DB, user.id);
 
   return c.json({ message: 'Password has been reset.' }, 200);
