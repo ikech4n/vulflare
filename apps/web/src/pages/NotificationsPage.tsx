@@ -804,13 +804,13 @@ export function NotificationsPage() {
                     const channel = channels.find((ch) => ch.id === rule.channel_id);
                     return (
                       <tr key={rule.id}>
-                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
                           {channel?.name || "Unknown"}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
                           {EVENT_LABELS[rule.event_type]}
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center space-x-2">
                             <span
                               className={`px-2 py-1 text-xs rounded ${
@@ -844,7 +844,7 @@ export function NotificationsPage() {
                             </button>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-right">
+                        <td className="px-6 py-4 text-right whitespace-nowrap">
                           <button
                             onClick={() => {
                               if (!confirm("このルールを削除しますか？")) return;
