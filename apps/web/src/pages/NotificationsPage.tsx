@@ -850,7 +850,7 @@ export function NotificationsPage() {
                               if (!confirm("このルールを削除しますか？")) return;
                               deleteRuleMutation.mutate(rule.id);
                             }}
-                            className="text-red-600 hover:text-red-900"
+                            className="text-sm text-red-600 hover:text-red-900"
                           >
                             削除
                           </button>
