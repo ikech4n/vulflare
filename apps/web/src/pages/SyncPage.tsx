@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, CheckCircle, XCircle, Clock, AlertCircle, ChevronDown, ChevronUp, Save, Search, X, Trash2, Database } from 'lucide-react';
+import { RefreshCw, CheckCircle, XCircle, Clock, AlertCircle, ChevronDown, ChevronUp, ChevronRight, Save, Search, X, Trash2, Database } from 'lucide-react';
 import { api } from '@/lib/api.ts';
 import { useAuthStore } from '@/store/authStore.ts';
 import { useState, useEffect } from 'react';
@@ -301,7 +301,7 @@ export function SyncPage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">ステータス</h2>
           {isEditorOrAbove && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => triggerSyncMutation.mutate()}
                 disabled={triggerSyncMutation.isPending || triggerFullSyncMutation.isPending || latestLog?.status === 'running'}
@@ -427,21 +427,25 @@ export function SyncPage() {
                     {vendorSelections.map(vendor => (
                       <div key={vendor.vendorId} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 flex-1">
-                            <button
-                              onClick={() => setExpandedVendorId(
-                                expandedVendorId === vendor.vendorId ? null : vendor.vendorId
-                              )}
-                              className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600"
-                            >
+                          <button
+                            onClick={() => setExpandedVendorId(
+                              expandedVendorId === vendor.vendorId ? null : vendor.vendorId
+                            )}
+                            className="flex items-center gap-2 flex-1 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded px-1 -mx-1 py-0.5 transition-colors"
+                          >
+                            {expandedVendorId === vendor.vendorId
+                              ? <ChevronDown size={14} className="text-blue-500 shrink-0" />
+                              : <ChevronRight size={14} className="text-gray-400 shrink-0" />
+                            }
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                               {vendor.vendorName}
-                            </button>
+                            </span>
                             <span className="text-xs text-gray-500 dark:text-gray-400">
                               {vendor.products.length > 0
                                 ? `${vendor.products.length}製品選択中`
-                                : '全製品対象'}
+                                : '製品を選択 →'}
                             </span>
-                          </div>
+                          </button>
                           <button
                             onClick={() => removeVendor(vendor.vendorId)}
                             className="text-gray-400 hover:text-red-600"
@@ -717,7 +721,7 @@ export function SyncPage() {
                     : <span className="text-gray-400 dark:text-gray-500">未設定</span>}
                 </dd>
               </div>
-              <div className="pt-3 grid grid-cols-3 gap-4">
+              <div className="pt-3 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <dt className="text-xs text-gray-500 dark:text-gray-400 mb-1">CVSS最小スコア</dt>
                   <dd className="text-gray-900 dark:text-gray-100">{cvssMinScore === 0 ? '無効（全て取得）' : String(cvssMinScore)}</dd>
