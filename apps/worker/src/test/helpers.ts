@@ -1,5 +1,5 @@
-import type { Env } from '../types.ts';
-import { hashPassword, makeAccessToken } from '../services/auth.ts';
+import { hashPassword, makeAccessToken } from "../services/auth.ts";
+import type { Env } from "../types.ts";
 
 /**
  * テスト用ユーザーを作成
@@ -9,19 +9,19 @@ export async function createTestUser(
   options: {
     username?: string;
     password?: string;
-    role?: 'admin' | 'editor' | 'viewer';
-  } = {}
+    role?: "admin" | "editor" | "viewer";
+  } = {},
 ) {
   const id = crypto.randomUUID();
   const username = options.username ?? `testuser-${id.slice(0, 8)}`;
-  const password = options.password ?? 'TestPassword123!';
-  const role = options.role ?? 'viewer';
+  const password = options.password ?? "TestPassword123!";
+  const role = options.role ?? "viewer";
 
   const passwordHash = await hashPassword(password);
 
   await db
     .prepare(
-      'INSERT INTO users (id, username, password_hash, role, is_active) VALUES (?, ?, ?, ?, 1)'
+      "INSERT INTO users (id, username, password_hash, role, is_active) VALUES (?, ?, ?, ?, 1)",
     )
     .bind(id, username, passwordHash, role)
     .run();
@@ -34,8 +34,8 @@ export async function createTestUser(
  */
 export async function createTestToken(
   userId: string,
-  role: 'admin' | 'editor' | 'viewer',
-  jwtSecret: string
+  role: "admin" | "editor" | "viewer",
+  jwtSecret: string,
 ): Promise<string> {
   return makeAccessToken(userId, role, jwtSecret);
 }
@@ -59,13 +59,13 @@ export async function createTestVulnerability(
     title?: string;
     severity?: string;
     status?: string;
-  } = {}
+  } = {},
 ) {
   const id = crypto.randomUUID();
   const cveId = options.cveId ?? null;
   const title = options.title ?? `Test Vulnerability ${id.slice(0, 8)}`;
-  const severity = options.severity ?? 'medium';
-  const status = options.status ?? 'new';
+  const severity = options.severity ?? "medium";
+  const status = options.status ?? "new";
 
   await db
     .prepare(
@@ -73,25 +73,25 @@ export async function createTestVulnerability(
         id, cve_id, title, description, severity, status, source,
         cvss_v3_score, cvss_v3_vector, cvss_v2_score, cvss_v2_vector,
         cwe_ids, affected_products, vuln_references, published_at, modified_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       id,
       cveId,
       title,
-      'Test description',
+      "Test description",
       severity,
       status,
-      'manual',
+      "manual",
       null,
       null,
       null,
       null,
-      '[]',
-      '[]',
-      '[]',
+      "[]",
+      "[]",
+      "[]",
       null,
-      null
+      null,
     )
     .run();
 

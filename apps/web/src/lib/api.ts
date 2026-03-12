@@ -1,12 +1,12 @@
-import axios from 'axios';
-import { useAuthStore } from '../store/authStore.ts';
+import axios from "axios";
+import { useAuthStore } from "../store/authStore.ts";
 
-const BASE_URL = import.meta.env.VITE_WORKER_URL ?? '';
+const BASE_URL = import.meta.env.VITE_WORKER_URL ?? "";
 
 export const api = axios.create({
   baseURL: `${BASE_URL}/api`,
   withCredentials: true,
-  headers: { 'Content-Type': 'application/json' },
+  headers: { "Content-Type": "application/json" },
 });
 
 api.interceptors.request.use((config) => {
@@ -52,15 +52,15 @@ api.interceptors.response.use(
         );
         const newToken = data.accessToken;
         useAuthStore.getState().setAccessToken(newToken);
-        failedQueue.forEach((p) => p.resolve(newToken));
+        for (const p of failedQueue) p.resolve(newToken);
         failedQueue = [];
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);
       } catch (refreshError) {
-        failedQueue.forEach((p) => p.reject(refreshError));
+        for (const p of failedQueue) p.reject(refreshError);
         failedQueue = [];
         useAuthStore.getState().logout();
-        window.location.href = '/login';
+        window.location.href = "/login";
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

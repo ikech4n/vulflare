@@ -1,4 +1,4 @@
-import type { Env } from '../types.ts';
+import type { Env } from "../types.ts";
 
 /**
  * 現在の脆弱性統計をスナップショットとして保存する（日次）
@@ -40,10 +40,12 @@ export async function createDailySnapshot(env: Env): Promise<void> {
         fixed_count = excluded.fixed_count,
         accepted_risk_count = excluded.accepted_risk_count,
         false_positive_count = excluded.false_positive_count
-    `).bind(id).run();
+    `)
+      .bind(id)
+      .run();
 
-    console.log('Daily snapshot created successfully');
+    console.log("Daily snapshot created successfully");
   } catch (error) {
-    console.error('Failed to create daily snapshot:', error);
+    console.error("Failed to create daily snapshot:", error);
   }
 }

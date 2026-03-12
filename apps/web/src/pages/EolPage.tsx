@@ -1,57 +1,57 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, RefreshCw, Trash2, Package, Calendar, Edit } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { api } from '@/lib/api.ts';
-import { useAuthStore } from '@/store/authStore.ts';
-import type { EolProduct, EolCategory, EolStats } from '@vulflare/shared/types';
+import { api } from "@/lib/api.ts";
+import { useAuthStore } from "@/store/authStore.ts";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { EolCategory, EolProduct, EolStats } from "@vulflare/shared/types";
+import { Calendar, Edit, Package, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 
 const CATEGORY_LABELS: Record<EolCategory, string> = {
-  os: 'OS',
-  programming_language: 'プログラミング言語',
-  runtime: 'ランタイム',
-  middleware: 'ミドルウェア',
-  framework: 'フレームワーク',
-  library: 'ライブラリ',
-  cloud_service: 'クラウドサービス',
-  hardware: 'ハードウェア',
+  os: "OS",
+  programming_language: "プログラミング言語",
+  runtime: "ランタイム",
+  middleware: "ミドルウェア",
+  framework: "フレームワーク",
+  library: "ライブラリ",
+  cloud_service: "クラウドサービス",
+  hardware: "ハードウェア",
 };
 
-type EolStatusFilter = 'eol' | 'approaching_30d' | 'approaching_90d';
+type EolStatusFilter = "eol" | "approaching_30d" | "approaching_90d";
 
 const STATUS_LABELS: Record<EolStatusFilter, string> = {
-  eol: 'EOL済み',
-  approaching_30d: '30日以内EOL',
-  approaching_90d: '90日以内EOL',
+  eol: "EOL済み",
+  approaching_30d: "30日以内EOL",
+  approaching_90d: "90日以内EOL",
 };
 
 export function EolPage() {
   const { user } = useAuthStore();
-  const isViewer = user?.role === 'viewer';
+  const isViewer = user?.role === "viewer";
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [selectedCategory, setSelectedCategory] = useState<EolCategory | ''>('');
+  const [selectedCategory, setSelectedCategory] = useState<EolCategory | "">("");
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const selectedStatus = searchParams.get('status') as EolStatusFilter | null;
+  const selectedStatus = searchParams.get("status") as EolStatusFilter | null;
 
   // 統計情報
   const { data: stats } = useQuery<EolStats>({
-    queryKey: ['eol', 'stats'],
+    queryKey: ["eol", "stats"],
     queryFn: async () => {
-      const res = await api.get('/eol/stats');
+      const res = await api.get("/eol/stats");
       return res.data;
     },
   });
 
   // プロダクト一覧
   const { data: products = [], isLoading } = useQuery<EolProduct[]>({
-    queryKey: ['eol', 'products', selectedCategory, selectedStatus],
+    queryKey: ["eol", "products", selectedCategory, selectedStatus],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (selectedCategory) params.set('category', selectedCategory);
-      if (selectedStatus) params.set('status', selectedStatus);
-      const query = params.toString() ? `?${params.toString()}` : '';
+      if (selectedCategory) params.set("category", selectedCategory);
+      if (selectedStatus) params.set("status", selectedStatus);
+      const query = params.toString() ? `?${params.toString()}` : "";
       const res = await api.get(`/eol/products${query}`);
       return res.data;
     },
@@ -70,10 +70,13 @@ export function EolPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">EOL 管理</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">ソフトウェア・ハードウェアの EOL（サポート終了）を管理します</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            ソフトウェア・ハードウェアの EOL（サポート終了）を管理します
+          </p>
         </div>
         {!isViewer && (
           <button
+            type="button"
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 self-start sm:self-auto"
           >
@@ -88,20 +91,22 @@ export function EolPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <button
             onClick={() => setSearchParams({})}
-            className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-left transition-all hover:shadow-md ${!selectedStatus ? 'ring-2 ring-blue-400' : ''}`}
+            className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-left transition-all hover:shadow-md ${!selectedStatus ? "ring-2 ring-blue-400" : ""}`}
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">登録プロダクト</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total_products}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {stats.total_products}
+                </p>
               </div>
               <Package className="w-8 h-8 text-gray-400" />
             </div>
           </button>
 
           <button
-            onClick={() => handleStatusFilter('eol')}
-            className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-left transition-all hover:shadow-md ${selectedStatus === 'eol' ? 'ring-2 ring-red-400' : ''}`}
+            onClick={() => handleStatusFilter("eol")}
+            className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-left transition-all hover:shadow-md ${selectedStatus === "eol" ? "ring-2 ring-red-400" : ""}`}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -113,8 +118,8 @@ export function EolPage() {
           </button>
 
           <button
-            onClick={() => handleStatusFilter('approaching_30d')}
-            className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-left transition-all hover:shadow-md ${selectedStatus === 'approaching_30d' ? 'ring-2 ring-orange-400' : ''}`}
+            onClick={() => handleStatusFilter("approaching_30d")}
+            className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-left transition-all hover:shadow-md ${selectedStatus === "approaching_30d" ? "ring-2 ring-orange-400" : ""}`}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -139,10 +144,16 @@ export function EolPage() {
 
       {/* カテゴリフィルタ */}
       <div className="flex items-center gap-2">
-        <label className="text-sm font-medium text-gray-700 dark:text-gray-200 whitespace-nowrap">カテゴリ:</label>
+        <label
+          htmlFor="category-filter"
+          className="text-sm font-medium text-gray-700 dark:text-gray-200 whitespace-nowrap"
+        >
+          カテゴリ:
+        </label>
         <select
+          id="category-filter"
           value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value as EolCategory | '')}
+          onChange={(e) => setSelectedCategory(e.target.value as EolCategory | "")}
           className="min-w-0 flex-1 sm:flex-none px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-gray-200"
         >
           <option value="">すべて</option>
@@ -161,7 +172,13 @@ export function EolPage() {
           {selectedStatus && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
               {STATUS_LABELS[selectedStatus]}
-              <button onClick={() => setSearchParams({})} className="ml-0.5 hover:text-orange-600" aria-label="フィルター解除">×</button>
+              <button
+                onClick={() => setSearchParams({})}
+                className="ml-0.5 hover:text-orange-600"
+                aria-label="フィルター解除"
+              >
+                ×
+              </button>
             </span>
           )}
         </div>
@@ -173,47 +190,59 @@ export function EolPage() {
             <p className="text-center text-gray-500 dark:text-gray-400">プロダクトがありません</p>
           ) : (
             <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead>
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">プロダクト名</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">カテゴリ</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ベンダー</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">データソース</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {products.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-4 py-4">
-                      <Link
-                        to={`/eol/products/${product.id}`}
-                        className="text-blue-600 hover:text-blue-800 font-medium"
-                      >
-                        {product.display_name}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className="px-2 py-1 text-xs font-semibold rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 whitespace-nowrap">
-                        {CATEGORY_LABELS[product.category]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">{product.vendor || '-'}</td>
-                    <td className="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">
-                      {product.eol_api_id ? (
-                        <span className="text-green-600">endoflife.date</span>
-                      ) : (
-                        <span className="text-gray-500">手動</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-4 text-right">
-                      <ProductActions product={product} />
-                    </td>
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                      プロダクト名
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                      カテゴリ
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                      ベンダー
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                      データソース
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                      操作
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {products.map((product) => (
+                    <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-4 py-4">
+                        <Link
+                          to={`/eol/products/${product.id}`}
+                          className="text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          {product.display_name}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="px-2 py-1 text-xs font-semibold rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 whitespace-nowrap">
+                          {CATEGORY_LABELS[product.category]}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">
+                        {product.vendor || "-"}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">
+                        {product.eol_api_id ? (
+                          <span className="text-green-600">endoflife.date</span>
+                        ) : (
+                          <span className="text-gray-500">手動</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <ProductActions product={product} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
@@ -234,11 +263,11 @@ function ProductActions({ product }: { product: EolProduct }) {
       await api.post(`/eol/sync/${product.product_name}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['eol'] });
-      alert('同期が完了しました');
+      queryClient.invalidateQueries({ queryKey: ["eol"] });
+      alert("同期が完了しました");
     },
     onError: () => {
-      alert('同期に失敗しました');
+      alert("同期に失敗しました");
     },
   });
 
@@ -247,17 +276,17 @@ function ProductActions({ product }: { product: EolProduct }) {
       await api.delete(`/eol/products/${product.id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['eol'] });
+      queryClient.invalidateQueries({ queryKey: ["eol"] });
     },
     onError: () => {
-      alert('削除に失敗しました');
+      alert("削除に失敗しました");
     },
   });
 
   return (
     <>
       <div className="flex items-center justify-end gap-2">
-        {user?.role !== 'viewer' && (
+        {user?.role !== "viewer" && (
           <button
             onClick={() => setShowEditModal(true)}
             className="p-1 text-gray-600 hover:text-gray-800"
@@ -266,20 +295,20 @@ function ProductActions({ product }: { product: EolProduct }) {
             <Edit className="w-4 h-4" />
           </button>
         )}
-        {user?.role !== 'viewer' && product.eol_api_id && (
+        {user?.role !== "viewer" && product.eol_api_id && (
           <button
             onClick={() => syncMutation.mutate()}
             disabled={syncMutation.isPending}
             className="p-1 text-blue-600 hover:text-blue-800"
             title="同期"
           >
-            <RefreshCw className={`w-4 h-4 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${syncMutation.isPending ? "animate-spin" : ""}`} />
           </button>
         )}
-        {user?.role === 'admin' && (
+        {user?.role === "admin" && (
           <button
             onClick={() => {
-              if (confirm('本当に削除しますか?')) {
+              if (confirm("本当に削除しますか?")) {
                 deleteMutation.mutate();
               }
             }}
@@ -300,19 +329,19 @@ function ProductActions({ product }: { product: EolProduct }) {
 function AddProductModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
-    product_name: '',
-    display_name: '',
-    category: 'os' as EolCategory,
-    eol_api_id: '',
-    vendor: '',
-    link: '',
+    product_name: "",
+    display_name: "",
+    category: "os" as EolCategory,
+    eol_api_id: "",
+    vendor: "",
+    link: "",
   });
 
   // 利用可能な製品一覧を取得
   const { data: availableProducts = [] } = useQuery<string[]>({
-    queryKey: ['eol', 'available-products'],
+    queryKey: ["eol", "available-products"],
     queryFn: async () => {
-      const res = await api.get('/eol/available-products');
+      const res = await api.get("/eol/available-products");
       return res.data;
     },
   });
@@ -326,9 +355,9 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
 
     // 表示名を生成（最初の文字を大文字に）
     const displayName = productId
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
 
     setFormData({
       ...formData,
@@ -340,7 +369,7 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      await api.post('/eol/products', {
+      await api.post("/eol/products", {
         ...formData,
         eol_api_id: formData.eol_api_id || undefined,
         vendor: formData.vendor || undefined,
@@ -348,12 +377,12 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['eol'] });
+      queryClient.invalidateQueries({ queryKey: ["eol"] });
       onClose();
     },
     onError: (error: unknown) => {
       const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error;
-      alert(msg || '作成に失敗しました');
+      alert(msg || "作成に失敗しました");
     },
   });
 
@@ -364,13 +393,17 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            <label
+              htmlFor="create-product-name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
               プロダクト名（英語）*
               <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
                 ({availableProducts.length}個の製品から選択可能)
               </span>
             </label>
             <input
+              id="create-product-name"
               type="text"
               list="available-products"
               value={formData.product_name}
@@ -396,8 +429,14 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">表示名*</label>
+            <label
+              htmlFor="create-display-name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              表示名*
+            </label>
             <input
+              id="create-display-name"
               type="text"
               value={formData.display_name}
               onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
@@ -407,10 +446,18 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">カテゴリ*</label>
+            <label
+              htmlFor="create-category"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              カテゴリ*
+            </label>
             <select
+              id="create-category"
               value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value as EolCategory })}
+              onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value as EolCategory })
+              }
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
             >
               {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
@@ -422,8 +469,14 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">endoflife.date API ID</label>
+            <label
+              htmlFor="create-eol-api-id"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              endoflife.date API ID
+            </label>
             <input
+              id="create-eol-api-id"
               type="text"
               value={formData.eol_api_id}
               onChange={(e) => setFormData({ ...formData, eol_api_id: e.target.value })}
@@ -436,8 +489,14 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">ベンダー</label>
+            <label
+              htmlFor="create-vendor"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              ベンダー
+            </label>
             <input
+              id="create-vendor"
               type="text"
               value={formData.vendor}
               onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
@@ -447,8 +506,14 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">公式URL</label>
+            <label
+              htmlFor="create-link"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              公式URL
+            </label>
             <input
+              id="create-link"
               type="url"
               value={formData.link}
               onChange={(e) => setFormData({ ...formData, link: e.target.value })}
@@ -460,17 +525,19 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
 
         <div className="flex justify-end gap-3 mt-6">
           <button
+            type="button"
             onClick={onClose}
             className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
           >
             キャンセル
           </button>
           <button
+            type="button"
             onClick={() => createMutation.mutate()}
             disabled={!formData.product_name || !formData.display_name || createMutation.isPending}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            {createMutation.isPending ? '作成中...' : '作成'}
+            {createMutation.isPending ? "作成中..." : "作成"}
           </button>
         </div>
       </div>
@@ -483,9 +550,9 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
   const [formData, setFormData] = useState({
     display_name: product.display_name,
     category: product.category,
-    eol_api_id: product.eol_api_id || '',
-    vendor: product.vendor || '',
-    link: product.link || '',
+    eol_api_id: product.eol_api_id || "",
+    vendor: product.vendor || "",
+    link: product.link || "",
   });
 
   const updateMutation = useMutation({
@@ -499,12 +566,12 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['eol'] });
+      queryClient.invalidateQueries({ queryKey: ["eol"] });
       onClose();
     },
     onError: (error: unknown) => {
       const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error;
-      alert(msg || '更新に失敗しました');
+      alert(msg || "更新に失敗しました");
     },
   });
 
@@ -515,21 +582,33 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            <label
+              htmlFor="edit-product-name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
               プロダクト名（英語）
             </label>
             <input
+              id="edit-product-name"
               type="text"
               value={product.product_name}
               disabled
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">プロダクト名は変更できません</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              プロダクト名は変更できません
+            </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">表示名*</label>
+            <label
+              htmlFor="edit-display-name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              表示名*
+            </label>
             <input
+              id="edit-display-name"
               type="text"
               value={formData.display_name}
               onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
@@ -539,10 +618,18 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">カテゴリ*</label>
+            <label
+              htmlFor="edit-category"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              カテゴリ*
+            </label>
             <select
+              id="edit-category"
               value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value as EolCategory })}
+              onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value as EolCategory })
+              }
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
             >
               {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
@@ -554,8 +641,14 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">endoflife.date API ID</label>
+            <label
+              htmlFor="edit-eol-api-id"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              endoflife.date API ID
+            </label>
             <input
+              id="edit-eol-api-id"
               type="text"
               value={formData.eol_api_id}
               onChange={(e) => setFormData({ ...formData, eol_api_id: e.target.value })}
@@ -568,8 +661,14 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">ベンダー</label>
+            <label
+              htmlFor="edit-vendor"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              ベンダー
+            </label>
             <input
+              id="edit-vendor"
               type="text"
               value={formData.vendor}
               onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
@@ -579,8 +678,14 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">公式URL</label>
+            <label
+              htmlFor="edit-link"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              公式URL
+            </label>
             <input
+              id="edit-link"
               type="url"
               value={formData.link}
               onChange={(e) => setFormData({ ...formData, link: e.target.value })}
@@ -592,17 +697,19 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
 
         <div className="flex justify-end gap-3 mt-6">
           <button
+            type="button"
             onClick={onClose}
             className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
           >
             キャンセル
           </button>
           <button
+            type="button"
             onClick={() => updateMutation.mutate()}
             disabled={!formData.display_name || updateMutation.isPending}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            {updateMutation.isPending ? '更新中...' : '更新'}
+            {updateMutation.isPending ? "更新中..." : "更新"}
           </button>
         </div>
       </div>

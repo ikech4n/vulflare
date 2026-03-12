@@ -1,7 +1,7 @@
-import type { Env } from '../types.ts';
-import { syncAllProducts } from '../services/eol-sync.ts';
-import { eolCycleRepo, eolProductRepo } from '../db/eol-repository.ts';
-import { dispatchNotification } from '../services/notifications.ts';
+import { eolCycleRepo, eolProductRepo } from "../db/eol-repository.ts";
+import { syncAllProducts } from "../services/eol-sync.ts";
+import { dispatchNotification } from "../services/notifications.ts";
+import type { Env } from "../types.ts";
 
 // 通知を送るマイルストーン（日前）
 const EOL_MILESTONES = [180, 90, 30] as const;
@@ -14,24 +14,22 @@ const DEDUP_WINDOW_DAYS = 7;
  * 日次Cronで実行: 登録済みプロダクトのEOL情報を同期
  */
 export async function handleEolSync(env: Env): Promise<void> {
-  console.log('[EOL Sync] Starting daily EOL sync...');
+  console.log("[EOL Sync] Starting daily EOL sync...");
 
   try {
     // 1. EOL情報の同期
     const result = await syncAllProducts(env);
 
-    console.log(
-      `[EOL Sync] Completed. Products: ${result.total}, Cycles synced: ${result.synced}`,
-    );
+    console.log(`[EOL Sync] Completed. Products: ${result.total}, Cycles synced: ${result.synced}`);
 
     if (result.failed.length > 0) {
-      console.warn(`[EOL Sync] Failed products:`, result.failed);
+      console.warn("[EOL Sync] Failed products:", result.failed);
     }
 
     // 2. EOL期限の確認と通知
     await checkEolDatesAndNotify(env);
   } catch (err) {
-    console.error('[EOL Sync] Fatal error:', err);
+    console.error("[EOL Sync] Fatal error:", err);
   }
 }
 
@@ -47,7 +45,7 @@ function isAtMilestone(daysUntilEol: number, milestone: number): boolean {
  * 通知は 180日前 / 90日前 / 30日前 のマイルストーンのみ送信（重複チェックあり）
  */
 async function checkEolDatesAndNotify(env: Env): Promise<void> {
-  console.log('[EOL Check] Checking EOL dates for notifications...');
+  console.log("[EOL Check] Checking EOL dates for notifications...");
 
   try {
     const now = new Date();
@@ -61,7 +59,7 @@ async function checkEolDatesAndNotify(env: Env): Promise<void> {
          AND c.eol_date IS NOT NULL
          AND c.eol_date > date('now')
          AND c.eol_date <= date('now', '+180 days')
-       ORDER BY c.eol_date ASC`
+       ORDER BY c.eol_date ASC`,
     ).all();
 
     // 既にEOL済みのサイクル（is_eolフラグが更新されていない可能性がある）
@@ -71,7 +69,7 @@ async function checkEolDatesAndNotify(env: Env): Promise<void> {
        JOIN eol_products p ON c.product_id = p.id
        WHERE c.eol_date IS NOT NULL
          AND c.eol_date < date('now')
-         AND c.is_eol = 0`
+         AND c.is_eol = 0`,
     ).all();
 
     // EOL期限が近いサイクルの通知（マイルストーンのみ）
@@ -91,19 +89,19 @@ async function checkEolDatesAndNotify(env: Env): Promise<void> {
              AND json_extract(payload, '$.data.cycle_id') = ?
              AND json_extract(payload, '$.data.milestone_days') = ?
              AND status = 'sent'
-             AND sent_at >= date('now', '-${DEDUP_WINDOW_DAYS} days')`
-        ).bind(cycle.id, milestone).first<{ cnt: number }>();
+             AND sent_at >= date('now', '-${DEDUP_WINDOW_DAYS} days')`,
+        )
+          .bind(cycle.id, milestone)
+          .first<{ cnt: number }>();
 
         if (dedupResult && dedupResult.cnt > 0) {
-          console.log(
-            `[EOL Check] Skip duplicate: cycle=${cycle.id} milestone=${milestone}d`,
-          );
+          console.log(`[EOL Check] Skip duplicate: cycle=${cycle.id} milestone=${milestone}d`);
           break;
         }
 
-        const severity = milestone === 30 ? 'high' : milestone === 90 ? 'medium' : 'low';
+        const severity = milestone === 30 ? "high" : milestone === 90 ? "medium" : "low";
 
-        await dispatchNotification(env, 'eol_approaching', {
+        await dispatchNotification(env, "eol_approaching", {
           product_name: cycle.product_name,
           display_name: cycle.display_name,
           category: cycle.category,
@@ -122,7 +120,7 @@ async function checkEolDatesAndNotify(env: Env): Promise<void> {
 
     // EOL期限切れサイクルの通知とフラグ更新
     for (const cycle of expiredCycles.results) {
-      await dispatchNotification(env, 'eol_expired', {
+      await dispatchNotification(env, "eol_expired", {
         product_name: cycle.product_name,
         display_name: cycle.display_name,
         category: cycle.category,
@@ -139,6 +137,6 @@ async function checkEolDatesAndNotify(env: Env): Promise<void> {
       `[EOL Check] Notified ${notifiedCount} milestone(s), ${expiredCycles.results.length} expired`,
     );
   } catch (err) {
-    console.error('[EOL Check] Error checking EOL dates:', err);
+    console.error("[EOL Check] Error checking EOL dates:", err);
   }
 }

@@ -1,21 +1,21 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bell, Plus, Trash2, Send, CheckCircle, XCircle, Edit2 } from 'lucide-react';
-import { api } from '@/lib/api.ts';
-import { useAuthStore } from '@/store/authStore.ts';
+import { api } from "@/lib/api.ts";
+import { useAuthStore } from "@/store/authStore.ts";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
-  NotificationChannel,
-  NotificationRule,
-  NotificationLog,
   EventType,
-} from '@vulflare/shared/types';
+  NotificationChannel,
+  NotificationLog,
+  NotificationRule,
+} from "@vulflare/shared/types";
+import { Bell, CheckCircle, Edit2, Plus, Send, Trash2, XCircle } from "lucide-react";
+import { useState } from "react";
 
 const EVENT_LABELS: Record<EventType, string> = {
-  vulnerability_created: '脆弱性作成',
-  vulnerability_updated: '脆弱性更新',
-  vulnerability_critical: 'クリティカル脆弱性',
-  eol_approaching: 'EOL期限接近',
-  eol_expired: 'EOL期限切れ',
+  vulnerability_created: "脆弱性作成",
+  vulnerability_updated: "脆弱性更新",
+  vulnerability_critical: "クリティカル脆弱性",
+  eol_approaching: "EOL期限接近",
+  eol_expired: "EOL期限切れ",
 };
 
 function parsePayload(payloadStr: string): Record<string, unknown> {
@@ -30,20 +30,30 @@ function parsePayload(payloadStr: string): Record<string, unknown> {
 function LogDetail({ log }: { log: NotificationLog }) {
   const data = parsePayload(log.payload);
 
-  if (log.event_type === 'eol_approaching' || log.event_type === 'eol_expired') {
+  if (log.event_type === "eol_approaching" || log.event_type === "eol_expired") {
     const name = data.display_name as string | undefined;
     const cycle = data.cycle as string | undefined;
     const eolDate = data.eol_date as string | undefined;
     const daysUntil = data.days_until_eol as number | undefined;
     return (
       <div className="text-sm text-gray-700 dark:text-gray-300 space-y-0.5">
-        {name && <div><span className="font-medium">{name}</span>{cycle ? ` (${cycle})` : ''}</div>}
-        {eolDate && <div className="text-xs text-gray-500 dark:text-gray-400">EOL: {eolDate}{daysUntil != null ? ` (残 ${daysUntil}日)` : ''}</div>}
+        {name && (
+          <div>
+            <span className="font-medium">{name}</span>
+            {cycle ? ` (${cycle})` : ""}
+          </div>
+        )}
+        {eolDate && (
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            EOL: {eolDate}
+            {daysUntil != null ? ` (残 ${daysUntil}日)` : ""}
+          </div>
+        )}
       </div>
     );
   }
 
-  if (log.event_type.startsWith('vulnerability_')) {
+  if (log.event_type.startsWith("vulnerability_")) {
     const title = data.title as string | undefined;
     const vulnId = data.vuln_id as string | undefined;
     const severity = data.severity as string | undefined;
@@ -53,10 +63,26 @@ function LogDetail({ log }: { log: NotificationLog }) {
     const cveIds = data.cve_ids as string[] | undefined;
     return (
       <div className="text-sm text-gray-700 dark:text-gray-300 space-y-0.5">
-        {(vulnId || title) && <div><span className="font-medium">{vulnId}</span>{title ? ` ${title}` : ''}</div>}
-        {createdCount != null && <div>{createdCount}件登録{criticalCount ? `（Critical: ${criticalCount}件）` : ''}</div>}
-        {cveIds?.length && <div className="text-xs text-gray-500 dark:text-gray-400">CVE: {cveIds.join(', ')}</div>}
-        {(severity || cvss != null) && <div className="text-xs text-gray-500 dark:text-gray-400">{severity}{cvss != null ? ` CVSS: ${cvss}` : ''}</div>}
+        {(vulnId || title) && (
+          <div>
+            <span className="font-medium">{vulnId}</span>
+            {title ? ` ${title}` : ""}
+          </div>
+        )}
+        {createdCount != null && (
+          <div>
+            {createdCount}件登録{criticalCount ? `（Critical: ${criticalCount}件）` : ""}
+          </div>
+        )}
+        {cveIds?.length && (
+          <div className="text-xs text-gray-500 dark:text-gray-400">CVE: {cveIds.join(", ")}</div>
+        )}
+        {(severity || cvss != null) && (
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            {severity}
+            {cvss != null ? ` CVSS: ${cvss}` : ""}
+          </div>
+        )}
       </div>
     );
   }
@@ -67,54 +93,54 @@ function LogDetail({ log }: { log: NotificationLog }) {
 export function NotificationsPage() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'channels' | 'rules' | 'logs'>('channels');
+  const [activeTab, setActiveTab] = useState<"channels" | "rules" | "logs">("channels");
 
   // チャネル作成フォーム
   const [showChannelForm, setShowChannelForm] = useState(false);
-  const [channelName, setChannelName] = useState('');
-  const [channelType, setChannelType] = useState<'webhook' | 'email'>('webhook');
-  const [webhookUrl, setWebhookUrl] = useState('');
-  const [emailFrom, setEmailFrom] = useState('');
-  const [emailTo, setEmailTo] = useState('');
-  const [emailCc, setEmailCc] = useState('');
+  const [channelName, setChannelName] = useState("");
+  const [channelType, setChannelType] = useState<"webhook" | "email">("webhook");
+  const [webhookUrl, setWebhookUrl] = useState("");
+  const [emailFrom, setEmailFrom] = useState("");
+  const [emailTo, setEmailTo] = useState("");
+  const [emailCc, setEmailCc] = useState("");
 
   // チャネル編集フォーム
   const [editingChannelId, setEditingChannelId] = useState<string | null>(null);
-  const [editChannelName, setEditChannelName] = useState('');
-  const [editWebhookUrl, setEditWebhookUrl] = useState('');
-  const [editEmailFrom, setEditEmailFrom] = useState('');
-  const [editEmailTo, setEditEmailTo] = useState('');
-  const [editEmailCc, setEditEmailCc] = useState('');
+  const [editChannelName, setEditChannelName] = useState("");
+  const [editWebhookUrl, setEditWebhookUrl] = useState("");
+  const [editEmailFrom, setEditEmailFrom] = useState("");
+  const [editEmailTo, setEditEmailTo] = useState("");
+  const [editEmailCc, setEditEmailCc] = useState("");
   const [editIsActive, setEditIsActive] = useState(true);
 
   // ルール作成フォーム
   const [showRuleForm, setShowRuleForm] = useState(false);
-  const [ruleChannelId, setRuleChannelId] = useState('');
-  const [ruleEventType, setRuleEventType] = useState<EventType>('vulnerability_created');
+  const [ruleChannelId, setRuleChannelId] = useState("");
+  const [ruleEventType, setRuleEventType] = useState<EventType>("vulnerability_created");
 
   // チャネル一覧
   const { data: channels = [] } = useQuery<NotificationChannel[]>({
-    queryKey: ['notifications', 'channels'],
+    queryKey: ["notifications", "channels"],
     queryFn: async () => {
-      const res = await api.get('/notifications/channels');
+      const res = await api.get("/notifications/channels");
       return res.data;
     },
   });
 
   // ルール一覧
   const { data: rules = [] } = useQuery<NotificationRule[]>({
-    queryKey: ['notifications', 'rules'],
+    queryKey: ["notifications", "rules"],
     queryFn: async () => {
-      const res = await api.get('/notifications/rules');
+      const res = await api.get("/notifications/rules");
       return res.data;
     },
   });
 
   // ログ一覧
   const { data: logs = [] } = useQuery<NotificationLog[]>({
-    queryKey: ['notifications', 'logs'],
+    queryKey: ["notifications", "logs"],
     queryFn: async () => {
-      const res = await api.get('/notifications/logs');
+      const res = await api.get("/notifications/logs");
       return res.data;
     },
   });
@@ -122,31 +148,40 @@ export function NotificationsPage() {
   // チャネル作成
   const createChannelMutation = useMutation({
     mutationFn: async () => {
-      const config = channelType === 'webhook'
-        ? { url: webhookUrl }
-        : {
-            from: emailFrom,
-            to: emailTo.split(',').map(e => e.trim()).filter(e => e),
-            ...(emailCc && { cc: emailCc.split(',').map(e => e.trim()).filter(e => e) })
-          };
+      const config =
+        channelType === "webhook"
+          ? { url: webhookUrl }
+          : {
+              from: emailFrom,
+              to: emailTo
+                .split(",")
+                .map((e) => e.trim())
+                .filter((e) => e),
+              ...(emailCc && {
+                cc: emailCc
+                  .split(",")
+                  .map((e) => e.trim())
+                  .filter((e) => e),
+              }),
+            };
 
-      await api.post('/notifications/channels', {
+      await api.post("/notifications/channels", {
         name: channelName,
         type: channelType,
         config,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications', 'channels'] });
+      queryClient.invalidateQueries({ queryKey: ["notifications", "channels"] });
       setShowChannelForm(false);
-      setChannelName('');
-      setWebhookUrl('');
-      setEmailFrom('');
-      setEmailTo('');
-      setEmailCc('');
+      setChannelName("");
+      setWebhookUrl("");
+      setEmailFrom("");
+      setEmailTo("");
+      setEmailCc("");
     },
     onError: () => {
-      alert('チャネルの作成に失敗しました');
+      alert("チャネルの作成に失敗しました");
     },
   });
 
@@ -156,33 +191,36 @@ export function NotificationsPage() {
       await api.delete(`/notifications/channels/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: () => {
-      alert('チャネルの削除に失敗しました');
+      alert("チャネルの削除に失敗しました");
     },
   });
 
   // チャネル更新
   const updateChannelMutation = useMutation({
-    mutationFn: async ({ id, data }: {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
       id: string;
       data: {
         name?: string;
         config?: Record<string, unknown>;
-        isActive?: boolean
-      }
+        isActive?: boolean;
+      };
     }) => {
       await api.patch(`/notifications/channels/${id}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications', 'channels'] });
+      queryClient.invalidateQueries({ queryKey: ["notifications", "channels"] });
       setEditingChannelId(null);
-      setEditChannelName('');
-      setEditWebhookUrl('');
-      setEditEmailFrom('');
-      setEditEmailTo('');
-      setEditEmailCc('');
+      setEditChannelName("");
+      setEditWebhookUrl("");
+      setEditEmailFrom("");
+      setEditEmailTo("");
+      setEditEmailCc("");
     },
   });
 
@@ -192,28 +230,28 @@ export function NotificationsPage() {
       await api.post(`/notifications/channels/${id}/test`);
     },
     onSuccess: () => {
-      alert('テスト通知を送信しました。メールをご確認ください。');
+      alert("テスト通知を送信しました。メールをご確認ください。");
     },
     onError: () => {
-      alert('テスト送信に失敗しました。設定を確認してください。');
+      alert("テスト送信に失敗しました。設定を確認してください。");
     },
   });
 
   // ルール作成
   const createRuleMutation = useMutation({
     mutationFn: async () => {
-      await api.post('/notifications/rules', {
+      await api.post("/notifications/rules", {
         channelId: ruleChannelId,
         eventType: ruleEventType,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications', 'rules'] });
+      queryClient.invalidateQueries({ queryKey: ["notifications", "rules"] });
       setShowRuleForm(false);
-      setRuleChannelId('');
+      setRuleChannelId("");
     },
     onError: () => {
-      alert('ルールの作成に失敗しました');
+      alert("ルールの作成に失敗しました");
     },
   });
 
@@ -223,10 +261,10 @@ export function NotificationsPage() {
       await api.delete(`/notifications/rules/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications', 'rules'] });
+      queryClient.invalidateQueries({ queryKey: ["notifications", "rules"] });
     },
     onError: () => {
-      alert('ルールの削除に失敗しました');
+      alert("ルールの削除に失敗しました");
     },
   });
 
@@ -236,18 +274,20 @@ export function NotificationsPage() {
       await api.patch(`/notifications/rules/${id}`, { isActive });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications', 'rules'] });
+      queryClient.invalidateQueries({ queryKey: ["notifications", "rules"] });
     },
     onError: () => {
-      alert('ルールの更新に失敗しました');
+      alert("ルールの更新に失敗しました");
     },
   });
 
-  if (user?.role === 'viewer') {
+  if (user?.role === "viewer") {
     return (
       <div className="space-y-6 max-w-2xl">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">通知設定</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">この画面は編集者以上のみ利用できます。</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          この画面は編集者以上のみ利用できます。
+        </p>
       </div>
     );
   }
@@ -264,28 +304,37 @@ export function NotificationsPage() {
     } catch {
       config = {};
     }
-    if (channel.type === 'webhook') {
-      setEditWebhookUrl(config.url || '');
-      setEditEmailFrom('');
-      setEditEmailTo('');
-      setEditEmailCc('');
+    if (channel.type === "webhook") {
+      setEditWebhookUrl(config.url || "");
+      setEditEmailFrom("");
+      setEditEmailTo("");
+      setEditEmailCc("");
     } else {
-      setEditWebhookUrl('');
-      setEditEmailFrom(config.from || '');
-      setEditEmailTo(config.to?.join(', ') || '');
-      setEditEmailCc(config.cc?.join(', ') || '');
+      setEditWebhookUrl("");
+      setEditEmailFrom(config.from || "");
+      setEditEmailTo(config.to?.join(", ") || "");
+      setEditEmailCc(config.cc?.join(", ") || "");
     }
   };
 
   // チャネル編集保存
   const handleSaveChannel = (channel: NotificationChannel) => {
-    const config = channel.type === 'webhook'
-      ? { url: editWebhookUrl }
-      : {
-          from: editEmailFrom,
-          to: editEmailTo.split(',').map(e => e.trim()).filter(e => e),
-          ...(editEmailCc && { cc: editEmailCc.split(',').map(e => e.trim()).filter(e => e) })
-        };
+    const config =
+      channel.type === "webhook"
+        ? { url: editWebhookUrl }
+        : {
+            from: editEmailFrom,
+            to: editEmailTo
+              .split(",")
+              .map((e) => e.trim())
+              .filter((e) => e),
+            ...(editEmailCc && {
+              cc: editEmailCc
+                .split(",")
+                .map((e) => e.trim())
+                .filter((e) => e),
+            }),
+          };
 
     updateChannelMutation.mutate({
       id: channel.id,
@@ -300,49 +349,51 @@ export function NotificationsPage() {
   // チャネル編集キャンセル
   const handleCancelEdit = () => {
     setEditingChannelId(null);
-    setEditChannelName('');
-    setEditWebhookUrl('');
-    setEditEmailFrom('');
-    setEditEmailTo('');
-    setEditEmailCc('');
+    setEditChannelName("");
+    setEditWebhookUrl("");
+    setEditEmailFrom("");
+    setEditEmailTo("");
+    setEditEmailCc("");
   };
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">通知設定</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">イベント通知のチャネルとルールを管理します</p>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">
+          イベント通知のチャネルとルールを管理します
+        </p>
       </div>
 
       {/* タブ */}
       <div className="border-b border-gray-200 dark:border-gray-700">
         <nav className="-mb-px flex space-x-8">
           <button
-            onClick={() => setActiveTab('channels')}
+            onClick={() => setActiveTab("channels")}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'channels'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300'
+              activeTab === "channels"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300"
             }`}
           >
             チャネル
           </button>
           <button
-            onClick={() => setActiveTab('rules')}
+            onClick={() => setActiveTab("rules")}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'rules'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300'
+              activeTab === "rules"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300"
             }`}
           >
             ルール
           </button>
           <button
-            onClick={() => setActiveTab('logs')}
+            onClick={() => setActiveTab("logs")}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'logs'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300'
+              activeTab === "logs"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300"
             }`}
           >
             ログ
@@ -351,7 +402,7 @@ export function NotificationsPage() {
       </div>
 
       {/* チャネルタブ */}
-      {activeTab === 'channels' && (
+      {activeTab === "channels" && (
         <div className="space-y-4">
           <div className="flex justify-end">
             <button
@@ -368,7 +419,9 @@ export function NotificationsPage() {
               <h3 className="text-lg font-semibold dark:text-white mb-4">新規チャネル</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">名前</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                    名前
+                  </label>
                   <input
                     type="text"
                     value={channelName}
@@ -379,10 +432,12 @@ export function NotificationsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">タイプ</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                    タイプ
+                  </label>
                   <select
                     value={channelType}
-                    onChange={(e) => setChannelType(e.target.value as 'webhook' | 'email')}
+                    onChange={(e) => setChannelType(e.target.value as "webhook" | "email")}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
                   >
                     <option value="webhook">Webhook</option>
@@ -390,9 +445,11 @@ export function NotificationsPage() {
                   </select>
                 </div>
 
-                {channelType === 'webhook' && (
+                {channelType === "webhook" && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Webhook URL</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                      Webhook URL
+                    </label>
                     <input
                       type="url"
                       value={webhookUrl}
@@ -403,10 +460,12 @@ export function NotificationsPage() {
                   </div>
                 )}
 
-                {channelType === 'email' && (
+                {channelType === "email" && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">送信元アドレス</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                        送信元アドレス
+                      </label>
                       <input
                         type="email"
                         value={emailFrom}
@@ -416,7 +475,9 @@ export function NotificationsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">宛先アドレス（カンマ区切り）</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                        宛先アドレス（カンマ区切り）
+                      </label>
                       <input
                         type="text"
                         value={emailTo}
@@ -426,7 +487,9 @@ export function NotificationsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">CC（オプション、カンマ区切り）</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                        CC（オプション、カンマ区切り）
+                      </label>
                       <input
                         type="text"
                         value={emailCc}
@@ -443,8 +506,8 @@ export function NotificationsPage() {
                     onClick={() => createChannelMutation.mutate()}
                     disabled={
                       !channelName ||
-                      (channelType === 'webhook' && !webhookUrl) ||
-                      (channelType === 'email' && (!emailFrom || !emailTo))
+                      (channelType === "webhook" && !webhookUrl) ||
+                      (channelType === "email" && (!emailFrom || !emailTo))
                     }
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                   >
@@ -470,7 +533,9 @@ export function NotificationsPage() {
                     <h3 className="text-lg font-semibold dark:text-white mb-4">チャネル編集</h3>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">名前</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                          名前
+                        </label>
                         <input
                           type="text"
                           value={editChannelName}
@@ -481,7 +546,9 @@ export function NotificationsPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">タイプ</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                          タイプ
+                        </label>
                         <select
                           value={channel.type}
                           disabled
@@ -490,12 +557,16 @@ export function NotificationsPage() {
                           <option value="webhook">Webhook</option>
                           <option value="email">Email</option>
                         </select>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">タイプは変更できません</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          タイプは変更できません
+                        </p>
                       </div>
 
-                      {channel.type === 'webhook' && (
+                      {channel.type === "webhook" && (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Webhook URL</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            Webhook URL
+                          </label>
                           <input
                             type="url"
                             value={editWebhookUrl}
@@ -506,10 +577,12 @@ export function NotificationsPage() {
                         </div>
                       )}
 
-                      {channel.type === 'email' && (
+                      {channel.type === "email" && (
                         <>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">送信元アドレス</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                              送信元アドレス
+                            </label>
                             <input
                               type="email"
                               value={editEmailFrom}
@@ -519,7 +592,9 @@ export function NotificationsPage() {
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">宛先アドレス（カンマ区切り）</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                              宛先アドレス（カンマ区切り）
+                            </label>
                             <input
                               type="text"
                               value={editEmailTo}
@@ -529,7 +604,9 @@ export function NotificationsPage() {
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">CC（オプション、カンマ区切り）</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                              CC（オプション、カンマ区切り）
+                            </label>
                             <input
                               type="text"
                               value={editEmailCc}
@@ -549,7 +626,9 @@ export function NotificationsPage() {
                             onChange={(e) => setEditIsActive(e.target.checked)}
                             className="mr-2"
                           />
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">有効</span>
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                            有効
+                          </span>
                         </label>
                       </div>
 
@@ -558,8 +637,8 @@ export function NotificationsPage() {
                           onClick={() => handleSaveChannel(channel)}
                           disabled={
                             !editChannelName ||
-                            (channel.type === 'webhook' && !editWebhookUrl) ||
-                            (channel.type === 'email' && (!editEmailFrom || !editEmailTo))
+                            (channel.type === "webhook" && !editWebhookUrl) ||
+                            (channel.type === "email" && (!editEmailFrom || !editEmailTo))
                           }
                           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                         >
@@ -578,15 +657,21 @@ export function NotificationsPage() {
                   // 通常モード
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{channel.name}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{channel.type}</p>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {channel.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {channel.type}
+                      </p>
                       <div className="mt-2">
                         <span
                           className={`px-2 py-1 text-xs rounded ${
-                            channel.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                            channel.is_active
+                              ? "bg-green-100 text-green-800"
+                              : "bg-gray-100 text-gray-800"
                           }`}
                         >
-                          {channel.is_active ? '有効' : '無効'}
+                          {channel.is_active ? "有効" : "無効"}
                         </span>
                       </div>
                     </div>
@@ -607,7 +692,7 @@ export function NotificationsPage() {
                       </button>
                       <button
                         onClick={() => {
-                          if (!confirm('このチャネルを削除しますか？')) return;
+                          if (!confirm("このチャネルを削除しますか？")) return;
                           deleteChannelMutation.mutate(channel.id);
                         }}
                         className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
@@ -625,7 +710,7 @@ export function NotificationsPage() {
       )}
 
       {/* ルールタブ */}
-      {activeTab === 'rules' && (
+      {activeTab === "rules" && (
         <div className="space-y-4">
           <div className="flex justify-end">
             <button
@@ -642,7 +727,9 @@ export function NotificationsPage() {
               <h3 className="text-lg font-semibold dark:text-white mb-4">新規ルール</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">チャネル</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                    チャネル
+                  </label>
                   <select
                     value={ruleChannelId}
                     onChange={(e) => setRuleChannelId(e.target.value)}
@@ -658,7 +745,9 @@ export function NotificationsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">イベント</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                    イベント
+                  </label>
                   <select
                     value={ruleEventType}
                     onChange={(e) => setRuleEventType(e.target.value as EventType)}
@@ -693,129 +782,171 @@ export function NotificationsPage() {
 
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">チャネル</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">イベント</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">状態</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {rules.map((rule) => {
-                  const channel = channels.find((ch) => ch.id === rule.channel_id);
-                  return (
-                    <tr key={rule.id}>
-                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">{channel?.name || 'Unknown'}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">{EVENT_LABELS[rule.event_type]}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center space-x-2">
-                          <span
-                            className={`px-2 py-1 text-xs rounded ${
-                              rule.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                            }`}
-                          >
-                            {rule.is_active ? '有効' : '無効'}
-                          </span>
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                      チャネル
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                      イベント
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                      状態
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                      操作
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {rules.map((rule) => {
+                    const channel = channels.find((ch) => ch.id === rule.channel_id);
+                    return (
+                      <tr key={rule.id}>
+                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                          {channel?.name || "Unknown"}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                          {EVENT_LABELS[rule.event_type]}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center space-x-2">
+                            <span
+                              className={`px-2 py-1 text-xs rounded ${
+                                rule.is_active
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-gray-100 text-gray-800"
+                              }`}
+                            >
+                              {rule.is_active ? "有効" : "無効"}
+                            </span>
+                            <button
+                              onClick={() =>
+                                toggleRuleMutation.mutate({
+                                  id: rule.id,
+                                  isActive: !rule.is_active,
+                                })
+                              }
+                              disabled={toggleRuleMutation.isPending}
+                              className={`p-1 rounded transition-colors ${
+                                rule.is_active
+                                  ? "text-green-600 hover:bg-green-50"
+                                  : "text-gray-400 hover:bg-gray-50"
+                              } disabled:opacity-50`}
+                              title={rule.is_active ? "無効にする" : "有効にする"}
+                            >
+                              {rule.is_active ? (
+                                <CheckCircle className="w-4 h-4" />
+                              ) : (
+                                <XCircle className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right">
                           <button
-                            onClick={() => toggleRuleMutation.mutate({
-                              id: rule.id,
-                              isActive: !rule.is_active
-                            })}
-                            disabled={toggleRuleMutation.isPending}
-                            className={`p-1 rounded transition-colors ${
-                              rule.is_active
-                                ? 'text-green-600 hover:bg-green-50'
-                                : 'text-gray-400 hover:bg-gray-50'
-                            } disabled:opacity-50`}
-                            title={rule.is_active ? '無効にする' : '有効にする'}
+                            onClick={() => {
+                              if (!confirm("このルールを削除しますか？")) return;
+                              deleteRuleMutation.mutate(rule.id);
+                            }}
+                            className="text-red-600 hover:text-red-900"
                           >
-                            {rule.is_active ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                            削除
                           </button>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => {
-                            if (!confirm('このルールを削除しますか？')) return;
-                            deleteRuleMutation.mutate(rule.id);
-                          }}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          削除
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
       )}
 
       {/* ログタブ */}
-      {activeTab === 'logs' && (
+      {activeTab === "logs" && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-700">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">送信日時</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">チャネル</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">イベント</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">詳細</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">状態</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">エラー</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {logs.map((log) => {
-                const channel = channels.find((c) => c.id === log.channel_id);
-                return (
-                  <tr key={log.id}>
-                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-                      {new Date(log.sent_at.replace(' ', 'T') + 'Z').toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
-                      {channel ? (
-                        <span>{channel.name}</span>
-                      ) : (
-                        <span className="text-xs text-gray-400">{log.channel_id.slice(0, 8)}…</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-                      {EVENT_LABELS[log.event_type] ?? log.event_type}
-                    </td>
-                    <td className="px-6 py-4 min-w-48">
-                      <LogDetail log={log} />
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`flex items-center gap-1 px-2 py-1 text-xs rounded whitespace-nowrap ${
-                          log.status === 'sent'
-                            ? 'bg-green-100 text-green-800'
-                            : log.status === 'failed'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                      >
-                        {log.status === 'sent' ? (
-                          <CheckCircle className="w-3 h-3" />
-                        ) : log.status === 'failed' ? (
-                          <XCircle className="w-3 h-3" />
-                        ) : null}
-                        {log.status === 'sent' ? '成功' : log.status === 'failed' ? '失敗' : '保留中'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{log.error_message || '-'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                    送信日時
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                    チャネル
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                    イベント
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                    詳細
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                    状態
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                    エラー
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {logs.map((log) => {
+                  const channel = channels.find((c) => c.id === log.channel_id);
+                  return (
+                    <tr key={log.id}>
+                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                        {new Date(`${log.sent_at.replace(" ", "T")}Z`).toLocaleString("ja-JP", {
+                          timeZone: "Asia/Tokyo",
+                        })}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                        {channel ? (
+                          <span>{channel.name}</span>
+                        ) : (
+                          <span className="text-xs text-gray-400">
+                            {log.channel_id.slice(0, 8)}…
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                        {EVENT_LABELS[log.event_type] ?? log.event_type}
+                      </td>
+                      <td className="px-6 py-4 min-w-48">
+                        <LogDetail log={log} />
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`flex items-center gap-1 px-2 py-1 text-xs rounded whitespace-nowrap ${
+                            log.status === "sent"
+                              ? "bg-green-100 text-green-800"
+                              : log.status === "failed"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {log.status === "sent" ? (
+                            <CheckCircle className="w-3 h-3" />
+                          ) : log.status === "failed" ? (
+                            <XCircle className="w-3 h-3" />
+                          ) : null}
+                          {log.status === "sent"
+                            ? "成功"
+                            : log.status === "failed"
+                              ? "失敗"
+                              : "保留中"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                        {log.error_message || "-"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       )}

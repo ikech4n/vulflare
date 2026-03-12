@@ -1,4 +1,4 @@
-import type { Env } from '../types.ts';
+import type { Env } from "../types.ts";
 
 export interface DataSourceSettings {
   jvn: boolean;
@@ -6,25 +6,25 @@ export interface DataSourceSettings {
 
 // ベンダー/製品選択（MyJVN APIから取得したデータ）
 export interface JvnProductSelection {
-  productId: string;    // MyJVN product ID (pid)
-  productName: string;  // 製品名（表示用）
-  cpe: string;          // CPE文字列（JVN APIクエリに使用）
+  productId: string; // MyJVN product ID (pid)
+  productName: string; // 製品名（表示用）
+  cpe: string; // CPE文字列（JVN APIクエリに使用）
 }
 
 export interface JvnVendorSelection {
-  vendorId: string;     // MyJVN vendor ID (vid)
-  vendorName: string;   // ベンダー名（表示用）
-  products: JvnProductSelection[];  // 空 = そのベンダーの全製品を対象
+  vendorId: string; // MyJVN vendor ID (vid)
+  vendorName: string; // ベンダー名（表示用）
+  products: JvnProductSelection[]; // 空 = そのベンダーの全製品を対象
 }
 
 export interface SyncSettings {
-  vendorSelections: JvnVendorSelection[];  // ベンダー/製品フィルター（新規）
-  keywords: string[];                       // キーワード検索（維持）
-  excludeKeywords: string[];                // 除外キーワード（維持）
-  cvssMinScore: number;                     // CVSS最小スコア（新規、0=無効）
-  fullSyncDays: number;                     // 同期期間（維持）
-  retentionDays: number;                    // データ保持期間（維持）
-  dataSources: DataSourceSettings;          // データソース設定（維持）
+  vendorSelections: JvnVendorSelection[]; // ベンダー/製品フィルター（新規）
+  keywords: string[]; // キーワード検索（維持）
+  excludeKeywords: string[]; // 除外キーワード（維持）
+  cvssMinScore: number; // CVSS最小スコア（新規、0=無効）
+  fullSyncDays: number; // 同期期間（維持）
+  retentionDays: number; // データ保持期間（維持）
+  dataSources: DataSourceSettings; // データソース設定（維持）
 }
 
 const DEFAULT_SETTINGS: SyncSettings = {
@@ -51,20 +51,22 @@ export async function getSyncSettings(env: Env): Promise<SyncSettings> {
     const map = new Map(rows.results.map((r) => [r.key, r.value]));
 
     // 後方互換性: 旧 detection_mode が残っている場合の処理
-    const legacyMode = map.get('detection_mode');
+    const legacyMode = map.get("detection_mode");
     if (legacyMode) {
-      console.log(`[getSyncSettings] Legacy detection_mode found: ${legacyMode} (migrating gracefully)`);
+      console.log(
+        `[getSyncSettings] Legacy detection_mode found: ${legacyMode} (migrating gracefully)`,
+      );
       // vendorSelections は空にし、keywords は維持
       // アセットパッケージは常時自動検知されるため、旧 package-based と同等の動作
     }
 
-    const vendorSelections = map.get('vendor_selections');
-    const keywords = map.get('keywords');
-    const excludeKeywords = map.get('exclude_keywords');
-    const cvssMinScore = map.get('cvss_min_score');
-    const fullSyncDays = map.get('full_sync_days');
-    const retentionDays = map.get('retention_days');
-    const dataSources = map.get('data_sources');
+    const vendorSelections = map.get("vendor_selections");
+    const keywords = map.get("keywords");
+    const excludeKeywords = map.get("exclude_keywords");
+    const cvssMinScore = map.get("cvss_min_score");
+    const fullSyncDays = map.get("full_sync_days");
+    const retentionDays = map.get("retention_days");
+    const dataSources = map.get("data_sources");
 
     // dataSources を取得し、数値をブール値に変換
     let parsedDataSources = DEFAULT_SETTINGS.dataSources;
@@ -76,12 +78,18 @@ export async function getSyncSettings(env: Env): Promise<SyncSettings> {
     }
 
     return {
-      vendorSelections: vendorSelections ? JSON.parse(vendorSelections) : DEFAULT_SETTINGS.vendorSelections,
+      vendorSelections: vendorSelections
+        ? JSON.parse(vendorSelections)
+        : DEFAULT_SETTINGS.vendorSelections,
       keywords: keywords ? JSON.parse(keywords) : DEFAULT_SETTINGS.keywords,
-      excludeKeywords: excludeKeywords ? JSON.parse(excludeKeywords) : DEFAULT_SETTINGS.excludeKeywords,
-      cvssMinScore: cvssMinScore ? parseFloat(cvssMinScore) : DEFAULT_SETTINGS.cvssMinScore,
-      fullSyncDays: fullSyncDays ? parseInt(fullSyncDays) : DEFAULT_SETTINGS.fullSyncDays,
-      retentionDays: retentionDays ? parseInt(retentionDays) : DEFAULT_SETTINGS.retentionDays,
+      excludeKeywords: excludeKeywords
+        ? JSON.parse(excludeKeywords)
+        : DEFAULT_SETTINGS.excludeKeywords,
+      cvssMinScore: cvssMinScore ? Number.parseFloat(cvssMinScore) : DEFAULT_SETTINGS.cvssMinScore,
+      fullSyncDays: fullSyncDays ? Number.parseInt(fullSyncDays) : DEFAULT_SETTINGS.fullSyncDays,
+      retentionDays: retentionDays
+        ? Number.parseInt(retentionDays)
+        : DEFAULT_SETTINGS.retentionDays,
       dataSources: parsedDataSources,
     };
   } catch {
@@ -94,7 +102,7 @@ export async function updateSyncSettings(env: Env, settings: SyncSettings): Prom
   const jstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
   const now = jstNow.toISOString();
 
-  console.log('updateSyncSettings called with:', {
+  console.log("updateSyncSettings called with:", {
     vendorSelections: settings.vendorSelections,
     keywords: settings.keywords,
     excludeKeywords: settings.excludeKeywords,
@@ -135,7 +143,7 @@ export async function updateSyncSettings(env: Env, settings: SyncSettings): Prom
     ).bind(JSON.stringify(settings.dataSources), now),
   ]);
 
-  console.log('Batch result:', JSON.stringify(result));
+  console.log("Batch result:", JSON.stringify(result));
 }
 
 /**
@@ -167,7 +175,7 @@ export function shouldExcludeByCvss(
   cvssV2Score: number | undefined,
   minScore: number,
 ): boolean {
-  if (minScore <= 0) return false;  // 閾値が0以下の場合はフィルタリング無効
+  if (minScore <= 0) return false; // 閾値が0以下の場合はフィルタリング無効
   const score = cvssV3Score ?? cvssV2Score ?? 0;
   return score < minScore;
 }

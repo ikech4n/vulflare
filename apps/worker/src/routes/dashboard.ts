@@ -1,14 +1,14 @@
-import { Hono } from 'hono';
-import type { Env, JwtVariables } from '../types.ts';
-import { authMiddleware } from '../middleware/auth.ts';
+import { Hono } from "hono";
+import { authMiddleware } from "../middleware/auth.ts";
+import type { Env, JwtVariables } from "../types.ts";
 
 export const dashboardRoutes = new Hono<{ Bindings: Env; Variables: JwtVariables }>();
 
-dashboardRoutes.use('/*', authMiddleware);
+dashboardRoutes.use("/*", authMiddleware);
 
 // GET /api/dashboard/trends - 時系列トレンド（30/90日間）
-dashboardRoutes.get('/trends', async (c) => {
-  const days = Number(c.req.query('days') ?? '30');
+dashboardRoutes.get("/trends", async (c) => {
+  const days = Number(c.req.query("days") ?? "30");
   const validDays = [7, 30, 90];
   const selectedDays = validDays.includes(days) ? days : 30;
 
@@ -16,7 +16,7 @@ dashboardRoutes.get('/trends', async (c) => {
   const result = await c.env.DB.prepare(
     `SELECT * FROM vulnerability_snapshots
      WHERE snapshot_date >= date('now', '-${selectedDays} days')
-     ORDER BY snapshot_date ASC`
+     ORDER BY snapshot_date ASC`,
   ).all();
 
   const snapshots = result.results ?? [];
@@ -26,7 +26,7 @@ dashboardRoutes.get('/trends', async (c) => {
     return c.json({
       days: selectedDays,
       data: [],
-      message: 'No snapshot data available. Run scheduled sync to generate snapshots.',
+      message: "No snapshot data available. Run scheduled sync to generate snapshots.",
     });
   }
 

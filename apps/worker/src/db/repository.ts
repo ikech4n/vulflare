@@ -1,6 +1,6 @@
-import type { Env } from '../types.ts';
+import type { Env } from "../types.ts";
 
-type DB = Env['DB'];
+type DB = Env["DB"];
 
 // --- Users ---
 
@@ -20,26 +20,44 @@ export interface DbUser {
 
 export const userRepo = {
   findByUsername(db: DB, username: string) {
-    return db.prepare('SELECT * FROM users WHERE username = ?').bind(username).first<DbUser>();
+    return db.prepare("SELECT * FROM users WHERE username = ?").bind(username).first<DbUser>();
   },
   findById(db: DB, id: string) {
-    return db.prepare('SELECT * FROM users WHERE id = ?').bind(id).first<DbUser>();
+    return db.prepare("SELECT * FROM users WHERE id = ?").bind(id).first<DbUser>();
   },
-  create(db: DB, user: Omit<DbUser, 'created_at' | 'updated_at' | 'failed_login_attempts' | 'locked_at' | 'email' | 'theme'> & { email?: string | null }) {
+  create(
+    db: DB,
+    user: Omit<
+      DbUser,
+      "created_at" | "updated_at" | "failed_login_attempts" | "locked_at" | "email" | "theme"
+    > & { email?: string | null },
+  ) {
     return db
       .prepare(
-        'INSERT INTO users (id, username, password_hash, role, is_active, email) VALUES (?, ?, ?, ?, ?, ?)',
+        "INSERT INTO users (id, username, password_hash, role, is_active, email) VALUES (?, ?, ?, ?, ?, ?)",
       )
-      .bind(user.id, user.username, user.password_hash, user.role, user.is_active, user.email ?? null)
+      .bind(
+        user.id,
+        user.username,
+        user.password_hash,
+        user.role,
+        user.is_active,
+        user.email ?? null,
+      )
       .run();
   },
   list(db: DB) {
     return db
-      .prepare('SELECT id, username, role, is_active, failed_login_attempts, locked_at, email, created_at FROM users ORDER BY created_at ASC')
-      .all<Omit<DbUser, 'password_hash' | 'updated_at'>>();
+      .prepare(
+        "SELECT id, username, role, is_active, failed_login_attempts, locked_at, email, created_at FROM users ORDER BY created_at ASC",
+      )
+      .all<Omit<DbUser, "password_hash" | "updated_at">>();
   },
   findByEmail(db: DB, email: string) {
-    return db.prepare('SELECT * FROM users WHERE email = ? AND is_active = 1').bind(email).first<DbUser>();
+    return db
+      .prepare("SELECT * FROM users WHERE email = ? AND is_active = 1")
+      .bind(email)
+      .first<DbUser>();
   },
   updatePassword(db: DB, id: string, passwordHash: string) {
     return db
@@ -59,17 +77,33 @@ export const userRepo = {
       .bind(isActive, id)
       .run();
   },
-  updateProfile(db: DB, id: string, fields: { username?: string; email?: string | null; theme?: string }) {
+  updateProfile(
+    db: DB,
+    id: string,
+    fields: { username?: string; email?: string | null; theme?: string },
+  ) {
     const sets: string[] = ["updated_at = datetime('now')"];
     const params: unknown[] = [];
-    if (fields.username) { sets.push('username = ?'); params.push(fields.username); }
-    if (fields.email !== undefined) { sets.push('email = ?'); params.push(fields.email); }
-    if (fields.theme !== undefined) { sets.push('theme = ?'); params.push(fields.theme); }
+    if (fields.username) {
+      sets.push("username = ?");
+      params.push(fields.username);
+    }
+    if (fields.email !== undefined) {
+      sets.push("email = ?");
+      params.push(fields.email);
+    }
+    if (fields.theme !== undefined) {
+      sets.push("theme = ?");
+      params.push(fields.theme);
+    }
     params.push(id);
-    return db.prepare(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`).bind(...params).run();
+    return db
+      .prepare(`UPDATE users SET ${sets.join(", ")} WHERE id = ?`)
+      .bind(...params)
+      .run();
   },
   delete(db: DB, id: string) {
-    return db.prepare('DELETE FROM users WHERE id = ?').bind(id).run();
+    return db.prepare("DELETE FROM users WHERE id = ?").bind(id).run();
   },
   incrementFailedAttempts(db: DB, id: string) {
     return db
@@ -117,15 +151,17 @@ interface UserTokenEntry {
 
 export const sessionTokenRepo = {
   async create(kv: KV, jti: string, userId: string, tokenHash: string, ttlSeconds: number) {
-    await kv.put(`token:${tokenHash}`, JSON.stringify({ userId, jti }), { expirationTtl: ttlSeconds });
+    await kv.put(`token:${tokenHash}`, JSON.stringify({ userId, jti }), {
+      expirationTtl: ttlSeconds,
+    });
     const userKey = `user:${userId}`;
-    const existing = (await kv.get<UserTokenEntry[]>(userKey, 'json')) ?? [];
+    const existing = (await kv.get<UserTokenEntry[]>(userKey, "json")) ?? [];
     existing.push({ jti, tokenHash });
     await kv.put(userKey, JSON.stringify(existing));
   },
 
   findByHash(kv: KV, tokenHash: string): Promise<SessionTokenData | null> {
-    return kv.get<SessionTokenData>(`token:${tokenHash}`, 'json');
+    return kv.get<SessionTokenData>(`token:${tokenHash}`, "json");
   },
 
   async revoke(kv: KV, tokenHash: string) {
@@ -134,7 +170,7 @@ export const sessionTokenRepo = {
 
   async revokeAllForUser(kv: KV, userId: string) {
     const userKey = `user:${userId}`;
-    const tokens = (await kv.get<UserTokenEntry[]>(userKey, 'json')) ?? [];
+    const tokens = (await kv.get<UserTokenEntry[]>(userKey, "json")) ?? [];
     await Promise.all(tokens.map(({ tokenHash }) => kv.delete(`token:${tokenHash}`)));
     await kv.delete(userKey);
   },
@@ -144,7 +180,10 @@ export const sessionTokenRepo = {
 
 export const appSettingsRepo = {
   get(db: DB, key: string) {
-    return db.prepare('SELECT value FROM sync_settings WHERE key = ?').bind(key).first<{ value: string }>();
+    return db
+      .prepare("SELECT value FROM sync_settings WHERE key = ?")
+      .bind(key)
+      .first<{ value: string }>();
   },
   set(db: DB, key: string, value: string) {
     return db
@@ -162,7 +201,7 @@ export const passwordResetTokenRepo = {
   create(db: DB, id: string, userId: string, tokenHash: string, expiresAt: string) {
     return db
       .prepare(
-        'INSERT INTO password_reset_tokens (id, user_id, token_hash, expires_at) VALUES (?, ?, ?, ?)',
+        "INSERT INTO password_reset_tokens (id, user_id, token_hash, expires_at) VALUES (?, ?, ?, ?)",
       )
       .bind(id, userId, tokenHash, expiresAt)
       .run();
@@ -232,58 +271,62 @@ export const vulnRepo = {
     const params: unknown[] = [];
 
     if (severity) {
-      const severities = severity.split(',').filter(Boolean);
+      const severities = severity.split(",").filter(Boolean);
       if (severities.length === 1) {
-        conditions.push('severity = ?');
+        conditions.push("severity = ?");
         params.push(severities[0]);
       } else {
-        conditions.push(`severity IN (${severities.map(() => '?').join(',')})`);
+        conditions.push(`severity IN (${severities.map(() => "?").join(",")})`);
         params.push(...severities);
       }
     }
     if (status) {
-      const statuses = status.split(',').filter(Boolean);
+      const statuses = status.split(",").filter(Boolean);
       if (statuses.length === 1) {
-        conditions.push('status = ?');
+        conditions.push("status = ?");
         params.push(statuses[0]);
       } else {
-        conditions.push(`status IN (${statuses.map(() => '?').join(',')})`);
+        conditions.push(`status IN (${statuses.map(() => "?").join(",")})`);
         params.push(...statuses);
       }
     }
-    if (source) { conditions.push('source = ?'); params.push(source); }
+    if (source) {
+      conditions.push("source = ?");
+      params.push(source);
+    }
     if (q) {
-      conditions.push('(cve_id LIKE ? OR title LIKE ?)');
+      conditions.push("(cve_id LIKE ? OR title LIKE ?)");
       params.push(`%${q}%`, `%${q}%`);
     }
 
-    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const offset = (page - 1) * limit;
 
     const countStmt = db
       .prepare(`SELECT COUNT(*) as total FROM vulnerabilities ${where}`)
       .bind(...params);
     const dataStmt = db
-      .prepare(
-        `SELECT * FROM vulnerabilities ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
-      )
+      .prepare(`SELECT * FROM vulnerabilities ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`)
       .bind(...params, limit, offset);
 
     return { countStmt, dataStmt };
   },
 
   findById(db: DB, id: string) {
-    return db.prepare('SELECT * FROM vulnerabilities WHERE id = ?').bind(id).first<DbVulnerability>();
+    return db
+      .prepare("SELECT * FROM vulnerabilities WHERE id = ?")
+      .bind(id)
+      .first<DbVulnerability>();
   },
 
   findByCveId(db: DB, cveId: string) {
     return db
-      .prepare('SELECT * FROM vulnerabilities WHERE cve_id = ?')
+      .prepare("SELECT * FROM vulnerabilities WHERE cve_id = ?")
       .bind(cveId)
       .first<DbVulnerability>();
   },
 
-  create(db: DB, v: Omit<DbVulnerability, 'created_at' | 'updated_at'>) {
+  create(db: DB, v: Omit<DbVulnerability, "created_at" | "updated_at">) {
     return db
       .prepare(
         `INSERT INTO vulnerabilities
@@ -294,16 +337,50 @@ export const vulnRepo = {
          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       )
       .bind(
-        v.id, v.cve_id, v.title, v.description, v.severity,
-        v.cvss_v3_score, v.cvss_v3_vector, v.cvss_v2_score, v.cvss_v2_vector,
-        v.cvss_v4_score, v.cvss_v4_vector,
-        v.cwe_ids, v.affected_products, v.vuln_references,
-        v.published_at, v.modified_at, v.source, v.status,
+        v.id,
+        v.cve_id,
+        v.title,
+        v.description,
+        v.severity,
+        v.cvss_v3_score,
+        v.cvss_v3_vector,
+        v.cvss_v2_score,
+        v.cvss_v2_vector,
+        v.cvss_v4_score,
+        v.cvss_v4_vector,
+        v.cwe_ids,
+        v.affected_products,
+        v.vuln_references,
+        v.published_at,
+        v.modified_at,
+        v.source,
+        v.status,
       )
       .run();
   },
 
-  update(db: DB, id: string, fields: Partial<Pick<DbVulnerability, 'title' | 'description' | 'severity' | 'status' | 'cvss_v3_score' | 'cvss_v3_vector' | 'cvss_v4_score' | 'cvss_v4_vector' | 'cwe_ids' | 'vuln_references' | 'published_at' | 'modified_at' | 'memo'>>) {
+  update(
+    db: DB,
+    id: string,
+    fields: Partial<
+      Pick<
+        DbVulnerability,
+        | "title"
+        | "description"
+        | "severity"
+        | "status"
+        | "cvss_v3_score"
+        | "cvss_v3_vector"
+        | "cvss_v4_score"
+        | "cvss_v4_vector"
+        | "cwe_ids"
+        | "vuln_references"
+        | "published_at"
+        | "modified_at"
+        | "memo"
+      >
+    >,
+  ) {
     const sets: string[] = ["updated_at = datetime('now')"];
     const params: unknown[] = [];
     for (const [k, v] of Object.entries(fields)) {
@@ -311,11 +388,14 @@ export const vulnRepo = {
       params.push(v);
     }
     params.push(id);
-    return db.prepare(`UPDATE vulnerabilities SET ${sets.join(', ')} WHERE id = ?`).bind(...params).run();
+    return db
+      .prepare(`UPDATE vulnerabilities SET ${sets.join(", ")} WHERE id = ?`)
+      .bind(...params)
+      .run();
   },
 
   delete(db: DB, id: string) {
-    return db.prepare('DELETE FROM vulnerabilities WHERE id = ?').bind(id).run();
+    return db.prepare("DELETE FROM vulnerabilities WHERE id = ?").bind(id).run();
   },
 
   stats(db: DB) {
@@ -342,7 +422,7 @@ export const vulnRepo = {
   batchUpdate(
     db: DB,
     ids: string[],
-    fields: Partial<Pick<DbVulnerability, 'severity' | 'status'>>
+    fields: Partial<Pick<DbVulnerability, "severity" | "status">>,
   ) {
     if (ids.length === 0) {
       return { success: true, meta: { changes: 0 } };
@@ -356,11 +436,13 @@ export const vulnRepo = {
       params.push(v);
     }
 
-    const placeholders = ids.map(() => '?').join(',');
+    const placeholders = ids.map(() => "?").join(",");
     params.push(...ids);
 
-    const sql = `UPDATE vulnerabilities SET ${sets.join(', ')} WHERE id IN (${placeholders})`;
-    return db.prepare(sql).bind(...params).run();
+    const sql = `UPDATE vulnerabilities SET ${sets.join(", ")} WHERE id IN (${placeholders})`;
+    return db
+      .prepare(sql)
+      .bind(...params)
+      .run();
   },
 };
-

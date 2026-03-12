@@ -1,13 +1,27 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, CheckCircle, XCircle, Clock, AlertCircle, ChevronDown, ChevronUp, ChevronRight, Save, Search, X, Trash2, Database } from 'lucide-react';
-import { api } from '@/lib/api.ts';
-import { useAuthStore } from '@/store/authStore.ts';
-import { useState, useEffect } from 'react';
+import { api } from "@/lib/api.ts";
+import { useAuthStore } from "@/store/authStore.ts";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  AlertCircle,
+  CheckCircle,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  Clock,
+  Database,
+  RefreshCw,
+  Save,
+  Search,
+  Trash2,
+  X,
+  XCircle,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface JvnSyncLog {
   id: string;
-  sync_type: 'full' | 'incremental';
-  status: 'running' | 'completed' | 'failed';
+  sync_type: "full" | "incremental";
+  status: "running" | "completed" | "failed";
   started_at: string;
   completed_at: string | null;
   total_fetched: number;
@@ -49,11 +63,11 @@ interface SyncSettings {
 
 export function SyncPage() {
   const { user } = useAuthStore();
-  const isEditorOrAbove = user?.role === 'admin' || user?.role === 'editor';
+  const isEditorOrAbove = user?.role === "admin" || user?.role === "editor";
   const queryClient = useQueryClient();
   const [showSettings, setShowSettings] = useState(true);
   const [showFullSyncConfirm, setShowFullSyncConfirm] = useState(false);
-  const [deleteSuccess, setDeleteSuccess] = useState('');
+  const [deleteSuccess, setDeleteSuccess] = useState("");
 
   // 設定の状態
   const [vendorSelections, setVendorSelections] = useState<JvnVendorSelection[]>([]);
@@ -62,11 +76,11 @@ export function SyncPage() {
   const [cvssMinScore, setCvssMinScore] = useState(0);
   const [syncFullSyncDays, setSyncFullSyncDays] = useState(365);
   const [syncRetentionDays, setSyncRetentionDays] = useState(0);
-  const [keywordInput, setKeywordInput] = useState('');
-  const [excludeKeywordInput, setExcludeKeywordInput] = useState('');
+  const [keywordInput, setKeywordInput] = useState("");
+  const [excludeKeywordInput, setExcludeKeywordInput] = useState("");
 
   // ベンダー検索状態
-  const [vendorSearchQuery, setVendorSearchQuery] = useState('');
+  const [vendorSearchQuery, setVendorSearchQuery] = useState("");
   const [showVendorDropdown, setShowVendorDropdown] = useState(false);
   const [expandedVendorId, setExpandedVendorId] = useState<string | null>(null);
 
@@ -74,73 +88,79 @@ export function SyncPage() {
   const [productSearchQueries, setProductSearchQueries] = useState<Record<string, string>>({});
 
   const { data: syncStatus, isLoading } = useQuery({
-    queryKey: ['sync-status'],
-    queryFn: () => api.get<{ latestLog: JvnSyncLog | null }>('/sync/status').then((r) => r.data),
+    queryKey: ["sync-status"],
+    queryFn: () => api.get<{ latestLog: JvnSyncLog | null }>("/sync/status").then((r) => r.data),
     refetchInterval: (query) =>
-      (query.state.data as { latestLog: JvnSyncLog | null } | undefined)?.latestLog?.status === 'running'
+      (query.state.data as { latestLog: JvnSyncLog | null } | undefined)?.latestLog?.status ===
+      "running"
         ? 5000
         : false,
   });
 
   const { data: syncSettingsData } = useQuery({
-    queryKey: ['sync-settings'],
-    queryFn: () => api.get<SyncSettings>('/sync/settings').then((r) => r.data),
+    queryKey: ["sync-settings"],
+    queryFn: () => api.get<SyncSettings>("/sync/settings").then((r) => r.data),
   });
 
   // ベンダー検索
   const { data: vendorSearchResults } = useQuery({
-    queryKey: ['jvn-vendors', vendorSearchQuery],
-    queryFn: () => api.get<{ vendors: JvnVendor[] }>(`/sync/jvn-vendors?q=${vendorSearchQuery}`).then(r => r.data),
+    queryKey: ["jvn-vendors", vendorSearchQuery],
+    queryFn: () =>
+      api
+        .get<{ vendors: JvnVendor[] }>(`/sync/jvn-vendors?q=${vendorSearchQuery}`)
+        .then((r) => r.data),
     enabled: showVendorDropdown,
   });
 
   // 展開されたベンダーの製品一覧
   const { data: vendorProducts } = useQuery({
-    queryKey: ['jvn-products', expandedVendorId],
-    queryFn: () => api.get<{ products: JvnProduct[] }>(`/sync/jvn-vendors/${expandedVendorId}/products`).then(r => r.data),
+    queryKey: ["jvn-products", expandedVendorId],
+    queryFn: () =>
+      api
+        .get<{ products: JvnProduct[] }>(`/sync/jvn-vendors/${expandedVendorId}/products`)
+        .then((r) => r.data),
     enabled: !!expandedVendorId,
   });
 
   const triggerSyncMutation = useMutation({
-    mutationFn: () => api.post('/sync/trigger'),
+    mutationFn: () => api.post("/sync/trigger"),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['sync-status'] });
+      void queryClient.invalidateQueries({ queryKey: ["sync-status"] });
     },
   });
 
   const triggerFullSyncMutation = useMutation({
-    mutationFn: () => api.post('/sync/trigger-full'),
+    mutationFn: () => api.post("/sync/trigger-full"),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['sync-status'] });
+      void queryClient.invalidateQueries({ queryKey: ["sync-status"] });
       setShowFullSyncConfirm(false);
     },
   });
 
   const deleteSyncDataMutation = useMutation({
-    mutationFn: (source: string) =>
-      api.delete(`/sync/data/${source}`),
+    mutationFn: (source: string) => api.delete(`/sync/data/${source}`),
     onSuccess: (response) => {
       const data = response.data;
       const count = data.totalDeleted ?? data.deleted ?? 0;
       setDeleteSuccess(`${count}件のデータを削除しました`);
-      setTimeout(() => setDeleteSuccess(''), 5000);
-      void queryClient.invalidateQueries({ queryKey: ['vulnerabilities'] });
+      setTimeout(() => setDeleteSuccess(""), 5000);
+      void queryClient.invalidateQueries({ queryKey: ["vulnerabilities"] });
     },
     onError: (err: unknown) => {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
-      alert(`削除に失敗しました: ${msg ?? '不明なエラー'}`);
+      alert(`削除に失敗しました: ${msg ?? "不明なエラー"}`);
     },
   });
 
   const updateSyncSettingsMut = useMutation({
     mutationFn: (settings: SyncSettings) =>
-      api.put('/sync/settings', {
+      api.put("/sync/settings", {
         ...settings,
         dataSources: { jvn: true },
       }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['sync-settings'] });
-      alert('設定を保存しました');
+      void queryClient.invalidateQueries({ queryKey: ["sync-settings"] });
+      alert("設定を保存しました");
     },
   });
 
@@ -156,46 +176,52 @@ export function SyncPage() {
     }
   }, [syncSettingsData]);
 
-
   // ベンダー追加
   const addVendor = (vendor: JvnVendor) => {
-    if (!vendorSelections.some(v => v.vendorId === vendor.vid)) {
-      setVendorSelections([...vendorSelections, {
-        vendorId: vendor.vid,
-        vendorName: vendor.vname,
-        products: []
-      }]);
+    if (!vendorSelections.some((v) => v.vendorId === vendor.vid)) {
+      setVendorSelections([
+        ...vendorSelections,
+        {
+          vendorId: vendor.vid,
+          vendorName: vendor.vname,
+          products: [],
+        },
+      ]);
     }
-    setVendorSearchQuery('');
+    setVendorSearchQuery("");
     setShowVendorDropdown(false);
   };
 
   // ベンダー削除
   const removeVendor = (vendorId: string) => {
-    setVendorSelections(vendorSelections.filter(v => v.vendorId !== vendorId));
+    setVendorSelections(vendorSelections.filter((v) => v.vendorId !== vendorId));
   };
 
   // 製品選択トグル
   const toggleProduct = (vendorId: string, product: JvnProduct) => {
-    setVendorSelections(vendorSelections.map(v => {
-      if (v.vendorId !== vendorId) return v;
+    setVendorSelections(
+      vendorSelections.map((v) => {
+        if (v.vendorId !== vendorId) return v;
 
-      const hasProduct = v.products.some(p => p.productId === product.pid);
-      if (hasProduct) {
-        // 製品を削除
-        return { ...v, products: v.products.filter(p => p.productId !== product.pid) };
-      } else {
+        const hasProduct = v.products.some((p) => p.productId === product.pid);
+        if (hasProduct) {
+          // 製品を削除
+          return { ...v, products: v.products.filter((p) => p.productId !== product.pid) };
+        }
         // 製品を追加
         return {
           ...v,
-          products: [...v.products, {
-            productId: product.pid,
-            productName: product.pname,
-            cpe: product.cpe
-          }]
+          products: [
+            ...v.products,
+            {
+              productId: product.pid,
+              productName: product.pname,
+              cpe: product.cpe,
+            },
+          ],
         };
-      }
-    }));
+      }),
+    );
   };
 
   // キーワード追加
@@ -203,12 +229,12 @@ export function SyncPage() {
     const trimmed = keywordInput.trim();
     if (trimmed && !syncKeywords.includes(trimmed)) {
       setSyncKeywords([...syncKeywords, trimmed]);
-      setKeywordInput('');
+      setKeywordInput("");
     }
   };
 
   const handleKeywordKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       addKeyword();
     }
@@ -219,12 +245,12 @@ export function SyncPage() {
     const trimmed = excludeKeywordInput.trim();
     if (trimmed && !syncExcludeKeywords.includes(trimmed)) {
       setSyncExcludeKeywords([...syncExcludeKeywords, trimmed]);
-      setExcludeKeywordInput('');
+      setExcludeKeywordInput("");
     }
   };
 
   const handleExcludeKeywordKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       addExcludeKeyword();
     }
@@ -246,11 +272,11 @@ export function SyncPage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'running':
+      case "running":
         return <Clock className="text-blue-500 animate-spin" size={20} />;
-      case 'completed':
+      case "completed":
         return <CheckCircle className="text-green-500" size={20} />;
-      case 'failed':
+      case "failed":
         return <XCircle className="text-red-500" size={20} />;
       default:
         return <AlertCircle className="text-gray-400" size={20} />;
@@ -259,28 +285,28 @@ export function SyncPage() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'running':
-        return '取得中';
-      case 'completed':
-        return '完了';
-      case 'failed':
-        return '失敗';
+      case "running":
+        return "取得中";
+      case "completed":
+        return "完了";
+      case "failed":
+        return "失敗";
       default:
-        return '不明';
+        return "不明";
     }
   };
 
   const formatDateTime = (dateStr: string | null) => {
-    if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleString('ja-JP');
+    if (!dateStr) return "—";
+    return new Date(dateStr).toLocaleString("ja-JP");
   };
 
   const getSyncTypeText = (syncType: string) => {
     switch (syncType) {
-      case 'full':
-        return '全件取得';
-      case 'incremental':
-        return '増分取得';
+      case "full":
+        return "全件取得";
+      case "incremental":
+        return "増分取得";
       default:
         return syncType;
     }
@@ -304,18 +330,32 @@ export function SyncPage() {
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => triggerSyncMutation.mutate()}
-                disabled={triggerSyncMutation.isPending || triggerFullSyncMutation.isPending || latestLog?.status === 'running'}
+                disabled={
+                  triggerSyncMutation.isPending ||
+                  triggerFullSyncMutation.isPending ||
+                  latestLog?.status === "running"
+                }
                 className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <RefreshCw size={16} className={triggerSyncMutation.isPending ? 'animate-spin' : ''} />
+                <RefreshCw
+                  size={16}
+                  className={triggerSyncMutation.isPending ? "animate-spin" : ""}
+                />
                 増分取得
               </button>
               <button
                 onClick={() => setShowFullSyncConfirm(true)}
-                disabled={triggerSyncMutation.isPending || triggerFullSyncMutation.isPending || latestLog?.status === 'running'}
+                disabled={
+                  triggerSyncMutation.isPending ||
+                  triggerFullSyncMutation.isPending ||
+                  latestLog?.status === "running"
+                }
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <RefreshCw size={16} className={triggerFullSyncMutation.isPending ? 'animate-spin' : ''} />
+                <RefreshCw
+                  size={16}
+                  className={triggerFullSyncMutation.isPending ? "animate-spin" : ""}
+                />
                 全件取得
               </button>
             </div>
@@ -334,7 +374,7 @@ export function SyncPage() {
                   <span className="text-xs text-gray-500 dark:text-gray-400">
                     ({getSyncTypeText(latestLog.sync_type)})
                   </span>
-                  {latestLog.status === 'completed' && (
+                  {latestLog.status === "completed" && (
                     <span className="text-xs text-gray-500 dark:text-gray-400">
                       - {latestLog.total_fetched.toLocaleString()} 件取得、
                       {latestLog.total_created.toLocaleString()} 件新規作成
@@ -380,14 +420,18 @@ export function SyncPage() {
                   ベンダー/製品選択
                 </label>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                  MyJVN APIから取得したベンダーと製品を選択できます。製品未選択の場合はそのベンダーの全製品が対象になります。
+                  MyJVN
+                  APIから取得したベンダーと製品を選択できます。製品未選択の場合はそのベンダーの全製品が対象になります。
                 </p>
 
                 {/* 検索入力 */}
                 <div className="relative mb-3">
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                      <Search
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                        size={16}
+                      />
                       <input
                         type="text"
                         value={vendorSearchQuery}
@@ -403,47 +447,55 @@ export function SyncPage() {
                   </div>
 
                   {/* 検索結果ドロップダウン */}
-                  {showVendorDropdown && vendorSearchResults && vendorSearchResults.vendors.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-96 overflow-y-auto">
-                      {vendorSearchResults.vendors.map(vendor => (
-                        <button
-                          key={vendor.vid}
-                          onClick={() => addVendor(vendor)}
-                          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-200 flex items-center justify-between"
-                        >
-                          <span>{vendor.vname}</span>
-                          {vendorSelections.some(v => v.vendorId === vendor.vid) && (
-                            <CheckCircle size={16} className="text-green-500" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  {showVendorDropdown &&
+                    vendorSearchResults &&
+                    vendorSearchResults.vendors.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-96 overflow-y-auto">
+                        {vendorSearchResults.vendors.map((vendor) => (
+                          <button
+                            key={vendor.vid}
+                            onClick={() => addVendor(vendor)}
+                            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-200 flex items-center justify-between"
+                          >
+                            <span>{vendor.vname}</span>
+                            {vendorSelections.some((v) => v.vendorId === vendor.vid) && (
+                              <CheckCircle size={16} className="text-green-500" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                 </div>
 
                 {/* 選択済みベンダー */}
                 {vendorSelections.length > 0 && (
                   <div className="space-y-2">
-                    {vendorSelections.map(vendor => (
-                      <div key={vendor.vendorId} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                    {vendorSelections.map((vendor) => (
+                      <div
+                        key={vendor.vendorId}
+                        className="border border-gray-200 dark:border-gray-700 rounded-lg p-3"
+                      >
                         <div className="flex items-center justify-between">
                           <button
-                            onClick={() => setExpandedVendorId(
-                              expandedVendorId === vendor.vendorId ? null : vendor.vendorId
-                            )}
+                            onClick={() =>
+                              setExpandedVendorId(
+                                expandedVendorId === vendor.vendorId ? null : vendor.vendorId,
+                              )
+                            }
                             className="flex items-center gap-2 flex-1 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded px-1 -mx-1 py-0.5 transition-colors"
                           >
-                            {expandedVendorId === vendor.vendorId
-                              ? <ChevronDown size={14} className="text-blue-500 shrink-0" />
-                              : <ChevronRight size={14} className="text-gray-400 shrink-0" />
-                            }
+                            {expandedVendorId === vendor.vendorId ? (
+                              <ChevronDown size={14} className="text-blue-500 shrink-0" />
+                            ) : (
+                              <ChevronRight size={14} className="text-gray-400 shrink-0" />
+                            )}
                             <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                               {vendor.vendorName}
                             </span>
                             <span className="text-xs text-gray-500 dark:text-gray-400">
                               {vendor.products.length > 0
                                 ? `${vendor.products.length}製品選択中`
-                                : '製品を選択 →'}
+                                : "製品を選択 →"}
                             </span>
                           </button>
                           <button
@@ -460,14 +512,19 @@ export function SyncPage() {
                             {/* 製品検索 */}
                             {vendorProducts.products.length > 10 && (
                               <div className="relative">
-                                <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                                <Search
+                                  className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
+                                  size={14}
+                                />
                                 <input
                                   type="text"
-                                  value={productSearchQueries[vendor.vendorId] || ''}
-                                  onChange={(e) => setProductSearchQueries({
-                                    ...productSearchQueries,
-                                    [vendor.vendorId]: e.target.value
-                                  })}
+                                  value={productSearchQueries[vendor.vendorId] || ""}
+                                  onChange={(e) =>
+                                    setProductSearchQueries({
+                                      ...productSearchQueries,
+                                      [vendor.vendorId]: e.target.value,
+                                    })
+                                  }
                                   placeholder="製品を検索..."
                                   className="w-full pl-7 pr-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                                 />
@@ -477,20 +534,27 @@ export function SyncPage() {
                             {/* 製品リスト */}
                             <div className="space-y-1 max-h-40 overflow-y-auto">
                               {vendorProducts.products
-                                .filter(product => {
-                                  const query = productSearchQueries[vendor.vendorId] || '';
+                                .filter((product) => {
+                                  const query = productSearchQueries[vendor.vendorId] || "";
                                   if (!query) return true;
                                   return product.pname.toLowerCase().includes(query.toLowerCase());
                                 })
-                                .map(product => (
-                                  <label key={product.pid} className="flex items-center gap-2 text-sm">
+                                .map((product) => (
+                                  <label
+                                    key={product.pid}
+                                    className="flex items-center gap-2 text-sm"
+                                  >
                                     <input
                                       type="checkbox"
-                                      checked={vendor.products.some(p => p.productId === product.pid)}
+                                      checked={vendor.products.some(
+                                        (p) => p.productId === product.pid,
+                                      )}
                                       onChange={() => toggleProduct(vendor.vendorId, product)}
                                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                     />
-                                    <span className="text-gray-700 dark:text-gray-300">{product.pname}</span>
+                                    <span className="text-gray-700 dark:text-gray-300">
+                                      {product.pname}
+                                    </span>
                                   </label>
                                 ))}
                             </div>
@@ -583,7 +647,9 @@ export function SyncPage() {
                         {kw}
                         <button
                           type="button"
-                          onClick={() => setSyncExcludeKeywords((prev) => prev.filter((k) => k !== kw))}
+                          onClick={() =>
+                            setSyncExcludeKeywords((prev) => prev.filter((k) => k !== kw))
+                          }
                           className="hover:text-red-900"
                         >
                           ×
@@ -609,15 +675,19 @@ export function SyncPage() {
                     max="10"
                     step="0.1"
                     value={cvssMinScore}
-                    onChange={(e) => setCvssMinScore(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setCvssMinScore(Number.parseFloat(e.target.value) || 0)}
                     className="w-24 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   />
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {cvssMinScore === 0 ? '無効（全て取得）' :
-                     cvssMinScore >= 9 ? 'Critical のみ' :
-                     cvssMinScore >= 7 ? 'High 以上' :
-                     cvssMinScore >= 4 ? 'Medium 以上' :
-                     'Low 以上'}
+                    {cvssMinScore === 0
+                      ? "無効（全て取得）"
+                      : cvssMinScore >= 9
+                        ? "Critical のみ"
+                        : cvssMinScore >= 7
+                          ? "High 以上"
+                          : cvssMinScore >= 4
+                            ? "Medium 以上"
+                            : "Low 以上"}
                   </span>
                 </div>
               </div>
@@ -635,7 +705,7 @@ export function SyncPage() {
                   min="1"
                   max="3650"
                   value={syncFullSyncDays}
-                  onChange={(e) => setSyncFullSyncDays(parseInt(e.target.value) || 365)}
+                  onChange={(e) => setSyncFullSyncDays(Number.parseInt(e.target.value) || 365)}
                   className="w-32 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 />
                 <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">日</span>
@@ -654,7 +724,7 @@ export function SyncPage() {
                   min="0"
                   max="3650"
                   value={syncRetentionDays}
-                  onChange={(e) => setSyncRetentionDays(parseInt(e.target.value) || 0)}
+                  onChange={(e) => setSyncRetentionDays(Number.parseInt(e.target.value) || 0)}
                   className="w-32 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 />
                 <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">日（0=無効）</span>
@@ -668,7 +738,7 @@ export function SyncPage() {
                   className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
                 >
                   <Save size={16} />
-                  {updateSyncSettingsMut.isPending ? '保存中...' : '設定を保存'}
+                  {updateSyncSettingsMut.isPending ? "保存中..." : "設定を保存"}
                 </button>
               </div>
             </div>
@@ -692,39 +762,65 @@ export function SyncPage() {
               <div className="pb-3">
                 <dt className="text-xs text-gray-500 dark:text-gray-400 mb-2">ベンダー/製品選択</dt>
                 <dd className="flex flex-wrap gap-1.5">
-                  {vendorSelections.length > 0
-                    ? vendorSelections.map((v) => (
-                        <span key={v.vendorId} className="inline-flex items-center bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs px-2 py-1 rounded-full">
-                          {v.vendorName}{v.products.length > 0 ? ` (${v.products.length}製品)` : ''}
-                        </span>
-                      ))
-                    : <span className="text-gray-400 dark:text-gray-500">未設定（全ベンダー対象）</span>}
+                  {vendorSelections.length > 0 ? (
+                    vendorSelections.map((v) => (
+                      <span
+                        key={v.vendorId}
+                        className="inline-flex items-center bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs px-2 py-1 rounded-full"
+                      >
+                        {v.vendorName}
+                        {v.products.length > 0 ? ` (${v.products.length}製品)` : ""}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-gray-400 dark:text-gray-500">
+                      未設定（全ベンダー対象）
+                    </span>
+                  )}
                 </dd>
               </div>
               <div className="py-3">
-                <dt className="text-xs text-gray-500 dark:text-gray-400 mb-2">キーワードフィルター</dt>
+                <dt className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  キーワードフィルター
+                </dt>
                 <dd className="flex flex-wrap gap-1.5">
-                  {syncKeywords.length > 0
-                    ? syncKeywords.map((kw) => (
-                        <span key={kw} className="inline-flex items-center bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs px-2 py-1 rounded-full">{kw}</span>
-                      ))
-                    : <span className="text-gray-400 dark:text-gray-500">未設定</span>}
+                  {syncKeywords.length > 0 ? (
+                    syncKeywords.map((kw) => (
+                      <span
+                        key={kw}
+                        className="inline-flex items-center bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs px-2 py-1 rounded-full"
+                      >
+                        {kw}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-gray-400 dark:text-gray-500">未設定</span>
+                  )}
                 </dd>
               </div>
               <div className="py-3">
                 <dt className="text-xs text-gray-500 dark:text-gray-400 mb-2">除外キーワード</dt>
                 <dd className="flex flex-wrap gap-1.5">
-                  {syncExcludeKeywords.length > 0
-                    ? syncExcludeKeywords.map((kw) => (
-                        <span key={kw} className="inline-flex items-center bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs px-2 py-1 rounded-full">{kw}</span>
-                      ))
-                    : <span className="text-gray-400 dark:text-gray-500">未設定</span>}
+                  {syncExcludeKeywords.length > 0 ? (
+                    syncExcludeKeywords.map((kw) => (
+                      <span
+                        key={kw}
+                        className="inline-flex items-center bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs px-2 py-1 rounded-full"
+                      >
+                        {kw}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-gray-400 dark:text-gray-500">未設定</span>
+                  )}
                 </dd>
               </div>
               <div className="pt-3 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <dt className="text-xs text-gray-500 dark:text-gray-400 mb-1">CVSS最小スコア</dt>
-                  <dd className="text-gray-900 dark:text-gray-100">{cvssMinScore === 0 ? '無効（全て取得）' : String(cvssMinScore)}</dd>
+                  <dd className="text-gray-900 dark:text-gray-100">
+                    {cvssMinScore === 0 ? "無効（全て取得）" : String(cvssMinScore)}
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-xs text-gray-500 dark:text-gray-400 mb-1">初回取得期間</dt>
@@ -732,7 +828,9 @@ export function SyncPage() {
                 </div>
                 <div>
                   <dt className="text-xs text-gray-500 dark:text-gray-400 mb-1">データ保持期間</dt>
-                  <dd className="text-gray-900 dark:text-gray-100">{syncRetentionDays === 0 ? '無効' : `${syncRetentionDays}日`}</dd>
+                  <dd className="text-gray-900 dark:text-gray-100">
+                    {syncRetentionDays === 0 ? "無効" : `${syncRetentionDays}日`}
+                  </dd>
                 </div>
               </div>
             </dl>
@@ -741,7 +839,7 @@ export function SyncPage() {
       )}
 
       {/* データ管理 */}
-      {user?.role === 'admin' && (
+      {user?.role === "admin" && (
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
             <Database size={16} />
@@ -753,11 +851,17 @@ export function SyncPage() {
 
           <div className="space-y-3">
             <div className="flex items-center justify-between py-2">
-              <span className="text-sm text-gray-700 dark:text-gray-300">JVN (Japan Vulnerability Notes)</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                JVN (Japan Vulnerability Notes)
+              </span>
               <button
                 onClick={() => {
-                  if (confirm('JVN のデータを削除しますか？\n\nこの操作は元に戻せません。削除後、再度同期を実行することで最新データを取得できます。')) {
-                    deleteSyncDataMutation.mutate('jvn');
+                  if (
+                    confirm(
+                      "JVN のデータを削除しますか？\n\nこの操作は元に戻せません。削除後、再度同期を実行することで最新データを取得できます。",
+                    )
+                  ) {
+                    deleteSyncDataMutation.mutate("jvn");
                   }
                 }}
                 disabled={deleteSyncDataMutation.isPending}
@@ -771,9 +875,7 @@ export function SyncPage() {
 
           {deleteSuccess && (
             <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-              <p className="text-sm text-green-700">
-                {deleteSuccess}
-              </p>
+              <p className="text-sm text-green-700">{deleteSuccess}</p>
             </div>
           )}
         </div>
@@ -785,8 +887,13 @@ export function SyncPage() {
         <div className="text-sm text-blue-800 space-y-1">
           <p>• JVN (Japan Vulnerability Notes) から脆弱性情報を取得します</p>
           <p>• 自動取得は毎時実行されます（増分同期）</p>
-          <p>• <strong>増分取得</strong>: 前回取得以降の更新データのみ取得（通常運用）</p>
-          <p>• <strong>全件取得</strong>: 設定期間の全データを再取得（製品追加時や過去データ補完に使用）</p>
+          <p>
+            • <strong>増分取得</strong>: 前回取得以降の更新データのみ取得（通常運用）
+          </p>
+          <p>
+            • <strong>全件取得</strong>:
+            設定期間の全データを再取得（製品追加時や過去データ補完に使用）
+          </p>
           <p>• ベンダー/製品選択、キーワード、CVSS閾値を組み合わせてフィルタリングできます</p>
           <p>• 登録済みアセットパッケージ（CPE）は自動的に検知対象になります</p>
         </div>
@@ -796,14 +903,18 @@ export function SyncPage() {
       {showFullSyncConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">全件取得の実行</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+              全件取得の実行
+            </h3>
             <div className="space-y-3 mb-6">
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                過去 <strong className="text-blue-600">{syncFullSyncDays}日分</strong> のデータを取得します。
+                過去 <strong className="text-blue-600">{syncFullSyncDays}日分</strong>{" "}
+                のデータを取得します。
               </p>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <p className="text-sm text-amber-800">
-                  <strong>注意:</strong> 全件取得は通常の取得より時間がかかります。実行してよろしいですか？
+                  <strong>注意:</strong>{" "}
+                  全件取得は通常の取得より時間がかかります。実行してよろしいですか？
                 </p>
               </div>
             </div>
@@ -819,7 +930,7 @@ export function SyncPage() {
                 disabled={triggerFullSyncMutation.isPending}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
-                {triggerFullSyncMutation.isPending ? '実行中...' : '実行'}
+                {triggerFullSyncMutation.isPending ? "実行中..." : "実行"}
               </button>
             </div>
           </div>

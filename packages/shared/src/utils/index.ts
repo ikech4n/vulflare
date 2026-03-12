@@ -1,2 +1,2 @@
-export * from './severity.js';
-export * from './version.js';
+export * from "./severity.js";
+export * from "./version.js";

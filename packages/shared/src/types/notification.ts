@@ -1,11 +1,11 @@
-export type NotificationChannelType = 'webhook' | 'email';
+export type NotificationChannelType = "webhook" | "email";
 
 export type EventType =
-  | 'vulnerability_created'
-  | 'vulnerability_updated'
-  | 'vulnerability_critical'
-  | 'eol_approaching'
-  | 'eol_expired';
+  | "vulnerability_created"
+  | "vulnerability_updated"
+  | "vulnerability_critical"
+  | "eol_approaching"
+  | "eol_expired";
 
 export interface NotificationChannel {
   id: string;
@@ -32,7 +32,7 @@ export interface NotificationLog {
   channel_id: string;
   event_type: EventType;
   payload: string;
-  status: 'sent' | 'failed' | 'pending';
+  status: "sent" | "failed" | "pending";
   error_message: string | null;
   sent_at: string;
 }

@@ -1,6 +1,6 @@
-export type UserRole = 'admin' | 'editor' | 'viewer';
+export type UserRole = "admin" | "editor" | "viewer";
 
-export type Theme = 'light' | 'dark' | 'system';
+export type Theme = "light" | "dark" | "system";
 
 export interface MeResponse {
   id: string;
@@ -35,5 +35,5 @@ export interface RegisterRequest {
 
 export interface LoginResponse {
   accessToken: string;
-  user: Pick<User, 'id' | 'username' | 'role'>;
+  user: Pick<User, "id" | "username" | "role">;
 }

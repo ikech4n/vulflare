@@ -1,13 +1,13 @@
-import { useState, type FormEvent } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { UserPlus, Trash2, KeyRound, Pencil, LockOpen, Mail } from 'lucide-react';
-import { api } from '@/lib/api.ts';
-import { useAuthStore } from '@/store/authStore.ts';
+import { api } from "@/lib/api.ts";
+import { useAuthStore } from "@/store/authStore.ts";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { KeyRound, LockOpen, Mail, Pencil, Trash2, UserPlus } from "lucide-react";
+import { type FormEvent, useState } from "react";
 
 const ROLE_LABELS: Record<string, string> = {
-  admin: '管理者',
-  editor: '編集者',
-  viewer: '閲覧者',
+  admin: "管理者",
+  editor: "編集者",
+  viewer: "閲覧者",
 };
 
 interface UserItem {
@@ -20,99 +20,96 @@ interface UserItem {
   createdAt: string;
 }
 
-
 export function SettingsPage() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
   // メール設定
   const [editingEmail, setEditingEmail] = useState(false);
-  const [noreplyEmailInput, setNoreplyEmailInput] = useState('');
+  const [noreplyEmailInput, setNoreplyEmailInput] = useState("");
 
   // パスワードリセット
   const [resetPwUserId, setResetPwUserId] = useState<string | null>(null);
-  const [resetPwValue, setResetPwValue] = useState('');
-  const [resetPwError, setResetPwError] = useState('');
+  const [resetPwValue, setResetPwValue] = useState("");
+  const [resetPwError, setResetPwError] = useState("");
 
   // ユーザー情報編集
   const [editUserId, setEditUserId] = useState<string | null>(null);
-  const [editUsername, setEditUsername] = useState('');
-  const [editEmail, setEditEmail] = useState('');
-  const [editError, setEditError] = useState('');
+  const [editUsername, setEditUsername] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editError, setEditError] = useState("");
 
   // ユーザー追加フォーム
-  const [addUsername, setAddUsername] = useState('');
-  const [addPassword, setAddPassword] = useState('');
-  const [addRole, setAddRole] = useState('viewer');
-  const [addEmail, setAddEmail] = useState('');
-  const [addError, setAddError] = useState('');
+  const [addUsername, setAddUsername] = useState("");
+  const [addPassword, setAddPassword] = useState("");
+  const [addRole, setAddRole] = useState("viewer");
+  const [addEmail, setAddEmail] = useState("");
+  const [addError, setAddError] = useState("");
   const [addSuccess, setAddSuccess] = useState(false);
 
   const { data: users = [] } = useQuery<UserItem[]>({
-    queryKey: ['users'],
-    queryFn: () => api.get<UserItem[]>('/users').then((r) => r.data),
-    enabled: user?.role === 'admin',
+    queryKey: ["users"],
+    queryFn: () => api.get<UserItem[]>("/users").then((r) => r.data),
+    enabled: user?.role === "admin",
   });
 
   const { data: appSettings } = useQuery<{ noreplyEmail: string | null }>({
-    queryKey: ['app-settings'],
-    queryFn: () => api.get<{ noreplyEmail: string | null }>('/app-settings').then((r) => r.data),
-    enabled: user?.role === 'admin',
+    queryKey: ["app-settings"],
+    queryFn: () => api.get<{ noreplyEmail: string | null }>("/app-settings").then((r) => r.data),
+    enabled: user?.role === "admin",
   });
 
   const updateAppSettingsMutation = useMutation({
-    mutationFn: (body: { noreplyEmail: string }) => api.patch('/app-settings', body),
+    mutationFn: (body: { noreplyEmail: string }) => api.patch("/app-settings", body),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['app-settings'] });
+      void queryClient.invalidateQueries({ queryKey: ["app-settings"] });
       setEditingEmail(false);
     },
   });
 
-
   const addUserMutation = useMutation({
     mutationFn: (body: { username: string; password: string; role: string; email?: string }) =>
-      api.post('/users', body),
+      api.post("/users", body),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['users'] });
-      setAddUsername('');
-      setAddPassword('');
-      setAddRole('viewer');
-      setAddEmail('');
-      setAddError('');
+      void queryClient.invalidateQueries({ queryKey: ["users"] });
+      setAddUsername("");
+      setAddPassword("");
+      setAddRole("viewer");
+      setAddEmail("");
+      setAddError("");
       setAddSuccess(true);
       setTimeout(() => setAddSuccess(false), 3000);
     },
     onError: (err: unknown) => {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
-      setAddError(msg ?? 'ユーザーの追加に失敗しました');
+      setAddError(msg ?? "ユーザーの追加に失敗しました");
     },
   });
 
   const updateRoleMutation = useMutation({
-    mutationFn: ({ id, role }: { id: string; role: string }) =>
-      api.patch(`/users/${id}`, { role }),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['users'] }),
+    mutationFn: ({ id, role }: { id: string; role: string }) => api.patch(`/users/${id}`, { role }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["users"] }),
   });
 
   const updateProfileMutation = useMutation({
     mutationFn: ({ id, username, email }: { id: string; username: string; email: string }) =>
       api.patch(`/users/${id}`, { username, email: email || null }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['users'] });
+      void queryClient.invalidateQueries({ queryKey: ["users"] });
       setEditUserId(null);
-      setEditUsername('');
-      setEditEmail('');
-      setEditError('');
+      setEditUsername("");
+      setEditEmail("");
+      setEditError("");
     },
     onError: (err: unknown) => {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
-      setEditError(msg ?? '更新に失敗しました');
+      setEditError(msg ?? "更新に失敗しました");
     },
   });
 
   const deleteUserMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/users/${id}`),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['users'] }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["users"] }),
   });
 
   const resetPasswordMutation = useMutation({
@@ -120,31 +117,38 @@ export function SettingsPage() {
       api.post(`/users/${id}/reset-password`, { password }),
     onSuccess: () => {
       setResetPwUserId(null);
-      setResetPwValue('');
-      setResetPwError('');
+      setResetPwValue("");
+      setResetPwError("");
     },
     onError: (err: unknown) => {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
-      setResetPwError(msg ?? 'パスワードのリセットに失敗しました');
+      setResetPwError(msg ?? "パスワードのリセットに失敗しました");
     },
   });
 
   const unlockMutation = useMutation({
     mutationFn: (id: string) => api.post(`/users/${id}/unlock`, {}),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['users'] }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["users"] }),
   });
 
   const handleAddUser = (e: FormEvent) => {
     e.preventDefault();
-    setAddError('');
-    addUserMutation.mutate({ username: addUsername, password: addPassword, role: addRole, ...(addEmail ? { email: addEmail } : {}) });
+    setAddError("");
+    addUserMutation.mutate({
+      username: addUsername,
+      password: addPassword,
+      role: addRole,
+      ...(addEmail ? { email: addEmail } : {}),
+    });
   };
 
-  if (user?.role !== 'admin') {
+  if (user?.role !== "admin") {
     return (
       <div className="space-y-6 max-w-2xl">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">管理者設定</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">この画面は管理者のみ利用できます。</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          この画面は管理者のみ利用できます。
+        </p>
       </div>
     );
   }
@@ -161,7 +165,9 @@ export function SettingsPage() {
         </h2>
         <div className="space-y-3">
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">パスワードリセットメールの送信元アドレス</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+              パスワードリセットメールの送信元アドレス
+            </p>
             {editingEmail ? (
               <div className="flex items-center gap-2">
                 <input
@@ -172,11 +178,13 @@ export function SettingsPage() {
                   className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 />
                 <button
-                  onClick={() => updateAppSettingsMutation.mutate({ noreplyEmail: noreplyEmailInput })}
+                  onClick={() =>
+                    updateAppSettingsMutation.mutate({ noreplyEmail: noreplyEmailInput })
+                  }
                   disabled={!noreplyEmailInput || updateAppSettingsMutation.isPending}
                   className="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 shrink-0"
                 >
-                  {updateAppSettingsMutation.isPending ? '保存中...' : '保存'}
+                  {updateAppSettingsMutation.isPending ? "保存中..." : "保存"}
                 </button>
                 <button
                   onClick={() => setEditingEmail(false)}
@@ -188,11 +196,13 @@ export function SettingsPage() {
             ) : (
               <div className="flex items-center gap-3">
                 <span className="text-sm text-gray-900 dark:text-white font-mono">
-                  {appSettings?.noreplyEmail ?? <span className="text-gray-400 italic">未設定</span>}
+                  {appSettings?.noreplyEmail ?? (
+                    <span className="text-gray-400 italic">未設定</span>
+                  )}
                 </span>
                 <button
                   onClick={() => {
-                    setNoreplyEmailInput(appSettings?.noreplyEmail ?? '');
+                    setNoreplyEmailInput(appSettings?.noreplyEmail ?? "");
                     setEditingEmail(true);
                   }}
                   className="text-xs text-blue-600 hover:underline dark:text-blue-400"
@@ -214,7 +224,9 @@ export function SettingsPage() {
         <form onSubmit={handleAddUser} className="space-y-3" autoComplete="off">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">ユーザー名</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                ユーザー名
+              </label>
               <input
                 type="text"
                 value={addUsername}
@@ -225,7 +237,9 @@ export function SettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">パスワード</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                パスワード
+              </label>
               <input
                 type="password"
                 value={addPassword}
@@ -237,7 +251,9 @@ export function SettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">ロール</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                ロール
+              </label>
               <select
                 value={addRole}
                 onChange={(e) => setAddRole(e.target.value)}
@@ -249,7 +265,9 @@ export function SettingsPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">メールアドレス（任意）</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                メールアドレス（任意）
+              </label>
               <input
                 type="email"
                 value={addEmail}
@@ -267,7 +285,7 @@ export function SettingsPage() {
             disabled={addUserMutation.isPending}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
           >
-            {addUserMutation.isPending ? '追加中...' : 'ユーザーを追加'}
+            {addUserMutation.isPending ? "追加中..." : "ユーザーを追加"}
           </button>
         </form>
       </div>
@@ -277,10 +295,15 @@ export function SettingsPage() {
         <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">ユーザー</h2>
         <div className="space-y-2">
           {users.map((u) => (
-            <div key={u.id} className="py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+            <div
+              key={u.id}
+              className="py-2 border-b border-gray-100 dark:border-gray-700 last:border-0"
+            >
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex items-center gap-2">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{u.username}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                    {u.username}
+                  </p>
                   {u.lockedAt && (
                     <span className="text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 px-1.5 py-0.5 rounded">
                       ロック中
@@ -292,16 +315,16 @@ export function SettingsPage() {
                     onClick={() => {
                       if (editUserId === u.id) {
                         setEditUserId(null);
-                        setEditError('');
+                        setEditError("");
                       } else {
                         setEditUserId(u.id);
                         setEditUsername(u.username);
-                        setEditEmail(u.email ?? '');
-                        setEditError('');
+                        setEditEmail(u.email ?? "");
+                        setEditError("");
                         setResetPwUserId(null);
                       }
                     }}
-                    className={`p-1 transition-colors ${editUserId === u.id ? 'text-blue-600' : 'text-gray-400 hover:text-blue-600'}`}
+                    className={`p-1 transition-colors ${editUserId === u.id ? "text-blue-600" : "text-gray-400 hover:text-blue-600"}`}
                     title="ユーザー情報を編集"
                   >
                     <Pencil size={14} />
@@ -318,7 +341,10 @@ export function SettingsPage() {
                   )}
                   {u.id !== user.id && (
                     <button
-                      onClick={() => { if (confirm(`${u.username} を削除しますか？この操作は元に戻せません。`)) deleteUserMutation.mutate(u.id); }}
+                      onClick={() => {
+                        if (confirm(`${u.username} を削除しますか？この操作は元に戻せません。`))
+                          deleteUserMutation.mutate(u.id);
+                      }}
                       disabled={deleteUserMutation.isPending}
                       className="p-1 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
                       title="削除"
@@ -330,7 +356,7 @@ export function SettingsPage() {
                     <button
                       onClick={() => {
                         setResetPwUserId(resetPwUserId === u.id ? null : u.id);
-                        setResetPwValue('');
+                        setResetPwValue("");
                         setEditUserId(null);
                       }}
                       className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
@@ -374,14 +400,25 @@ export function SettingsPage() {
                   {editError && <p className="text-xs text-red-600">{editError}</p>}
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => updateProfileMutation.mutate({ id: u.id, username: editUsername, email: editEmail })}
+                      onClick={() =>
+                        updateProfileMutation.mutate({
+                          id: u.id,
+                          username: editUsername,
+                          email: editEmail,
+                        })
+                      }
                       disabled={!editUsername || updateProfileMutation.isPending}
                       className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 shrink-0"
                     >
-                      {updateProfileMutation.isPending ? '保存中...' : '保存'}
+                      {updateProfileMutation.isPending ? "保存中..." : "保存"}
                     </button>
                     <button
-                      onClick={() => { setEditUserId(null); setEditUsername(''); setEditEmail(''); setEditError(''); }}
+                      onClick={() => {
+                        setEditUserId(null);
+                        setEditUsername("");
+                        setEditEmail("");
+                        setEditError("");
+                      }}
                       className="px-3 py-1.5 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0"
                     >
                       キャンセル
@@ -395,34 +432,40 @@ export function SettingsPage() {
                     <input
                       type="password"
                       value={resetPwValue}
-                      onChange={(e) => { setResetPwValue(e.target.value); setResetPwError(''); }}
+                      onChange={(e) => {
+                        setResetPwValue(e.target.value);
+                        setResetPwError("");
+                      }}
                       placeholder="新しいパスワード（8文字以上）"
                       className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     />
                     <button
-                      onClick={() => resetPasswordMutation.mutate({ id: u.id, password: resetPwValue })}
+                      onClick={() =>
+                        resetPasswordMutation.mutate({ id: u.id, password: resetPwValue })
+                      }
                       disabled={resetPwValue.length < 8 || resetPasswordMutation.isPending}
                       className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 shrink-0"
                     >
-                      {resetPasswordMutation.isPending ? 'リセット中...' : 'リセット'}
+                      {resetPasswordMutation.isPending ? "リセット中..." : "リセット"}
                     </button>
                     <button
-                      onClick={() => { setResetPwUserId(null); setResetPwValue(''); setResetPwError(''); }}
+                      onClick={() => {
+                        setResetPwUserId(null);
+                        setResetPwValue("");
+                        setResetPwError("");
+                      }}
                       className="px-3 py-1.5 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0"
                     >
                       キャンセル
                     </button>
                   </div>
-                  {resetPwError && (
-                    <p className="text-xs text-red-500">{resetPwError}</p>
-                  )}
+                  {resetPwError && <p className="text-xs text-red-500">{resetPwError}</p>}
                 </div>
               )}
             </div>
           ))}
         </div>
       </div>
-
     </div>
   );
 }

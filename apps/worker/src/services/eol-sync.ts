@@ -1,15 +1,15 @@
-import type { Env } from '../types.ts';
-import type { EndoflifeDateCycle, EolCycle } from '@vulflare/shared/types';
-import { eolProductRepo, eolCycleRepo, eolSyncLogRepo } from '../db/eol-repository.ts';
+import type { EndoflifeDateCycle, EolCycle } from "@vulflare/shared/types";
+import { eolCycleRepo, eolProductRepo, eolSyncLogRepo } from "../db/eol-repository.ts";
+import type { Env } from "../types.ts";
 
-const ENDOFLIFE_API_BASE = 'https://endoflife.date/api';
+const ENDOFLIFE_API_BASE = "https://endoflife.date/api";
 const CACHE_TTL = 24 * 60 * 60; // 24時間
 
 /**
  * endoflife.date から利用可能なプロダクト一覧を取得
  */
 export async function getAvailableProducts(env: Env): Promise<string[]> {
-  const cacheKey = 'eol:available_products';
+  const cacheKey = "eol:available_products";
   const cached = await env.VULFLARE_KV_CACHE.get(cacheKey);
   if (cached) {
     return JSON.parse(cached);
@@ -97,7 +97,7 @@ export async function syncProductCycles(
         const extendedSupportDate = normalizeDate(apiCycle.extendedSupport);
         const ltsDate = normalizeDate(apiCycle.lts);
 
-        const cycle: Omit<EolCycle, 'created_at' | 'updated_at'> = {
+        const cycle: Omit<EolCycle, "created_at" | "updated_at"> = {
           id: crypto.randomUUID(),
           product_id: productId,
           cycle: apiCycle.cycle,
@@ -111,7 +111,7 @@ export async function syncProductCycles(
           latest_version: apiCycle.latest ?? null,
           latest_release_date: apiCycle.latestReleaseDate ?? null,
           is_eol: isEolExpired(eolDate) ? 1 : 0,
-          source: 'endoflife_date',
+          source: "endoflife_date",
         };
 
         await eolCycleRepo.upsert(env.DB, cycle);
@@ -121,15 +121,15 @@ export async function syncProductCycles(
       }
     }
 
-    await eolSyncLogRepo.updateStatus(env.DB, logId, 'completed', {
+    await eolSyncLogRepo.updateStatus(env.DB, logId, "completed", {
       cycles_synced: synced,
-      ...(errors.length > 0 && { error_message: errors.join('; ') }),
+      ...(errors.length > 0 && { error_message: errors.join("; ") }),
     });
 
     return { synced, errors };
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
-    await eolSyncLogRepo.updateStatus(env.DB, logId, 'failed', {
+    await eolSyncLogRepo.updateStatus(env.DB, logId, "failed", {
       error_message: errorMsg,
     });
     throw err;

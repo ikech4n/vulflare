@@ -1,11 +1,11 @@
-import type { Env } from '../types.ts';
+import type { Env } from "../types.ts";
 
 export interface DeletionResult {
   deleted: Record<string, number>;
   totalDeleted: number;
 }
 
-type DataSource = 'jvn';
+type DataSource = "jvn";
 
 /**
  * 指定されたデータソースの同期データを削除する
@@ -13,10 +13,7 @@ type DataSource = 'jvn';
  * @param source - 削除対象のデータソース ('jvn')
  * @returns 削除結果 (各ソースの削除件数と合計)
  */
-export async function deleteSyncData(
-  env: Env,
-  source: 'jvn'
-): Promise<DeletionResult> {
+export async function deleteSyncData(env: Env, source: "jvn"): Promise<DeletionResult> {
   const deleted: Record<string, number> = {};
   let totalDeleted = 0;
 
@@ -52,9 +49,9 @@ export async function deleteSyncData(
  */
 async function deleteSingleSource(env: Env, source: DataSource): Promise<number> {
   // 1. vulnerabilities テーブルから該当ソースのレコードを削除
-  const vulnerabilitiesResult = await env.DB.prepare(
-    `DELETE FROM vulnerabilities WHERE source = ?`
-  ).bind(source).run();
+  const vulnerabilitiesResult = await env.DB.prepare("DELETE FROM vulnerabilities WHERE source = ?")
+    .bind(source)
+    .run();
 
   const deletedCount = vulnerabilitiesResult.meta.changes ?? 0;
 
@@ -75,13 +72,13 @@ async function deleteSingleSource(env: Env, source: DataSource): Promise<number>
   }
 
   // 4. JVN専用: vendor/product キャッシュテーブルも削除
-  if (source === 'jvn') {
+  if (source === "jvn") {
     try {
-      await env.DB.prepare(`DELETE FROM jvn_vendor_cache`).run();
-      await env.DB.prepare(`DELETE FROM jvn_product_cache`).run();
-      console.log(`[deleteSingleSource] Deleted JVN vendor/product cache`);
+      await env.DB.prepare("DELETE FROM jvn_vendor_cache").run();
+      await env.DB.prepare("DELETE FROM jvn_product_cache").run();
+      console.log("[deleteSingleSource] Deleted JVN vendor/product cache");
     } catch (error) {
-      console.warn(`[deleteSingleSource] Error deleting JVN cache tables:`, error);
+      console.warn("[deleteSingleSource] Error deleting JVN cache tables:", error);
     }
   }
 

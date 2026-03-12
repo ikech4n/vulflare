@@ -1,9 +1,9 @@
-import type { Env } from '../types.ts';
+import type { Env } from "../types.ts";
 
 /** RFC 2047 Base64 エンコード（非ASCII ヘッダー用） */
 function encodeHeader(str: string): string {
   const bytes = new TextEncoder().encode(str);
-  let binary = '';
+  let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return `=?UTF-8?B?${btoa(binary)}?=`;
 }
@@ -11,9 +11,9 @@ function encodeHeader(str: string): string {
 /** Base64 エンコード＋76文字で折り返し（RFC 2045 準拠） */
 function encodeBody(str: string): string {
   const bytes = new TextEncoder().encode(str);
-  let binary = '';
+  let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replace(/(.{76})/g, '$1\r\n');
+  return btoa(binary).replace(/(.{76})/g, "$1\r\n");
 }
 
 /**
@@ -25,19 +25,19 @@ export async function sendPasswordResetEmail(
   to: string,
   resetUrl: string,
 ): Promise<void> {
-  const subject = 'Vulflare: パスワードリセット';
+  const subject = "Vulflare: パスワードリセット";
 
   const textBody = [
-    'Vulflare パスワードリセット',
-    '',
-    'パスワードリセットのリクエストを受け付けました。',
-    '以下のリンクをクリックして新しいパスワードを設定してください。',
-    '',
+    "Vulflare パスワードリセット",
+    "",
+    "パスワードリセットのリクエストを受け付けました。",
+    "以下のリンクをクリックして新しいパスワードを設定してください。",
+    "",
     resetUrl,
-    '',
-    'このリンクは1時間有効です。',
-    'このリクエストに心当たりがない場合は、このメールを無視してください。',
-  ].join('\n');
+    "",
+    "このリンクは1時間有効です。",
+    "このリクエストに心当たりがない場合は、このメールを無視してください。",
+  ].join("\n");
 
   const htmlBody = `
 <!DOCTYPE html>
@@ -71,37 +71,37 @@ export async function sendPasswordResetEmail(
 </html>
   `.trim();
 
-  const { EmailMessage } = await import('cloudflare:email');
+  const { EmailMessage } = await import("cloudflare:email");
 
-  const domain = from.split('@')[1];
+  const domain = from.split("@")[1];
   const messageId = `<${crypto.randomUUID()}@${domain}>`;
   const date = new Date().toUTCString();
-  const boundary = `boundary_${crypto.randomUUID().replace(/-/g, '')}`;
+  const boundary = `boundary_${crypto.randomUUID().replace(/-/g, "")}`;
 
-  let mimeMessage = `From: ${encodeHeader('Vulflare')} <${from}>\r\n`;
+  let mimeMessage = `From: ${encodeHeader("Vulflare")} <${from}>\r\n`;
   mimeMessage += `To: ${to}\r\n`;
   mimeMessage += `Subject: ${encodeHeader(subject)}\r\n`;
   mimeMessage += `Date: ${date}\r\n`;
   mimeMessage += `Message-ID: ${messageId}\r\n`;
-  mimeMessage += `MIME-Version: 1.0\r\n`;
+  mimeMessage += "MIME-Version: 1.0\r\n";
   mimeMessage += `List-Unsubscribe: <mailto:${from}?subject=unsubscribe>\r\n`;
-  mimeMessage += `List-Unsubscribe-Post: List-Unsubscribe=One-Click\r\n`;
+  mimeMessage += "List-Unsubscribe-Post: List-Unsubscribe=One-Click\r\n";
   mimeMessage += `Content-Type: multipart/alternative; boundary="${boundary}"\r\n`;
-  mimeMessage += `\r\n`;
+  mimeMessage += "\r\n";
 
   mimeMessage += `--${boundary}\r\n`;
-  mimeMessage += `Content-Type: text/plain; charset=utf-8\r\n`;
-  mimeMessage += `Content-Transfer-Encoding: base64\r\n`;
-  mimeMessage += `\r\n`;
+  mimeMessage += "Content-Type: text/plain; charset=utf-8\r\n";
+  mimeMessage += "Content-Transfer-Encoding: base64\r\n";
+  mimeMessage += "\r\n";
   mimeMessage += encodeBody(textBody);
-  mimeMessage += `\r\n`;
+  mimeMessage += "\r\n";
 
   mimeMessage += `--${boundary}\r\n`;
-  mimeMessage += `Content-Type: text/html; charset=utf-8\r\n`;
-  mimeMessage += `Content-Transfer-Encoding: base64\r\n`;
-  mimeMessage += `\r\n`;
+  mimeMessage += "Content-Type: text/html; charset=utf-8\r\n";
+  mimeMessage += "Content-Transfer-Encoding: base64\r\n";
+  mimeMessage += "\r\n";
   mimeMessage += encodeBody(htmlBody);
-  mimeMessage += `\r\n`;
+  mimeMessage += "\r\n";
 
   mimeMessage += `--${boundary}--\r\n`;
 

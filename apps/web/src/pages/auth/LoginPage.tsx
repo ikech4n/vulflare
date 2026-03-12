@@ -1,45 +1,46 @@
-import { useState, useEffect, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { api } from '@/lib/api.ts';
-import { useAuthStore } from '@/store/authStore.ts';
-import type { LoginResponse, MeResponse } from '@vulflare/shared/types';
-import { useThemeStore } from '@/store/themeStore.ts';
+import { api } from "@/lib/api.ts";
+import { useAuthStore } from "@/store/authStore.ts";
+import { useThemeStore } from "@/store/themeStore.ts";
+import type { LoginResponse, MeResponse } from "@vulflare/shared/types";
+import { type FormEvent, useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 export function LoginPage() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [initialized, setInitialized] = useState(true);
   const navigate = useNavigate();
   const { login } = useAuthStore();
 
   useEffect(() => {
-    api.get<{ initialized: boolean }>('/auth/initialized')
+    api
+      .get<{ initialized: boolean }>("/auth/initialized")
       .then(({ data }) => setInitialized(data.initialized))
       .catch(() => setInitialized(true));
   }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
     try {
-      const { data } = await api.post<LoginResponse>('/auth/login', { username, password });
+      const { data } = await api.post<LoginResponse>("/auth/login", { username, password });
       login(data.accessToken, data.user);
       try {
-        const { data: me } = await api.get<MeResponse>('/auth/me');
+        const { data: me } = await api.get<MeResponse>("/auth/me");
         useThemeStore.getState().syncFromServer(me.theme);
       } catch {
         // 失敗時はlocalStorageの値をそのまま使用
       }
-      void navigate('/');
+      void navigate("/");
     } catch (err) {
       const status = (err as { response?: { status?: number } })?.response?.status;
       if (status === 423) {
-        setError('アカウントがロックされています。管理者にお問い合わせください。');
+        setError("アカウントがロックされています。管理者にお問い合わせください。");
       } else {
-        setError('ユーザー名またはパスワードが正しくありません');
+        setError("ユーザー名またはパスワードが正しくありません");
       }
     } finally {
       setLoading(false);
@@ -51,7 +52,9 @@ export function LoginPage() {
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">ログイン</h2>
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">ユーザー名</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            ユーザー名
+          </label>
           <input
             type="text"
             value={username}
@@ -61,7 +64,9 @@ export function LoginPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">パスワード</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            パスワード
+          </label>
           <input
             type="password"
             value={password}
@@ -76,17 +81,20 @@ export function LoginPage() {
           disabled={loading}
           className="w-full bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
         >
-          {loading ? 'ログイン中...' : 'ログイン'}
+          {loading ? "ログイン中..." : "ログイン"}
         </button>
         <p className="text-sm text-center text-gray-500 dark:text-gray-400">
-          <Link to="/forgot-password" className="text-blue-600 underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+          <Link
+            to="/forgot-password"
+            className="text-blue-600 underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+          >
             パスワードを忘れた方はこちら
           </Link>
         </p>
       </form>
       {!initialized && (
         <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-4">
-          アカウントをお持ちでない方は{' '}
+          アカウントをお持ちでない方は{" "}
           <Link to="/register" className="text-blue-600 hover:underline">
             新規登録
           </Link>

@@ -6,11 +6,11 @@ export interface Env {
   JWT_SECRET: string;
   PAGES_URL: string;
   NOREPLY_EMAIL: string;
-  ENVIRONMENT: 'development' | 'production';
+  ENVIRONMENT: "development" | "production";
 }
 
 export interface JwtVariables {
   userId: string;
-  role: 'admin' | 'editor' | 'viewer';
+  role: "admin" | "editor" | "viewer";
   validatedBody?: unknown;
 }

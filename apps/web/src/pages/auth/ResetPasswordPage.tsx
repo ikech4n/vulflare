@@ -1,33 +1,35 @@
-import { useState, type FormEvent } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { api } from '@/lib/api.ts';
+import { api } from "@/lib/api.ts";
+import { type FormEvent, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 export function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token') ?? '';
+  const token = searchParams.get("token") ?? "";
   const navigate = useNavigate();
 
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (password !== confirmPassword) {
-      setError('パスワードが一致しません');
+      setError("パスワードが一致しません");
       return;
     }
 
     setLoading(true);
     try {
-      await api.post('/auth/reset-password', { token, password });
-      void navigate('/login', { replace: true });
+      await api.post("/auth/reset-password", { token, password });
+      void navigate("/login", { replace: true });
     } catch (err) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
-      setError(msg ?? 'パスワードのリセットに失敗しました。リンクが無効または期限切れの可能性があります。');
+      setError(
+        msg ?? "パスワードのリセットに失敗しました。リンクが無効または期限切れの可能性があります。",
+      );
     } finally {
       setLoading(false);
     }
@@ -36,9 +38,14 @@ export function ResetPasswordPage() {
   if (!token) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">パスワードをリセット</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+          パスワードをリセット
+        </h2>
         <p className="text-sm text-red-600 mb-4">無効なリセットリンクです。</p>
-        <Link to="/forgot-password" className="text-blue-600 hover:underline dark:text-blue-400 text-sm">
+        <Link
+          to="/forgot-password"
+          className="text-blue-600 hover:underline dark:text-blue-400 text-sm"
+        >
           パスワードリセットをやり直す
         </Link>
       </div>
@@ -47,10 +54,14 @@ export function ResetPasswordPage() {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">新しいパスワードを設定</h2>
+      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+        新しいパスワードを設定
+      </h2>
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">新しいパスワード</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            新しいパスワード
+          </label>
           <input
             type="password"
             value={password}
@@ -64,7 +75,9 @@ export function ResetPasswordPage() {
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">パスワード（確認）</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            パスワード（確認）
+          </label>
           <input
             type="password"
             value={confirmPassword}
@@ -80,7 +93,7 @@ export function ResetPasswordPage() {
           disabled={loading}
           className="w-full bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
         >
-          {loading ? '更新中...' : 'パスワードを更新'}
+          {loading ? "更新中..." : "パスワードを更新"}
         </button>
         <p className="text-sm text-center">
           <Link to="/login" className="text-blue-600 hover:underline dark:text-blue-400">

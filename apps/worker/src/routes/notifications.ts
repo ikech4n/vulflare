@@ -1,44 +1,44 @@
-import { Hono } from 'hono';
-import type { Env, JwtVariables } from '../types.ts';
-import { authMiddleware, requireRole } from '../middleware/auth.ts';
-import { notificationRepo } from '../db/notification-repository.ts';
-import { sendTestNotification } from '../services/notifications.ts';
+import { Hono } from "hono";
+import { notificationRepo } from "../db/notification-repository.ts";
+import { authMiddleware, requireRole } from "../middleware/auth.ts";
+import { sendTestNotification } from "../services/notifications.ts";
+import type { Env, JwtVariables } from "../types.ts";
 
 export const notificationRoutes = new Hono<{ Bindings: Env; Variables: JwtVariables }>();
 
-notificationRoutes.use('/*', authMiddleware);
+notificationRoutes.use("/*", authMiddleware);
 
 // ========================================
 // チャネル管理
 // ========================================
 
 // GET /api/notifications/channels - チャネル一覧
-notificationRoutes.get('/channels', async (c) => {
+notificationRoutes.get("/channels", async (c) => {
   const channels = await notificationRepo.listChannels(c.env.DB);
   return c.json(channels);
 });
 
 // GET /api/notifications/channels/:id - チャネル詳細
-notificationRoutes.get('/channels/:id', async (c) => {
-  const channel = await notificationRepo.findChannelById(c.env.DB, c.req.param('id')!);
-  if (!channel) return c.json({ error: 'Channel not found' }, 404);
+notificationRoutes.get("/channels/:id", async (c) => {
+  const channel = await notificationRepo.findChannelById(c.env.DB, c.req.param("id")!);
+  if (!channel) return c.json({ error: "Channel not found" }, 404);
   return c.json(channel);
 });
 
 // POST /api/notifications/channels - チャネル作成（editor以上）
-notificationRoutes.post('/channels', requireRole('editor'), async (c) => {
+notificationRoutes.post("/channels", requireRole("editor"), async (c) => {
   const body = await c.req.json<{
     name: string;
-    type: 'webhook' | 'email';
+    type: "webhook" | "email";
     config: Record<string, unknown>;
   }>();
 
   if (!body.name || !body.type || !body.config) {
-    return c.json({ error: 'Missing required fields' }, 400);
+    return c.json({ error: "Missing required fields" }, 400);
   }
 
-  if (!['webhook', 'email'].includes(body.type)) {
-    return c.json({ error: 'Invalid channel type' }, 400);
+  if (!["webhook", "email"].includes(body.type)) {
+    return c.json({ error: "Invalid channel type" }, 400);
   }
 
   const id = crypto.randomUUID();
@@ -50,12 +50,12 @@ notificationRoutes.post('/channels', requireRole('editor'), async (c) => {
     is_active: 1,
   });
 
-  return c.json({ id, message: 'Channel created' }, 201);
+  return c.json({ id, message: "Channel created" }, 201);
 });
 
 // PATCH /api/notifications/channels/:id - チャネル更新（editor以上）
-notificationRoutes.patch('/channels/:id', requireRole('editor'), async (c) => {
-  const id = c.req.param('id')!;
+notificationRoutes.patch("/channels/:id", requireRole("editor"), async (c) => {
+  const id = c.req.param("id")!;
   const body = await c.req.json<{
     name?: string;
     config?: Record<string, unknown>;
@@ -63,7 +63,7 @@ notificationRoutes.patch('/channels/:id', requireRole('editor'), async (c) => {
   }>();
 
   const channel = await notificationRepo.findChannelById(c.env.DB, id);
-  if (!channel) return c.json({ error: 'Channel not found' }, 404);
+  if (!channel) return c.json({ error: "Channel not found" }, 404);
 
   await notificationRepo.updateChannel(c.env.DB, id, {
     ...(body.name && { name: body.name }),
@@ -71,29 +71,29 @@ notificationRoutes.patch('/channels/:id', requireRole('editor'), async (c) => {
     ...(body.isActive !== undefined && { is_active: body.isActive ? 1 : 0 }),
   });
 
-  return c.json({ message: 'Channel updated' });
+  return c.json({ message: "Channel updated" });
 });
 
 // DELETE /api/notifications/channels/:id - チャネル削除（admin限定）
-notificationRoutes.delete('/channels/:id', requireRole('admin'), async (c) => {
-  const channel = await notificationRepo.findChannelById(c.env.DB, c.req.param('id')!);
-  if (!channel) return c.json({ error: 'Channel not found' }, 404);
+notificationRoutes.delete("/channels/:id", requireRole("admin"), async (c) => {
+  const channel = await notificationRepo.findChannelById(c.env.DB, c.req.param("id")!);
+  if (!channel) return c.json({ error: "Channel not found" }, 404);
 
-  await notificationRepo.deleteChannel(c.env.DB, c.req.param('id')!);
-  return c.json({ message: 'Channel deleted' });
+  await notificationRepo.deleteChannel(c.env.DB, c.req.param("id")!);
+  return c.json({ message: "Channel deleted" });
 });
 
 // POST /api/notifications/channels/:id/test - テスト送信（editor以上）
-notificationRoutes.post('/channels/:id/test', requireRole('editor'), async (c) => {
-  const channel = await notificationRepo.findChannelById(c.env.DB, c.req.param('id')!);
-  if (!channel) return c.json({ error: 'Channel not found' }, 404);
+notificationRoutes.post("/channels/:id/test", requireRole("editor"), async (c) => {
+  const channel = await notificationRepo.findChannelById(c.env.DB, c.req.param("id")!);
+  if (!channel) return c.json({ error: "Channel not found" }, 404);
 
   c.executionCtx.waitUntil(
     sendTestNotification(c.env, channel).catch((error) => {
-      console.error('Test notification error:', error);
-    })
+      console.error("Test notification error:", error);
+    }),
   );
-  return c.json({ message: 'Test notification sent' });
+  return c.json({ message: "Test notification sent" });
 });
 
 // ========================================
@@ -101,14 +101,14 @@ notificationRoutes.post('/channels/:id/test', requireRole('editor'), async (c) =
 // ========================================
 
 // GET /api/notifications/rules - ルール一覧
-notificationRoutes.get('/rules', async (c) => {
-  const channelId = c.req.query('channelId');
+notificationRoutes.get("/rules", async (c) => {
+  const channelId = c.req.query("channelId");
   const rules = await notificationRepo.listRules(c.env.DB, channelId);
   return c.json(rules);
 });
 
 // POST /api/notifications/rules - ルール作成（editor以上）
-notificationRoutes.post('/rules', requireRole('editor'), async (c) => {
+notificationRoutes.post("/rules", requireRole("editor"), async (c) => {
   const body = await c.req.json<{
     channelId: string;
     eventType: string;
@@ -116,18 +116,18 @@ notificationRoutes.post('/rules', requireRole('editor'), async (c) => {
   }>();
 
   if (!body.channelId || !body.eventType) {
-    return c.json({ error: 'Missing required fields' }, 400);
+    return c.json({ error: "Missing required fields" }, 400);
   }
 
   const validEvents = [
-    'vulnerability_created',
-    'vulnerability_updated',
-    'vulnerability_critical',
-    'eol_approaching',
+    "vulnerability_created",
+    "vulnerability_updated",
+    "vulnerability_critical",
+    "eol_approaching",
   ];
 
   if (!validEvents.includes(body.eventType)) {
-    return c.json({ error: 'Invalid event type' }, 400);
+    return c.json({ error: "Invalid event type" }, 400);
   }
 
   const id = crypto.randomUUID();
@@ -139,12 +139,12 @@ notificationRoutes.post('/rules', requireRole('editor'), async (c) => {
     is_active: 1,
   });
 
-  return c.json({ id, message: 'Rule created' }, 201);
+  return c.json({ id, message: "Rule created" }, 201);
 });
 
 // PATCH /api/notifications/rules/:id - ルール更新（editor以上）
-notificationRoutes.patch('/rules/:id', requireRole('editor'), async (c) => {
-  const id = c.req.param('id')!;
+notificationRoutes.patch("/rules/:id", requireRole("editor"), async (c) => {
+  const id = c.req.param("id")!;
   const body = await c.req.json<{
     eventType?: string;
     filterConfig?: Record<string, unknown>;
@@ -152,7 +152,7 @@ notificationRoutes.patch('/rules/:id', requireRole('editor'), async (c) => {
   }>();
 
   const rule = await notificationRepo.findRuleById(c.env.DB, id);
-  if (!rule) return c.json({ error: 'Rule not found' }, 404);
+  if (!rule) return c.json({ error: "Rule not found" }, 404);
 
   await notificationRepo.updateRule(c.env.DB, id, {
     ...(body.eventType && { event_type: body.eventType }),
@@ -160,16 +160,16 @@ notificationRoutes.patch('/rules/:id', requireRole('editor'), async (c) => {
     ...(body.isActive !== undefined && { is_active: body.isActive ? 1 : 0 }),
   });
 
-  return c.json({ message: 'Rule updated' });
+  return c.json({ message: "Rule updated" });
 });
 
 // DELETE /api/notifications/rules/:id - ルール削除（admin限定）
-notificationRoutes.delete('/rules/:id', requireRole('admin'), async (c) => {
-  const rule = await notificationRepo.findRuleById(c.env.DB, c.req.param('id')!);
-  if (!rule) return c.json({ error: 'Rule not found' }, 404);
+notificationRoutes.delete("/rules/:id", requireRole("admin"), async (c) => {
+  const rule = await notificationRepo.findRuleById(c.env.DB, c.req.param("id")!);
+  if (!rule) return c.json({ error: "Rule not found" }, 404);
 
-  await notificationRepo.deleteRule(c.env.DB, c.req.param('id')!);
-  return c.json({ message: 'Rule deleted' });
+  await notificationRepo.deleteRule(c.env.DB, c.req.param("id")!);
+  return c.json({ message: "Rule deleted" });
 });
 
 // ========================================
@@ -177,9 +177,9 @@ notificationRoutes.delete('/rules/:id', requireRole('admin'), async (c) => {
 // ========================================
 
 // GET /api/notifications/logs - ログ一覧
-notificationRoutes.get('/logs', async (c) => {
-  const channelId = c.req.query('channelId');
-  const limit = c.req.query('limit') ? Number(c.req.query('limit')) : undefined;
+notificationRoutes.get("/logs", async (c) => {
+  const channelId = c.req.query("channelId");
+  const limit = c.req.query("limit") ? Number(c.req.query("limit")) : undefined;
 
   const logs = await notificationRepo.listLogs(c.env.DB, {
     ...(channelId && { channelId }),

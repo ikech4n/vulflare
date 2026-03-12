@@ -1,16 +1,16 @@
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 
-const API_BASE = 'http://localhost:8787/api';
+const API_BASE = "http://localhost:8787/api";
 
 export const handlers = [
   // 認証
   http.post(`${API_BASE}/auth/login`, () => {
     return HttpResponse.json({
-      accessToken: 'mock-access-token',
+      accessToken: "mock-access-token",
       user: {
-        id: '1',
-        username: 'testuser',
-        role: 'admin',
+        id: "1",
+        username: "testuser",
+        role: "admin",
       },
     });
   }),
@@ -41,12 +41,12 @@ export const handlers = [
     return HttpResponse.json({
       data: [
         {
-          id: '1',
-          cveId: 'CVE-2024-12345',
-          title: 'Test Vulnerability',
-          severity: 'high',
-          status: 'new',
-          createdAt: '2024-01-01T00:00:00Z',
+          id: "1",
+          cveId: "CVE-2024-12345",
+          title: "Test Vulnerability",
+          severity: "high",
+          status: "new",
+          createdAt: "2024-01-01T00:00:00Z",
         },
       ],
       total: 1,

@@ -1,20 +1,20 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, ExternalLink, Plus, Edit, Trash2 } from 'lucide-react';
-import { api } from '@/lib/api.ts';
-import { useAuthStore } from '@/store/authStore.ts';
-import type { EolProductWithCycles, EolCycle } from '@vulflare/shared/types';
-import { EolStatusBadge } from '@/components/EolStatusBadge.tsx';
+import { EolStatusBadge } from "@/components/EolStatusBadge.tsx";
+import { api } from "@/lib/api.ts";
+import { useAuthStore } from "@/store/authStore.ts";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { EolCycle, EolProductWithCycles } from "@vulflare/shared/types";
+import { ArrowLeft, Calendar, Edit, ExternalLink, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Link, useParams } from "react-router-dom";
 
 export function EolProductDetailPage() {
   const { user } = useAuthStore();
-  const isViewer = user?.role === 'viewer';
+  const isViewer = user?.role === "viewer";
   const { id } = useParams<{ id: string }>();
   const [showAddModal, setShowAddModal] = useState(false);
 
   const { data: product, isLoading } = useQuery<EolProductWithCycles>({
-    queryKey: ['eol', 'products', id],
+    queryKey: ["eol", "products", id],
     queryFn: async () => {
       const res = await api.get(`/eol/products/${id}`);
       return res.data;
@@ -34,13 +34,18 @@ export function EolProductDetailPage() {
     <div className="space-y-6">
       {/* ヘッダー */}
       <div>
-        <Link to="/eol" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4">
+        <Link
+          to="/eol"
+          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4"
+        >
           <ArrowLeft className="w-4 h-4" />
           EOL管理に戻る
         </Link>
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{product.display_name}</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {product.display_name}
+            </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">{product.product_name}</p>
           </div>
           {product.link && /^https?:\/\//i.test(product.link) && (
@@ -67,7 +72,9 @@ export function EolProductDetailPage() {
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">ベンダー</dt>
-            <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">{product.vendor || '-'}</dd>
+            <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
+              {product.vendor || "-"}
+            </dd>
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">データソース</dt>
@@ -86,7 +93,9 @@ export function EolProductDetailPage() {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">バージョンサイクル</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              バージョンサイクル
+            </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               {product.cycles.length} 件のバージョン
             </p>
@@ -106,22 +115,41 @@ export function EolProductDetailPage() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">バージョン</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">コードネーム</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">リリース日</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">EOL日</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ステータス</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">LTS</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">最新版</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                  バージョン
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                  コードネーム
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                  リリース日
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                  EOL日
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                  ステータス
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                  LTS
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                  最新版
+                </th>
                 {!product.eol_api_id && !isViewer && (
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">操作</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                    操作
+                  </th>
                 )}
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {product.cycles.length === 0 ? (
                 <tr>
-                  <td colSpan={!product.eol_api_id && !isViewer ? 8 : 7} className="px-4 py-8 text-center text-gray-500">
+                  <td
+                    colSpan={!product.eol_api_id && !isViewer ? 8 : 7}
+                    className="px-4 py-8 text-center text-gray-500"
+                  >
                     バージョン情報がありません
                   </td>
                 </tr>
@@ -129,13 +157,15 @@ export function EolProductDetailPage() {
                 product.cycles.map((cycle) => (
                   <tr key={cycle.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td className="px-4 py-4">
-                      <span className="font-medium text-gray-900 dark:text-gray-100">{cycle.cycle}</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                        {cycle.cycle}
+                      </span>
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
-                      {cycle.codename || '-'}
+                      {cycle.codename || "-"}
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
-                      {cycle.release_date ? formatDate(cycle.release_date) : '-'}
+                      {cycle.release_date ? formatDate(cycle.release_date) : "-"}
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
                       {cycle.eol_date ? (
@@ -144,7 +174,7 @@ export function EolProductDetailPage() {
                           {formatDate(cycle.eol_date)}
                         </span>
                       ) : (
-                        '-'
+                        "-"
                       )}
                     </td>
                     <td className="px-4 py-4">
@@ -156,11 +186,11 @@ export function EolProductDetailPage() {
                           LTS
                         </span>
                       ) : (
-                        '-'
+                        "-"
                       )}
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
-                      {cycle.latest_version || '-'}
+                      {cycle.latest_version || "-"}
                     </td>
                     {!product.eol_api_id && !isViewer && (
                       <td className="px-4 py-4">
@@ -192,10 +222,10 @@ function CycleActions({ cycle, productId }: { cycle: EolCycle; productId: string
       await api.delete(`/eol/cycles/${cycle.id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['eol', 'products', productId] });
+      queryClient.invalidateQueries({ queryKey: ["eol", "products", productId] });
     },
     onError: () => {
-      alert('削除に失敗しました');
+      alert("削除に失敗しました");
     },
   });
 
@@ -209,10 +239,10 @@ function CycleActions({ cycle, productId }: { cycle: EolCycle; productId: string
         >
           <Edit className="w-4 h-4" />
         </button>
-        {user?.role === 'admin' && (
+        {user?.role === "admin" && (
           <button
             onClick={() => {
-              if (confirm('本当に削除しますか?')) {
+              if (confirm("本当に削除しますか?")) {
                 deleteMutation.mutate();
               }
             }}
@@ -224,7 +254,11 @@ function CycleActions({ cycle, productId }: { cycle: EolCycle; productId: string
         )}
       </div>
       {showEditModal && (
-        <EditCycleModal cycle={cycle} productId={productId} onClose={() => setShowEditModal(false)} />
+        <EditCycleModal
+          cycle={cycle}
+          productId={productId}
+          onClose={() => setShowEditModal(false)}
+        />
       )}
     </>
   );
@@ -233,19 +267,19 @@ function CycleActions({ cycle, productId }: { cycle: EolCycle; productId: string
 function AddCycleModal({ productId, onClose }: { productId: string; onClose: () => void }) {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
-    cycle: '',
-    codename: '',
-    release_date: '',
-    eol_date: '',
-    support_date: '',
-    extended_support_date: '',
+    cycle: "",
+    codename: "",
+    release_date: "",
+    eol_date: "",
+    support_date: "",
+    extended_support_date: "",
     lts: false,
-    latest_version: '',
+    latest_version: "",
   });
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      await api.post('/eol/cycles', {
+      await api.post("/eol/cycles", {
         product_id: productId,
         cycle: formData.cycle,
         codename: formData.codename || undefined,
@@ -258,12 +292,12 @@ function AddCycleModal({ productId, onClose }: { productId: string; onClose: () 
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['eol', 'products', productId] });
+      queryClient.invalidateQueries({ queryKey: ["eol", "products", productId] });
       onClose();
     },
     onError: (error: unknown) => {
       const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error;
-      alert(msg || '作成に失敗しました');
+      alert(msg || "作成に失敗しました");
     },
   });
 
@@ -274,8 +308,14 @@ function AddCycleModal({ productId, onClose }: { productId: string; onClose: () 
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">バージョン*</label>
+            <label
+              htmlFor="create-cycle"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              バージョン*
+            </label>
             <input
+              id="create-cycle"
               type="text"
               value={formData.cycle}
               onChange={(e) => setFormData({ ...formData, cycle: e.target.value })}
@@ -285,8 +325,14 @@ function AddCycleModal({ productId, onClose }: { productId: string; onClose: () 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">コードネーム</label>
+            <label
+              htmlFor="create-codename"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              コードネーム
+            </label>
             <input
+              id="create-codename"
               type="text"
               value={formData.codename}
               onChange={(e) => setFormData({ ...formData, codename: e.target.value })}
@@ -296,8 +342,14 @@ function AddCycleModal({ productId, onClose }: { productId: string; onClose: () 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">リリース日</label>
+            <label
+              htmlFor="create-release-date"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              リリース日
+            </label>
             <input
+              id="create-release-date"
               type="date"
               value={formData.release_date}
               onChange={(e) => setFormData({ ...formData, release_date: e.target.value })}
@@ -306,8 +358,14 @@ function AddCycleModal({ productId, onClose }: { productId: string; onClose: () 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">EOL日</label>
+            <label
+              htmlFor="create-eol-date"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              EOL日
+            </label>
             <input
+              id="create-eol-date"
               type="date"
               value={formData.eol_date}
               onChange={(e) => setFormData({ ...formData, eol_date: e.target.value })}
@@ -316,8 +374,14 @@ function AddCycleModal({ productId, onClose }: { productId: string; onClose: () 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">サポート終了日</label>
+            <label
+              htmlFor="create-support-date"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              サポート終了日
+            </label>
             <input
+              id="create-support-date"
               type="date"
               value={formData.support_date}
               onChange={(e) => setFormData({ ...formData, support_date: e.target.value })}
@@ -326,8 +390,14 @@ function AddCycleModal({ productId, onClose }: { productId: string; onClose: () 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">延長サポート終了日</label>
+            <label
+              htmlFor="create-extended-support-date"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              延長サポート終了日
+            </label>
             <input
+              id="create-extended-support-date"
               type="date"
               value={formData.extended_support_date}
               onChange={(e) => setFormData({ ...formData, extended_support_date: e.target.value })}
@@ -336,8 +406,14 @@ function AddCycleModal({ productId, onClose }: { productId: string; onClose: () 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">最新バージョン</label>
+            <label
+              htmlFor="create-latest-version"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              最新バージョン
+            </label>
             <input
+              id="create-latest-version"
               type="text"
               value={formData.latest_version}
               onChange={(e) => setFormData({ ...formData, latest_version: e.target.value })}
@@ -354,7 +430,10 @@ function AddCycleModal({ productId, onClose }: { productId: string; onClose: () 
               onChange={(e) => setFormData({ ...formData, lts: e.target.checked })}
               className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded"
             />
-            <label htmlFor="lts" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+            <label
+              htmlFor="lts"
+              className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-200"
+            >
               LTS版
             </label>
           </div>
@@ -372,7 +451,7 @@ function AddCycleModal({ productId, onClose }: { productId: string; onClose: () 
             disabled={!formData.cycle || createMutation.isPending}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            {createMutation.isPending ? '作成中...' : '作成'}
+            {createMutation.isPending ? "作成中..." : "作成"}
           </button>
         </div>
       </div>
@@ -380,17 +459,21 @@ function AddCycleModal({ productId, onClose }: { productId: string; onClose: () 
   );
 }
 
-function EditCycleModal({ cycle, productId, onClose }: { cycle: EolCycle; productId: string; onClose: () => void }) {
+function EditCycleModal({
+  cycle,
+  productId,
+  onClose,
+}: { cycle: EolCycle; productId: string; onClose: () => void }) {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     cycle: cycle.cycle,
-    codename: cycle.codename || '',
-    release_date: cycle.release_date || '',
-    eol_date: cycle.eol_date || '',
-    support_date: cycle.support_date || '',
-    extended_support_date: cycle.extended_support_date || '',
+    codename: cycle.codename || "",
+    release_date: cycle.release_date || "",
+    eol_date: cycle.eol_date || "",
+    support_date: cycle.support_date || "",
+    extended_support_date: cycle.extended_support_date || "",
     lts: cycle.lts === 1,
-    latest_version: cycle.latest_version || '',
+    latest_version: cycle.latest_version || "",
   });
 
   const updateMutation = useMutation({
@@ -407,12 +490,12 @@ function EditCycleModal({ cycle, productId, onClose }: { cycle: EolCycle; produc
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['eol', 'products', productId] });
+      queryClient.invalidateQueries({ queryKey: ["eol", "products", productId] });
       onClose();
     },
     onError: (error: unknown) => {
       const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error;
-      alert(msg || '更新に失敗しました');
+      alert(msg || "更新に失敗しました");
     },
   });
 
@@ -423,8 +506,14 @@ function EditCycleModal({ cycle, productId, onClose }: { cycle: EolCycle; produc
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">バージョン*</label>
+            <label
+              htmlFor="edit-cycle"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              バージョン*
+            </label>
             <input
+              id="edit-cycle"
               type="text"
               value={formData.cycle}
               onChange={(e) => setFormData({ ...formData, cycle: e.target.value })}
@@ -434,8 +523,14 @@ function EditCycleModal({ cycle, productId, onClose }: { cycle: EolCycle; produc
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">コードネーム</label>
+            <label
+              htmlFor="edit-codename"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              コードネーム
+            </label>
             <input
+              id="edit-codename"
               type="text"
               value={formData.codename}
               onChange={(e) => setFormData({ ...formData, codename: e.target.value })}
@@ -445,8 +540,14 @@ function EditCycleModal({ cycle, productId, onClose }: { cycle: EolCycle; produc
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">リリース日</label>
+            <label
+              htmlFor="edit-release-date"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              リリース日
+            </label>
             <input
+              id="edit-release-date"
               type="date"
               value={formData.release_date}
               onChange={(e) => setFormData({ ...formData, release_date: e.target.value })}
@@ -455,8 +556,14 @@ function EditCycleModal({ cycle, productId, onClose }: { cycle: EolCycle; produc
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">EOL日</label>
+            <label
+              htmlFor="edit-eol-date"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              EOL日
+            </label>
             <input
+              id="edit-eol-date"
               type="date"
               value={formData.eol_date}
               onChange={(e) => setFormData({ ...formData, eol_date: e.target.value })}
@@ -465,8 +572,14 @@ function EditCycleModal({ cycle, productId, onClose }: { cycle: EolCycle; produc
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">サポート終了日</label>
+            <label
+              htmlFor="edit-support-date"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              サポート終了日
+            </label>
             <input
+              id="edit-support-date"
               type="date"
               value={formData.support_date}
               onChange={(e) => setFormData({ ...formData, support_date: e.target.value })}
@@ -475,8 +588,14 @@ function EditCycleModal({ cycle, productId, onClose }: { cycle: EolCycle; produc
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">延長サポート終了日</label>
+            <label
+              htmlFor="edit-extended-support-date"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              延長サポート終了日
+            </label>
             <input
+              id="edit-extended-support-date"
               type="date"
               value={formData.extended_support_date}
               onChange={(e) => setFormData({ ...formData, extended_support_date: e.target.value })}
@@ -485,8 +604,14 @@ function EditCycleModal({ cycle, productId, onClose }: { cycle: EolCycle; produc
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">最新バージョン</label>
+            <label
+              htmlFor="edit-latest-version"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              最新バージョン
+            </label>
             <input
+              id="edit-latest-version"
               type="text"
               value={formData.latest_version}
               onChange={(e) => setFormData({ ...formData, latest_version: e.target.value })}
@@ -503,7 +628,10 @@ function EditCycleModal({ cycle, productId, onClose }: { cycle: EolCycle; produc
               onChange={(e) => setFormData({ ...formData, lts: e.target.checked })}
               className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded"
             />
-            <label htmlFor="edit-lts" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+            <label
+              htmlFor="edit-lts"
+              className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-200"
+            >
               LTS版
             </label>
           </div>
@@ -521,7 +649,7 @@ function EditCycleModal({ cycle, productId, onClose }: { cycle: EolCycle; produc
             disabled={!formData.cycle || updateMutation.isPending}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            {updateMutation.isPending ? '更新中...' : '更新'}
+            {updateMutation.isPending ? "更新中..." : "更新"}
           </button>
         </div>
       </div>
@@ -532,10 +660,10 @@ function EditCycleModal({ cycle, productId, onClose }: { cycle: EolCycle; produc
 function formatDate(dateStr: string): string {
   try {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+    return date.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
   } catch {
     return dateStr;

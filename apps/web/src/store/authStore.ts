@@ -1,10 +1,10 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface AuthUser {
   id: string;
   username: string;
-  role: 'admin' | 'editor' | 'viewer';
+  role: "admin" | "editor" | "viewer";
 }
 
 interface AuthState {
@@ -27,7 +27,7 @@ export const useAuthStore = create<AuthState>()(
       logout: () => set({ accessToken: null, user: null }),
     }),
     {
-      name: 'vulflare-auth',
+      name: "vulflare-auth",
       partialize: (state) => ({ user: state.user }),
     },
   ),

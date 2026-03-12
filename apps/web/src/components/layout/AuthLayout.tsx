@@ -1,11 +1,11 @@
-import { Outlet } from 'react-router-dom';
-import { useThemeStore } from '@/store/themeStore.ts';
+import { useThemeStore } from "@/store/themeStore.ts";
+import { Outlet } from "react-router-dom";
 
 function useDarkMode(): boolean {
   const { theme } = useThemeStore();
-  if (theme === 'dark') return true;
-  if (theme === 'light') return false;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (theme === "dark") return true;
+  if (theme === "light") return false;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
 export function AuthLayout() {
@@ -15,7 +15,7 @@ export function AuthLayout() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col items-center justify-center">
       <div className="mb-8 text-center">
         <img
-          src={isDark ? '/logo.webp' : '/logo_light.webp'}
+          src={isDark ? "/logo.webp" : "/logo_light.webp"}
           alt="Vulflare"
           className="h-12 mx-auto"
         />

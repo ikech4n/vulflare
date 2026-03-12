@@ -3,11 +3,11 @@
  */
 function parseVersion(version: string): (number | string)[] {
   return version
-    .replace(/^[vV]/, '')
+    .replace(/^[vV]/, "")
     .split(/[.\-+]/)
     .map((seg) => {
-      const n = parseInt(seg, 10);
-      return isNaN(n) ? seg : n;
+      const n = Number.parseInt(seg, 10);
+      return Number.isNaN(n) ? seg : n;
     });
 }
 
@@ -24,7 +24,7 @@ export function compareVersions(a: string, b: string): number {
     const sa = pa[i] ?? 0;
     const sb = pb[i] ?? 0;
 
-    if (typeof sa === 'number' && typeof sb === 'number') {
+    if (typeof sa === "number" && typeof sb === "number") {
       if (sa !== sb) return sa - sb;
     } else {
       const cmp = String(sa).localeCompare(String(sb));

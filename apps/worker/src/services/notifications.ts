@@ -1,12 +1,12 @@
-import type { Env } from '../types.ts';
-import { notificationRepo } from '../db/notification-repository.ts';
+import { notificationRepo } from "../db/notification-repository.ts";
+import type { Env } from "../types.ts";
 
 export type EventType =
-  | 'vulnerability_created'
-  | 'vulnerability_updated'
-  | 'vulnerability_critical'
-  | 'eol_approaching'
-  | 'eol_expired';
+  | "vulnerability_created"
+  | "vulnerability_updated"
+  | "vulnerability_critical"
+  | "eol_approaching"
+  | "eol_expired";
 
 export interface NotificationPayload {
   eventType: EventType;
@@ -18,12 +18,12 @@ export interface NotificationPayload {
  * HTML特殊文字をエスケープする（XSS対策）
  */
 function escapeHtml(value: unknown): string {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 /**
@@ -32,7 +32,7 @@ function escapeHtml(value: unknown): string {
 export async function dispatchNotification(
   env: Env,
   eventType: EventType,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
 ): Promise<void> {
   const rules = await notificationRepo.findRulesByEvent(env.DB, eventType);
 
@@ -75,16 +75,16 @@ export async function dispatchNotification(
 async function sendToChannel(
   env: Env,
   channel: { id: string; type: string; config: string },
-  payload: NotificationPayload
+  payload: NotificationPayload,
 ): Promise<void> {
   const logId = crypto.randomUUID();
 
   try {
     const config = JSON.parse(channel.config) as Record<string, unknown>;
 
-    if (channel.type === 'webhook') {
+    if (channel.type === "webhook") {
       await sendWebhook(config, payload);
-    } else if (channel.type === 'email') {
+    } else if (channel.type === "email") {
       await sendEmail(env, config, payload);
     }
 
@@ -93,7 +93,7 @@ async function sendToChannel(
       channel_id: channel.id,
       event_type: payload.eventType,
       payload: JSON.stringify(payload),
-      status: 'sent',
+      status: "sent",
       error_message: null,
     });
   } catch (error) {
@@ -102,8 +102,8 @@ async function sendToChannel(
       channel_id: channel.id,
       event_type: payload.eventType,
       payload: JSON.stringify(payload),
-      status: 'failed',
-      error_message: error instanceof Error ? error.message : 'Unknown error',
+      status: "failed",
+      error_message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 }
@@ -113,18 +113,18 @@ async function sendToChannel(
  */
 async function sendWebhook(
   config: Record<string, unknown>,
-  payload: NotificationPayload
+  payload: NotificationPayload,
 ): Promise<void> {
   const url = config.url as string;
-  if (!url) throw new Error('Webhook URL is required');
+  if (!url) throw new Error("Webhook URL is required");
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     ...(config.headers as Record<string, string> | undefined),
   };
 
   const response = await fetch(url, {
-    method: 'POST',
+    method: "POST",
     headers,
     body: JSON.stringify(payload),
   });
@@ -140,59 +140,59 @@ async function sendWebhook(
 async function sendEmail(
   env: Env,
   config: Record<string, unknown>,
-  payload: NotificationPayload
+  payload: NotificationPayload,
 ): Promise<void> {
   const from = config.from as string;
   const to = config.to as string[];
 
-  if (!from) throw new Error('Email from address is required');
+  if (!from) throw new Error("Email from address is required");
   if (!to || !Array.isArray(to) || to.length === 0) {
-    throw new Error('Email to addresses are required');
+    throw new Error("Email to addresses are required");
   }
 
-  const subjectTemplate = (config.subject as string) || 'Vulflare: {eventType}';
-  const subject = subjectTemplate.replace('{eventType}', payload.eventType);
-  const appUrl = env.PAGES_URL ?? '';
+  const subjectTemplate = (config.subject as string) || "Vulflare: {eventType}";
+  const subject = subjectTemplate.replace("{eventType}", payload.eventType);
+  const appUrl = env.PAGES_URL ?? "";
   const htmlBody = generateEmailBody(payload, appUrl);
   const textBody = generateEmailBodyText(payload, appUrl);
 
   try {
-    const { EmailMessage } = await import('cloudflare:email');
+    const { EmailMessage } = await import("cloudflare:email");
 
     for (const recipient of to) {
       // MIMEメッセージを構築（multipart/alternative形式）
-      const messageId = `<${crypto.randomUUID()}@${from.split('@')[1]}>`;
+      const messageId = `<${crypto.randomUUID()}@${from.split("@")[1]}>`;
       const date = new Date().toUTCString();
-      const boundary = `boundary_${crypto.randomUUID().replace(/-/g, '')}`;
+      const boundary = `boundary_${crypto.randomUUID().replace(/-/g, "")}`;
 
       let mimeMessage = `From: ${from}\r\n`;
       mimeMessage += `To: ${recipient}\r\n`;
 
       if (config.cc && Array.isArray(config.cc) && config.cc.length > 0) {
-        mimeMessage += `Cc: ${config.cc.join(', ')}\r\n`;
+        mimeMessage += `Cc: ${config.cc.join(", ")}\r\n`;
       }
 
       mimeMessage += `Subject: ${subject}\r\n`;
       mimeMessage += `Date: ${date}\r\n`;
       mimeMessage += `Message-ID: ${messageId}\r\n`;
-      mimeMessage += `MIME-Version: 1.0\r\n`;
+      mimeMessage += "MIME-Version: 1.0\r\n";
       mimeMessage += `List-Unsubscribe: <mailto:${from}?subject=unsubscribe>\r\n`;
       mimeMessage += `Content-Type: multipart/alternative; boundary="${boundary}"\r\n`;
-      mimeMessage += `\r\n`;
+      mimeMessage += "\r\n";
 
       // プレーンテキストパート
       mimeMessage += `--${boundary}\r\n`;
-      mimeMessage += `Content-Type: text/plain; charset=utf-8\r\n`;
-      mimeMessage += `\r\n`;
+      mimeMessage += "Content-Type: text/plain; charset=utf-8\r\n";
+      mimeMessage += "\r\n";
       mimeMessage += textBody;
-      mimeMessage += `\r\n`;
+      mimeMessage += "\r\n";
 
       // HTMLパート
       mimeMessage += `--${boundary}\r\n`;
-      mimeMessage += `Content-Type: text/html; charset=utf-8\r\n`;
-      mimeMessage += `\r\n`;
+      mimeMessage += "Content-Type: text/html; charset=utf-8\r\n";
+      mimeMessage += "\r\n";
       mimeMessage += htmlBody;
-      mimeMessage += `\r\n`;
+      mimeMessage += "\r\n";
 
       mimeMessage += `--${boundary}--\r\n`;
 
@@ -200,8 +200,10 @@ async function sendEmail(
       await env.SEND_EMAIL.send(message);
     }
   } catch (error) {
-    console.error('Email send error:', error);
-    throw new Error(`Failed to send email: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error("Email send error:", error);
+    throw new Error(
+      `Failed to send email: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
 
@@ -211,94 +213,97 @@ async function sendEmail(
 function generateEmailBodyText(payload: NotificationPayload, appUrl: string): string {
   const { eventType, data, timestamp } = payload;
 
-  if (eventType === 'eol_approaching') {
+  if (eventType === "eol_approaching") {
     return [
-      'EOL期限が近づいています - Vulflare',
-      '',
+      "EOL期限が近づいています - Vulflare",
+      "",
       `${data.display_name} (${data.cycle}) のサポート終了が ${data.days_until_eol}日後 に迫っています。`,
-      '',
+      "",
       `プロダクト: ${data.display_name} (${data.product_name})`,
       `バージョン: ${data.cycle}`,
       `カテゴリ: ${data.category}`,
       ...(data.vendor ? [`ベンダー: ${data.vendor}`] : []),
       `EOL日: ${data.eol_date}`,
-      '',
-      `通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}`,
-    ].join('\n');
+      "",
+      `通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}`,
+    ].join("\n");
   }
 
-  if (eventType === 'vulnerability_created') {
+  if (eventType === "vulnerability_created") {
     const count = data.created_count as number | undefined;
     const criticalCount = data.critical_count as number | undefined;
     const title = data.title as string | undefined;
     const vulnId = data.vuln_id as string | undefined;
     const lines = [
-      '脆弱性が登録されました - Vulflare',
-      '',
+      "脆弱性が登録されました - Vulflare",
+      "",
       count != null
-        ? `新規脆弱性が ${count}件 登録されました。${criticalCount ? `（うちCritical: ${criticalCount}件）` : ''}`
-        : `脆弱性が登録されました: ${vulnId ?? ''} ${title ?? ''}`.trim(),
+        ? `新規脆弱性が ${count}件 登録されました。${criticalCount ? `（うちCritical: ${criticalCount}件）` : ""}`
+        : `脆弱性が登録されました: ${vulnId ?? ""} ${title ?? ""}`.trim(),
     ];
-    if (title) lines.push('', `タイトル: ${title}`);
-    if (appUrl) lines.push('', `脆弱性一覧: ${appUrl}/vulnerabilities`);
-    lines.push('', `通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}`);
-    return lines.join('\n');
+    if (title) lines.push("", `タイトル: ${title}`);
+    if (appUrl) lines.push("", `脆弱性一覧: ${appUrl}/vulnerabilities`);
+    lines.push(
+      "",
+      `通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}`,
+    );
+    return lines.join("\n");
   }
 
-  if (eventType === 'vulnerability_updated') {
+  if (eventType === "vulnerability_updated") {
     const count = data.count as number | undefined;
     const title = data.title as string | undefined;
     const vulnId = data.vuln_id as string | undefined;
     return [
-      '脆弱性が更新されました - Vulflare',
-      '',
+      "脆弱性が更新されました - Vulflare",
+      "",
       count != null
         ? `${count}件の脆弱性が一括更新されました。`
-        : `脆弱性が更新されました: ${vulnId ?? ''} ${title ?? ''}`.trim(),
-      '',
-      `通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}`,
-    ].join('\n');
+        : `脆弱性が更新されました: ${vulnId ?? ""} ${title ?? ""}`.trim(),
+      "",
+      `通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}`,
+    ].join("\n");
   }
 
-  if (eventType === 'vulnerability_critical') {
+  if (eventType === "vulnerability_critical") {
     const criticalCount = data.critical_count as number | undefined;
     const cveIds = data.cve_ids as string[] | undefined;
     const vulnId = data.vuln_id as string | undefined;
     return [
-      'クリティカル脆弱性が検出されました - Vulflare',
-      '',
+      "クリティカル脆弱性が検出されました - Vulflare",
+      "",
       criticalCount != null
-        ? `Critical脆弱性が ${criticalCount}件 検出されました。${cveIds?.length ? `\nCVE: ${cveIds.join(', ')}` : ''}`
-        : `クリティカル脆弱性: ${vulnId ?? ''}`,
-      '',
-      `通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}`,
-    ].join('\n');
+        ? `Critical脆弱性が ${criticalCount}件 検出されました。${cveIds?.length ? `\nCVE: ${cveIds.join(", ")}` : ""}`
+        : `クリティカル脆弱性: ${vulnId ?? ""}`,
+      "",
+      `通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}`,
+    ].join("\n");
   }
 
-  if (eventType === 'eol_expired') {
+  if (eventType === "eol_expired") {
     return [
-      'サポート終了（EOL） - Vulflare',
-      '',
+      "サポート終了（EOL） - Vulflare",
+      "",
       `${data.display_name} (${data.cycle}) のサポートが終了しました。早急な対応が必要です。`,
-      '',
+      "",
       `プロダクト: ${data.display_name} (${data.product_name})`,
       `バージョン: ${data.cycle}`,
       `カテゴリ: ${data.category}`,
       ...(data.vendor ? [`ベンダー: ${data.vendor}`] : []),
       `EOL日: ${data.eol_date}`,
-      '',
-      `通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}`,
-    ].join('\n');
+      "",
+      `通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}`,
+    ].join("\n");
   }
 
   return [
     `Vulflare Notification: ${eventType}`,
-    '',
-    `Timestamp: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}`,
-    '',
-    'Event Data:',
+    "",
+    `Timestamp: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}`,
+    "",
+    "Event Data:",
     JSON.stringify(data, null, 2),
-  ].join('\n');
+  ].join("\n");
 }
 
 /**
@@ -308,18 +313,21 @@ function generateEmailBody(payload: NotificationPayload, appUrl: string): string
   const { eventType, data, timestamp } = payload;
 
   // EOL関連イベントの場合は専用のフォーマットを使用
-  if (eventType === 'eol_approaching') {
+  if (eventType === "eol_approaching") {
     return generateEolApproachingEmail(data, timestamp);
-  } else if (eventType === 'eol_expired') {
+  }
+  if (eventType === "eol_expired") {
     return generateEolExpiredEmail(data, timestamp);
   }
 
   // 脆弱性関連イベント
-  if (eventType === 'vulnerability_created') {
+  if (eventType === "vulnerability_created") {
     return generateVulnerabilityCreatedEmail(data, timestamp, appUrl);
-  } else if (eventType === 'vulnerability_updated') {
+  }
+  if (eventType === "vulnerability_updated") {
     return generateVulnerabilityUpdatedEmail(data, timestamp);
-  } else if (eventType === 'vulnerability_critical') {
+  }
+  if (eventType === "vulnerability_critical") {
     return generateVulnerabilityCriticalEmail(data, timestamp);
   }
 
@@ -346,7 +354,7 @@ function generateEmailBody(payload: NotificationPayload, appUrl: string): string
     </div>
     <div class="content">
       <p><strong>Event Type:</strong> <span class="event-type">${escapeHtml(eventType)}</span></p>
-      <p class="timestamp"><strong>Timestamp:</strong> ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>
+      <p class="timestamp"><strong>Timestamp:</strong> ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}</p>
       <h3>Event Data:</h3>
       <pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>
     </div>
@@ -359,17 +367,22 @@ function generateEmailBody(payload: NotificationPayload, appUrl: string): string
 /**
  * 脆弱性作成メール本文
  */
-function generateVulnerabilityCreatedEmail(data: Record<string, unknown>, timestamp: string, appUrl: string): string {
+function generateVulnerabilityCreatedEmail(
+  data: Record<string, unknown>,
+  timestamp: string,
+  appUrl: string,
+): string {
   const count = data.created_count as number | undefined;
   const criticalCount = data.critical_count as number | undefined;
   const title = data.title as string | undefined;
   const vulnId = data.vuln_id as string | undefined;
   const severity = data.severity as string | undefined;
-  const severityColor = severity === 'critical' ? '#dc2626' : '#1e40af';
+  const severityColor = severity === "critical" ? "#dc2626" : "#1e40af";
 
-  const summary = count != null
-    ? `新規脆弱性が <strong>${count}件</strong> 登録されました。${criticalCount ? `（うちCritical: <strong>${criticalCount}件</strong>）` : ''}`
-    : `脆弱性が登録されました: <strong>${escapeHtml(vulnId)}</strong>`;
+  const summary =
+    count != null
+      ? `新規脆弱性が <strong>${count}件</strong> 登録されました。${criticalCount ? `（うちCritical: <strong>${criticalCount}件</strong>）` : ""}`
+      : `脆弱性が登録されました: <strong>${escapeHtml(vulnId)}</strong>`;
 
   return `
 <!DOCTYPE html>
@@ -391,11 +404,11 @@ function generateVulnerabilityCreatedEmail(data: Record<string, unknown>, timest
     <div class="header"><h1>脆弱性が登録されました</h1></div>
     <div class="content">
       <p>${summary}</p>
-      ${vulnId ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${escapeHtml(vulnId)}</div></div>` : ''}
-      ${title ? `<div class="info-item"><div class="info-label">タイトル</div><div>${escapeHtml(title)}</div></div>` : ''}
-      ${severity ? `<div class="info-item"><div class="info-label">深刻度</div><div>${escapeHtml(severity)}</div></div>` : ''}
-      ${appUrl ? `<a href="${appUrl}/vulnerabilities" class="link-button">脆弱性一覧を確認する</a>` : ''}
-      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>
+      ${vulnId ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${escapeHtml(vulnId)}</div></div>` : ""}
+      ${title ? `<div class="info-item"><div class="info-label">タイトル</div><div>${escapeHtml(title)}</div></div>` : ""}
+      ${severity ? `<div class="info-item"><div class="info-label">深刻度</div><div>${escapeHtml(severity)}</div></div>` : ""}
+      ${appUrl ? `<a href="${appUrl}/vulnerabilities" class="link-button">脆弱性一覧を確認する</a>` : ""}
+      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}</p>
     </div>
   </div>
 </body>
@@ -406,15 +419,19 @@ function generateVulnerabilityCreatedEmail(data: Record<string, unknown>, timest
 /**
  * 脆弱性更新メール本文
  */
-function generateVulnerabilityUpdatedEmail(data: Record<string, unknown>, timestamp: string): string {
+function generateVulnerabilityUpdatedEmail(
+  data: Record<string, unknown>,
+  timestamp: string,
+): string {
   const count = data.count as number | undefined;
   const title = data.title as string | undefined;
   const vulnId = data.vuln_id as string | undefined;
   const status = data.status as string | undefined;
 
-  const summary = count != null
-    ? `<strong>${count}件</strong> の脆弱性が一括更新されました。`
-    : `脆弱性が更新されました: <strong>${escapeHtml(vulnId)}</strong> ${escapeHtml(title)}`;
+  const summary =
+    count != null
+      ? `<strong>${count}件</strong> の脆弱性が一括更新されました。`
+      : `脆弱性が更新されました: <strong>${escapeHtml(vulnId)}</strong> ${escapeHtml(title)}`;
 
   return `
 <!DOCTYPE html>
@@ -435,9 +452,9 @@ function generateVulnerabilityUpdatedEmail(data: Record<string, unknown>, timest
     <div class="header"><h1>脆弱性が更新されました</h1></div>
     <div class="content">
       <p>${summary}</p>
-      ${vulnId ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${escapeHtml(vulnId)}</div></div>` : ''}
-      ${status ? `<div class="info-item"><div class="info-label">ステータス</div><div>${escapeHtml(status)}</div></div>` : ''}
-      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>
+      ${vulnId ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${escapeHtml(vulnId)}</div></div>` : ""}
+      ${status ? `<div class="info-item"><div class="info-label">ステータス</div><div>${escapeHtml(status)}</div></div>` : ""}
+      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}</p>
     </div>
   </div>
 </body>
@@ -448,15 +465,19 @@ function generateVulnerabilityUpdatedEmail(data: Record<string, unknown>, timest
 /**
  * クリティカル脆弱性メール本文
  */
-function generateVulnerabilityCriticalEmail(data: Record<string, unknown>, timestamp: string): string {
+function generateVulnerabilityCriticalEmail(
+  data: Record<string, unknown>,
+  timestamp: string,
+): string {
   const criticalCount = data.critical_count as number | undefined;
   const cveIds = data.cve_ids as string[] | undefined;
   const vulnId = data.vuln_id as string | undefined;
   const title = data.title as string | undefined;
 
-  const summary = criticalCount != null
-    ? `Critical脆弱性が <strong>${criticalCount}件</strong> 検出されました。`
-    : `クリティカル脆弱性が検出されました: <strong>${escapeHtml(vulnId)}</strong> ${escapeHtml(title)}`;
+  const summary =
+    criticalCount != null
+      ? `Critical脆弱性が <strong>${criticalCount}件</strong> 検出されました。`
+      : `クリティカル脆弱性が検出されました: <strong>${escapeHtml(vulnId)}</strong> ${escapeHtml(title)}`;
 
   return `
 <!DOCTYPE html>
@@ -478,9 +499,9 @@ function generateVulnerabilityCriticalEmail(data: Record<string, unknown>, times
     <div class="header"><h1>クリティカル脆弱性が検出されました</h1></div>
     <div class="content">
       <div class="alert">${summary}</div>
-      ${cveIds?.length ? `<div class="info-item"><div class="info-label">CVE ID一覧</div><div>${cveIds.map(escapeHtml).join(', ')}</div></div>` : ''}
-      ${vulnId && !cveIds?.length ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${escapeHtml(vulnId)}</div></div>` : ''}
-      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>
+      ${cveIds?.length ? `<div class="info-item"><div class="info-label">CVE ID一覧</div><div>${cveIds.map(escapeHtml).join(", ")}</div></div>` : ""}
+      ${vulnId && !cveIds?.length ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${escapeHtml(vulnId)}</div></div>` : ""}
+      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}</p>
     </div>
   </div>
 </body>
@@ -493,7 +514,8 @@ function generateVulnerabilityCriticalEmail(data: Record<string, unknown>, times
  */
 function generateEolApproachingEmail(data: Record<string, unknown>, timestamp: string): string {
   const severity = data.severity as string;
-  const severityColor = severity === 'critical' ? '#dc2626' : severity === 'high' ? '#ea580c' : '#f59e0b';
+  const severityColor =
+    severity === "critical" ? "#dc2626" : severity === "high" ? "#ea580c" : "#f59e0b";
 
   return `
 <!DOCTYPE html>
@@ -535,12 +557,16 @@ function generateEolApproachingEmail(data: Record<string, unknown>, timestamp: s
           <div class="info-label">カテゴリ</div>
           <div class="info-value">${escapeHtml(data.category)}</div>
         </div>
-        ${data.vendor ? `
+        ${
+          data.vendor
+            ? `
         <div class="info-item">
           <div class="info-label">ベンダー</div>
           <div class="info-value">${escapeHtml(data.vendor)}</div>
         </div>
-        ` : ''}
+        `
+            : ""
+        }
         <div class="info-item">
           <div class="info-label">EOL日</div>
           <div class="info-value">${escapeHtml(data.eol_date)}</div>
@@ -548,7 +574,7 @@ function generateEolApproachingEmail(data: Record<string, unknown>, timestamp: s
       </div>
 
       <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">
-        通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}
+        通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}
       </p>
     </div>
   </div>
@@ -601,12 +627,16 @@ function generateEolExpiredEmail(data: Record<string, unknown>, timestamp: strin
           <div class="info-label">カテゴリ</div>
           <div class="info-value">${escapeHtml(data.category)}</div>
         </div>
-        ${data.vendor ? `
+        ${
+          data.vendor
+            ? `
         <div class="info-item">
           <div class="info-label">ベンダー</div>
           <div class="info-value">${escapeHtml(data.vendor)}</div>
         </div>
-        ` : ''}
+        `
+            : ""
+        }
         <div class="info-item">
           <div class="info-label">EOL日</div>
           <div class="info-value">${escapeHtml(data.eol_date)}</div>
@@ -614,7 +644,7 @@ function generateEolExpiredEmail(data: Record<string, unknown>, timestamp: strin
       </div>
 
       <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">
-        通知日時: ${new Date(timestamp).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}
+        通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}
       </p>
     </div>
   </div>
@@ -628,24 +658,24 @@ function generateEolExpiredEmail(data: Record<string, unknown>, timestamp: strin
  */
 export async function sendTestNotification(
   env: Env,
-  channel: { id: string; type: string; config: string }
+  channel: { id: string; type: string; config: string },
 ): Promise<void> {
   const testPayload: NotificationPayload = {
-    eventType: 'vulnerability_created',
+    eventType: "vulnerability_created",
     data: {
       test: true,
-      vuln_id: 'CVE-2024-00000',
-      title: 'これはテスト通知です（Vulflare）',
-      severity: 'high',
+      vuln_id: "CVE-2024-00000",
+      title: "これはテスト通知です（Vulflare）",
+      severity: "high",
     },
     timestamp: new Date().toISOString(),
   };
 
   const config = JSON.parse(channel.config) as Record<string, unknown>;
 
-  if (channel.type === 'webhook') {
+  if (channel.type === "webhook") {
     await sendWebhook(config, testPayload);
-  } else if (channel.type === 'email') {
+  } else if (channel.type === "email") {
     await sendEmail(env, config, testPayload);
   }
 }

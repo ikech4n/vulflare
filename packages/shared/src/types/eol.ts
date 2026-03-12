@@ -1,18 +1,18 @@
 // EOL管理関連の型定義
 
 export type EolCategory =
-  | 'os'
-  | 'programming_language'
-  | 'runtime'
-  | 'middleware'
-  | 'framework'
-  | 'library'
-  | 'cloud_service'
-  | 'hardware';
+  | "os"
+  | "programming_language"
+  | "runtime"
+  | "middleware"
+  | "framework"
+  | "library"
+  | "cloud_service"
+  | "hardware";
 
-export type EolSource = 'endoflife_date' | 'manual';
+export type EolSource = "endoflife_date" | "manual";
 
-export type EolSyncStatus = 'running' | 'completed' | 'failed';
+export type EolSyncStatus = "running" | "completed" | "failed";
 
 export interface EolProduct {
   id: string;

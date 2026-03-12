@@ -12,9 +12,13 @@
     "type-check": "pnpm run -r type-check",
     "test": "pnpm run -r test",
     "test:worker": "pnpm --filter @vulflare/worker test",
-    "test:web": "pnpm --filter @vulflare/web test"
+    "test:web": "pnpm --filter @vulflare/web test",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format:check": "biome format --check ."
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "wrangler": "^4.0.0",
     "typescript": "^5.7.0"
   },

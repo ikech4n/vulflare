@@ -1,7 +1,7 @@
-import { type ReactNode, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/store/authStore.ts';
-import { api } from '@/lib/api.ts';
+import { api } from "@/lib/api.ts";
+import { useAuthStore } from "@/store/authStore.ts";
+import { type ReactNode, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, accessToken, login } = useAuthStore();
@@ -10,14 +10,22 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user || !accessToken) {
       // user はあるが accessToken がない（リロード後）か、未ログインの場合にリフレッシュを試みる
-      api.post<{ accessToken: string }>('/auth/refresh')
+      api
+        .post<{ accessToken: string }>("/auth/refresh")
         .then(({ data }) => {
-          return api.get<{ id: string; email: string; username: string; role: 'admin' | 'editor' | 'viewer' }>('/auth/me').then(({ data: me }) => {
-            login(data.accessToken, me);
-          });
+          return api
+            .get<{
+              id: string;
+              email: string;
+              username: string;
+              role: "admin" | "editor" | "viewer";
+            }>("/auth/me")
+            .then(({ data: me }) => {
+              login(data.accessToken, me);
+            });
         })
         .catch(() => {
-          void navigate('/login');
+          void navigate("/login");
         });
     }
   }, [user, accessToken, navigate, login]);
