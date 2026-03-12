@@ -147,12 +147,12 @@ export function VulnerabilitiesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">脆弱性一覧</h1>
         {!isViewer && (
           <Link
             to="/vulnerabilities/new"
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors self-start sm:self-auto"
           >
             <Plus size={16} />
             脆弱性を追加
@@ -308,6 +308,7 @@ export function VulnerabilitiesPage() {
 
       {/* Table */}
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
         {isLoading ? (
           <div className="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">読み込み中...</div>
         ) : (data?.data.length ?? 0) === 0 ? (
@@ -374,11 +375,12 @@ export function VulnerabilitiesPage() {
             </tbody>
           </table>
         )}
+        </div>
       </div>
 
       {/* Pagination */}
       {data && data.totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-sm">
           <span className="text-gray-500 dark:text-gray-400">
             全{data.total}件 / {data.page} / {data.totalPages}ページ
           </span>

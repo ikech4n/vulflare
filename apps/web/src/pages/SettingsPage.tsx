@@ -212,7 +212,7 @@ export function SettingsPage() {
           ユーザーを追加
         </h2>
         <form onSubmit={handleAddUser} className="space-y-3" autoComplete="off">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">ユーザー名</label>
               <input

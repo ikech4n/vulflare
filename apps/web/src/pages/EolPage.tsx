@@ -67,7 +67,7 @@ export function EolPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">EOL 管理</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">ソフトウェア・ハードウェアの EOL（サポート終了）を管理します</p>
@@ -75,7 +75,7 @@ export function EolPage() {
         {!isViewer && (
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
             プロダクト追加
@@ -139,11 +139,11 @@ export function EolPage() {
 
       {/* カテゴリフィルタ */}
       <div className="flex items-center gap-2">
-        <label className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">カテゴリ:</label>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-200 whitespace-nowrap">カテゴリ:</label>
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value as EolCategory | '')}
-          className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-gray-200"
+          className="min-w-0 flex-1 sm:flex-none px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-gray-200"
         >
           <option value="">すべて</option>
           {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
@@ -172,6 +172,7 @@ export function EolPage() {
           ) : products.length === 0 ? (
             <p className="text-center text-gray-500 dark:text-gray-400">プロダクトがありません</p>
           ) : (
+            <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead>
                 <tr>
@@ -194,7 +195,7 @@ export function EolPage() {
                       </Link>
                     </td>
                     <td className="px-4 py-4">
-                      <span className="px-2 py-1 text-xs font-semibold rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                      <span className="px-2 py-1 text-xs font-semibold rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 whitespace-nowrap">
                         {CATEGORY_LABELS[product.category]}
                       </span>
                     </td>
@@ -213,6 +214,7 @@ export function EolPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>
