@@ -807,7 +807,7 @@ export function NotificationsPage() {
                         <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                           {channel?.name || "Unknown"}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
                           {EVENT_LABELS[rule.event_type]}
                         </td>
                         <td className="px-6 py-4">
