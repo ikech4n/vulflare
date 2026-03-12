@@ -13,6 +13,7 @@ import {
   Database,
   ChevronDown,
   ChevronRight,
+  X,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore.ts';
 import { api } from '@/lib/api.ts';
@@ -52,7 +53,12 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white'
   }`;
 
-export function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   const { user, logout } = useAuthStore();
   const location = useLocation();
   const isAdmin = user?.role === 'admin';
@@ -84,6 +90,11 @@ export function Sidebar() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
+  useEffect(() => {
+    if (onClose) onClose();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
   const toggleGroup = (label: string) => {
     setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
   };
@@ -98,12 +109,30 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-56 h-screen sticky top-0 bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-zinc-800 flex flex-col">
-      <div className="p-4 border-b border-gray-200 dark:border-zinc-800">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          <span className="text-orange-500">V</span>ulflare
-        </h1>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">脆弱性管理プラットフォーム</p>
+    <>
+      {/* モバイルバックドロップ */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={onClose}
+        />
+      )}
+      <aside className={`w-56 h-dvh fixed top-0 left-0 z-40 bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-zinc-800 flex flex-col transition-transform duration-200 md:sticky md:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className="p-4 border-b border-gray-200 dark:border-zinc-800 flex items-center justify-between">
+        <div>
+          <NavLink to="/">
+            <img src="/logo_light.webp" alt="Vulflare" className="h-8 block dark:hidden" />
+            <img src="/logo.webp" alt="Vulflare" className="h-8 hidden dark:block" />
+          </NavLink>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">脆弱性管理プラットフォーム</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="md:hidden p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white"
+          aria-label="メニューを閉じる"
+        >
+          <X size={20} />
+        </button>
       </div>
 
       <nav className="flex-1 overflow-y-auto p-3 space-y-1">
@@ -179,5 +208,6 @@ export function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }
