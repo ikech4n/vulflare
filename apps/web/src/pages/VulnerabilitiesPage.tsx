@@ -406,6 +406,7 @@ export function VulnerabilitiesPage() {
                       <td className="px-4 py-3">
                         <Link
                           to={`/vulnerabilities/${vuln.id}`}
+                          state={{ search: searchParams.toString() }}
                           className="font-medium text-blue-600 hover:underline block"
                         >
                           {vuln.cveId ?? "—"}
