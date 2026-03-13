@@ -127,7 +127,7 @@ authRoutes.post("/login", rateLimitPresets.login, validate(loginSchema), async (
 
   return c.json({
     accessToken,
-    user: { id: user.id, username: user.username, role: user.role },
+    user: { id: user.id, username: user.username, displayName: user.display_name ?? null, role: user.role },
   });
 });
 
@@ -183,6 +183,7 @@ authRoutes.get("/me", authMiddleware, async (c) => {
   return c.json({
     id: user.id,
     username: user.username,
+    displayName: user.display_name ?? null,
     role: user.role,
     theme: user.theme,
     createdAt: user.created_at,
@@ -190,12 +191,13 @@ authRoutes.get("/me", authMiddleware, async (c) => {
 });
 
 authRoutes.patch("/me", authMiddleware, validate(updateMeSchema), async (c) => {
-  const body = c.get("validatedBody") as { theme?: string };
+  const body = c.get("validatedBody") as { theme?: string; displayName?: string | null };
   const userId = c.get("userId");
   const user = await userRepo.findById(c.env.DB, userId);
   if (!user) return c.json({ error: "User not found" }, 404);
-  const updates: { theme?: string } = {};
+  const updates: { theme?: string; display_name?: string | null } = {};
   if (body.theme !== undefined) updates.theme = body.theme;
+  if (body.displayName !== undefined) updates.display_name = body.displayName;
   await userRepo.updateProfile(c.env.DB, userId, updates);
   return c.json({ message: "Updated" });
 });

@@ -17,6 +17,7 @@ userRoutes.get("/", authMiddleware, requireRole("admin"), async (c) => {
     result.results.map((u) => ({
       id: u.id,
       username: u.username,
+      displayName: u.display_name ?? null,
       role: u.role,
       isActive: u.is_active === 1,
       lockedAt: u.locked_at ?? null,

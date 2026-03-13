@@ -174,7 +174,7 @@ vulnerabilityRoutes.post(
       id: crypto.randomUUID(),
       vulnerability_id: id,
       user_id: userId,
-      user_name: user?.username ?? null,
+      user_name: user?.display_name ?? user?.username ?? null,
       action: "created",
       changes: null,
     });
@@ -243,7 +243,7 @@ vulnerabilityRoutes.patch(
       id: crypto.randomUUID(),
       vulnerability_id: body.ids[0]!, // individual below
       user_id: userId,
-      user_name: user?.username ?? null,
+      user_name: user?.display_name ?? user?.username ?? null,
       action: "updated" as const,
       changes: Object.fromEntries(
         Object.entries(body.updates).map(([k, v]) => [k, { old: null, new: v }]),
@@ -256,7 +256,7 @@ vulnerabilityRoutes.patch(
         id: crypto.randomUUID(),
         vulnerability_id: vid,
         user_id: userId,
-        user_name: user?.username ?? null,
+        user_name: user?.display_name ?? user?.username ?? null,
         action: "updated",
         changes: Object.fromEntries(
           Object.entries(body.updates).map(([k, v]) => [k, { old: null, new: v }]),
@@ -370,7 +370,7 @@ vulnerabilityRoutes.patch(
         id: crypto.randomUUID(),
         vulnerability_id: id,
         user_id: userId,
-        user_name: user?.username ?? null,
+        user_name: user?.display_name ?? user?.username ?? null,
         action: "updated",
         changes,
       });
@@ -405,7 +405,7 @@ vulnerabilityRoutes.delete("/:id", requireRole("admin"), async (c) => {
     id: crypto.randomUUID(),
     vulnerability_id: id,
     user_id: userId,
-    user_name: user?.username ?? null,
+    user_name: user?.display_name ?? user?.username ?? null,
     action: "deleted",
     changes: null,
   });

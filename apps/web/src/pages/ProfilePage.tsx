@@ -3,7 +3,7 @@ import { useAuthStore } from "@/store/authStore.ts";
 import { type Theme, useThemeStore } from "@/store/themeStore.ts";
 import { useMutation } from "@tanstack/react-query";
 import { Monitor, Moon, Sun } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 
 const ROLE_LABELS: Record<string, string> = {
   admin: "管理者",
@@ -18,8 +18,31 @@ const THEME_OPTIONS: { value: Theme; icon: typeof Sun; label: string }[] = [
 ];
 
 export function ProfilePage() {
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const { theme, setTheme } = useThemeStore();
+
+  const [displayName, setDisplayName] = useState(user?.displayName ?? "");
+  const [displayNameSuccess, setDisplayNameSuccess] = useState(false);
+
+  useEffect(() => {
+    setDisplayName(user?.displayName ?? "");
+  }, [user?.displayName]);
+
+  const updateDisplayNameMutation = useMutation({
+    mutationFn: (body: { displayName: string | null }) => api.patch("/auth/me", body),
+    onSuccess: () => {
+      setDisplayNameSuccess(true);
+      if (user) {
+        setUser({ ...user, displayName: displayName.trim() || null });
+      }
+    },
+  });
+
+  const handleDisplayNameSave = (e: FormEvent) => {
+    e.preventDefault();
+    setDisplayNameSuccess(false);
+    updateDisplayNameMutation.mutate({ displayName: displayName.trim() || null });
+  };
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -66,8 +89,14 @@ export function ProfilePage() {
         </h2>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-gray-500 dark:text-gray-400">ユーザー名</span>
+            <span className="text-gray-500 dark:text-gray-400">ログインID</span>
             <span className="text-gray-900 dark:text-gray-100">{user?.username}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-500 dark:text-gray-400">表示名</span>
+            <span className="text-gray-900 dark:text-gray-100">
+              {user?.displayName || <span className="text-gray-400 dark:text-gray-500">未設定</span>}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500 dark:text-gray-400">ロール</span>
@@ -76,6 +105,40 @@ export function ProfilePage() {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Display name */}
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">表示名</h2>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+          担当者欄や変更履歴で表示される名前です。未設定の場合はログインIDが使われます。
+        </p>
+        <form onSubmit={handleDisplayNameSave} className="flex gap-2">
+          <input
+            type="text"
+            value={displayName}
+            onChange={(e) => {
+              setDisplayName(e.target.value);
+              setDisplayNameSuccess(false);
+            }}
+            maxLength={100}
+            placeholder={user?.username}
+            className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+          />
+          <button
+            type="submit"
+            disabled={updateDisplayNameMutation.isPending}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
+          >
+            {updateDisplayNameMutation.isPending ? "保存中..." : "保存"}
+          </button>
+        </form>
+        {displayNameSuccess && (
+          <p className="text-sm text-green-600 mt-2">表示名を更新しました</p>
+        )}
+        {updateDisplayNameMutation.isError && (
+          <p className="text-sm text-red-600 mt-2">更新に失敗しました</p>
+        )}
       </div>
 
       {/* Theme */}

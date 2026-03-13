@@ -7,6 +7,7 @@ type DB = Env["DB"];
 export interface DbUser {
   id: string;
   username: string;
+  display_name: string | null;
   password_hash: string;
   role: string;
   is_active: number;
@@ -29,16 +30,17 @@ export const userRepo = {
     db: DB,
     user: Omit<
       DbUser,
-      "created_at" | "updated_at" | "failed_login_attempts" | "locked_at" | "email" | "theme"
-    > & { email?: string | null },
+      "created_at" | "updated_at" | "failed_login_attempts" | "locked_at" | "email" | "theme" | "display_name"
+    > & { email?: string | null; display_name?: string | null },
   ) {
     return db
       .prepare(
-        "INSERT INTO users (id, username, password_hash, role, is_active, email) VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO users (id, username, display_name, password_hash, role, is_active, email) VALUES (?, ?, ?, ?, ?, ?, ?)",
       )
       .bind(
         user.id,
         user.username,
+        user.display_name ?? null,
         user.password_hash,
         user.role,
         user.is_active,
@@ -49,7 +51,7 @@ export const userRepo = {
   list(db: DB) {
     return db
       .prepare(
-        "SELECT id, username, role, is_active, failed_login_attempts, locked_at, email, created_at FROM users ORDER BY created_at ASC",
+        "SELECT id, username, display_name, role, is_active, failed_login_attempts, locked_at, email, created_at FROM users ORDER BY created_at ASC",
       )
       .all<Omit<DbUser, "password_hash" | "updated_at">>();
   },
@@ -80,7 +82,7 @@ export const userRepo = {
   updateProfile(
     db: DB,
     id: string,
-    fields: { username?: string; email?: string | null; theme?: string },
+    fields: { username?: string; email?: string | null; theme?: string; display_name?: string | null },
   ) {
     const sets: string[] = ["updated_at = datetime('now')"];
     const params: unknown[] = [];
@@ -95,6 +97,10 @@ export const userRepo = {
     if (fields.theme !== undefined) {
       sets.push("theme = ?");
       params.push(fields.theme);
+    }
+    if (fields.display_name !== undefined) {
+      sets.push("display_name = ?");
+      params.push(fields.display_name);
     }
     params.push(id);
     return db
@@ -319,7 +325,7 @@ export const vulnRepo = {
       .bind(...params);
     const dataStmt = db
       .prepare(
-        `SELECT v.*, u.username AS assignee_username
+        `SELECT v.*, COALESCE(u.display_name, u.username) AS assignee_username
          FROM vulnerabilities v
          LEFT JOIN users u ON v.assignee_id = u.id
          ${where}
@@ -333,7 +339,7 @@ export const vulnRepo = {
   findById(db: DB, id: string) {
     return db
       .prepare(
-        `SELECT v.*, u.username AS assignee_username
+        `SELECT v.*, COALESCE(u.display_name, u.username) AS assignee_username
          FROM vulnerabilities v
          LEFT JOIN users u ON v.assignee_id = u.id
          WHERE v.id = ?`,

@@ -125,6 +125,7 @@ export const resetPasswordSchema = z.object({
 
 export const updateMeSchema = z.object({
   theme: z.enum(["light", "dark", "system"]).optional(),
+  displayName: z.string().max(100, "Display name too long").nullable().optional(),
 });
 
 // ========================================

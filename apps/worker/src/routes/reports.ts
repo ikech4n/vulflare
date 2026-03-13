@@ -164,7 +164,7 @@ reportRoutes.post("/vulnerabilities/csv/import", requireRole("editor"), async (c
             id: crypto.randomUUID(),
             vulnerability_id: existing.id,
             user_id: userId,
-            user_name: user?.username ?? null,
+            user_name: user?.display_name ?? user?.username ?? null,
             action: "imported",
             changes: null,
           });
@@ -202,7 +202,7 @@ reportRoutes.post("/vulnerabilities/csv/import", requireRole("editor"), async (c
         id: crypto.randomUUID(),
         vulnerability_id: newId,
         user_id: userId,
-        user_name: user?.username ?? null,
+        user_name: user?.display_name ?? user?.username ?? null,
         action: "imported",
         changes: null,
       });

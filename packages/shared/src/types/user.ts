@@ -5,6 +5,7 @@ export type Theme = "light" | "dark" | "system";
 export interface MeResponse {
   id: string;
   username: string;
+  displayName: string | null;
   role: UserRole;
   theme: Theme;
   createdAt: string;
@@ -13,6 +14,7 @@ export interface MeResponse {
 export interface User {
   id: string;
   username: string;
+  displayName?: string | null;
   role: UserRole;
   isActive: boolean;
   createdAt: string;
