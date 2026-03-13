@@ -1,6 +1,6 @@
 import { Menu } from "lucide-react";
 import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { NavLink, Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar.tsx";
 
 export function DashboardLayout() {
@@ -18,9 +18,10 @@ export function DashboardLayout() {
         >
           <Menu size={24} />
         </button>
-        <span className="text-xl font-bold text-gray-900 dark:text-white">
-          <span className="text-orange-500">V</span>ulflare
-        </span>
+        <NavLink to="/">
+          <img src="/logo_light.webp" alt="Vulflare" className="h-8 block dark:hidden" />
+          <img src="/logo.webp" alt="Vulflare" className="h-8 hidden dark:block" />
+        </NavLink>
       </header>
 
       <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />

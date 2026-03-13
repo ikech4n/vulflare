@@ -23,7 +23,6 @@ vulnerabilityRoutes.get("/", async (c) => {
   const status = c.req.query("status");
   const source = c.req.query("source");
   const q = c.req.query("q");
-  const assignee = c.req.query("assignee");
 
   const { countStmt, dataStmt } = vulnRepo.list(c.env.DB, {
     page,
@@ -32,7 +31,6 @@ vulnerabilityRoutes.get("/", async (c) => {
     ...(status && { status }),
     ...(source && { source }),
     ...(q && { q }),
-    ...(assignee && { assignee }),
   });
   const [countResult, dataResult] = await c.env.DB.batch([countStmt, dataStmt]);
 
@@ -120,18 +118,11 @@ vulnerabilityRoutes.post(
       references?: unknown[];
       publishedAt?: string;
       modifiedAt?: string;
-      assigneeId?: string;
-      dueDate?: string;
     };
 
     if (body.cveId) {
       const existing = await vulnRepo.findByCveId(c.env.DB, body.cveId);
       if (existing) return c.json({ error: "CVE ID already exists" }, 409);
-    }
-
-    if (body.assigneeId) {
-      const assignee = await userRepo.findById(c.env.DB, body.assigneeId);
-      if (!assignee) return c.json({ error: "Assignee not found" }, 400);
     }
 
     const severity =
@@ -163,8 +154,6 @@ vulnerabilityRoutes.post(
       source: "manual",
       status: "new",
       memo: null,
-      assignee_id: body.assigneeId ?? null,
-      due_date: body.dueDate ?? null,
     });
 
     const userId = c.get("userId");
@@ -266,14 +255,6 @@ vulnerabilityRoutes.patch(
     await Promise.all(historyPromises);
     void historyEntries; // suppress unused warning
 
-    c.executionCtx.waitUntil(
-      dispatchNotification(c.env, "vulnerability_updated", {
-        count: affectedRows,
-        ids: body.ids,
-        updates: body.updates,
-      }),
-    );
-
     return c.json({
       message: "Batch update successful",
       affectedRows,
@@ -306,14 +287,7 @@ vulnerabilityRoutes.patch(
       publishedAt?: string | null;
       modifiedAt?: string | null;
       memo?: string | null;
-      assigneeId?: string | null;
-      dueDate?: string | null;
     };
-
-    if (body.assigneeId !== undefined && body.assigneeId !== null) {
-      const assignee = await userRepo.findById(c.env.DB, body.assigneeId);
-      if (!assignee) return c.json({ error: "Assignee not found" }, 400);
-    }
 
     // 変更差分を計算
     const fieldMap: Record<string, { dbField: string; oldVal: unknown }> = {
@@ -326,8 +300,6 @@ vulnerabilityRoutes.patch(
       cvssV4Score: { dbField: "cvss_v4_score", oldVal: existing.cvss_v4_score },
       cvssV4Vector: { dbField: "cvss_v4_vector", oldVal: existing.cvss_v4_vector },
       memo: { dbField: "memo", oldVal: existing.memo },
-      assigneeId: { dbField: "assignee_id", oldVal: existing.assignee_id },
-      dueDate: { dbField: "due_date", oldVal: existing.due_date },
     };
 
     const changes: Record<string, { old: unknown; new: unknown }> = {};
@@ -358,8 +330,6 @@ vulnerabilityRoutes.patch(
       ...(body.publishedAt !== undefined && { published_at: body.publishedAt }),
       ...(body.modifiedAt !== undefined && { modified_at: body.modifiedAt }),
       ...(body.memo !== undefined && { memo: body.memo }),
-      ...(body.assigneeId !== undefined && { assignee_id: body.assigneeId }),
-      ...(body.dueDate !== undefined && { due_date: body.dueDate }),
     });
 
     const userId = c.get("userId");
@@ -378,15 +348,6 @@ vulnerabilityRoutes.patch(
 
     const updated = await vulnRepo.findById(c.env.DB, id);
     const mappedUpdated = mapVuln((updated ?? {}) as unknown as Record<string, unknown>);
-
-    c.executionCtx.waitUntil(
-      dispatchNotification(c.env, "vulnerability_updated", {
-        vuln_id: mappedUpdated.cveId ?? id,
-        title: mappedUpdated.title,
-        severity: mappedUpdated.severity,
-        status: mappedUpdated.status,
-      }),
-    );
 
     return c.json(mappedUpdated);
   },
@@ -435,9 +396,6 @@ function mapVuln(v: Record<string, unknown>) {
     source: v.source,
     status: v.status,
     memo: v.memo ?? null,
-    assigneeId: v.assignee_id ?? null,
-    assigneeUsername: v.assignee_username ?? null,
-    dueDate: v.due_date ?? null,
     createdAt: v.created_at,
     updatedAt: v.updated_at,
   };

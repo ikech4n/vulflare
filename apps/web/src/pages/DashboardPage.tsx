@@ -1,7 +1,7 @@
 import { api } from "@/lib/api.ts";
 import { useQuery } from "@tanstack/react-query";
 import type { EolStats, EolTimelineItem, VulnerabilityStats } from "@vulflare/shared/types";
-import { AlertTriangle, CheckCircle2, Clock, ShieldAlert } from "lucide-react";
+import { CheckCircle2, Clock, Flame, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   Bar,
@@ -71,13 +71,13 @@ export function DashboardPage() {
       {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          icon={<ShieldAlert className="text-red-500" size={20} />}
+          icon={<Shield className="text-blue-500" size={20} />}
           label="脆弱性の総数"
           value={stats.total}
           href="/vulnerabilities"
         />
         <StatCard
-          icon={<AlertTriangle className="text-orange-500" size={20} />}
+          icon={<Flame className="text-red-500" size={20} />}
           label="Critical / High"
           value={(stats.bySeverity.critical ?? 0) + (stats.bySeverity.high ?? 0)}
           href="/vulnerabilities?severity=critical,high"

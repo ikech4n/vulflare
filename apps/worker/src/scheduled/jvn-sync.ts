@@ -179,18 +179,18 @@ async function fetchAndUpsertJvn(
   seenIds: Set<string>,
   excludeKeywords: string[],
   cvssMinScore: number,
-): Promise<{ fetched: number; created: number; cancelled: boolean }> {
+): Promise<{ fetched: number; changed: number; cancelled: boolean }> {
   let startItem = 1;
   let totalResults = Number.POSITIVE_INFINITY;
   let totalFetched = 0;
-  let totalCreated = 0;
+  let totalChanged = 0;
 
   while (startItem <= totalResults) {
     // キャンセルフラグを確認
     const cancelFlag = await env.VULFLARE_KV_CACHE.get("jvn:cancel_requested");
     if (cancelFlag) {
       await env.VULFLARE_KV_CACHE.delete("jvn:cancel_requested");
-      return { fetched: totalFetched, created: totalCreated, cancelled: true };
+      return { fetched: totalFetched, changed: totalChanged, cancelled: true };
     }
 
     const params = new URLSearchParams(baseParams);
@@ -233,7 +233,7 @@ async function fetchAndUpsertJvn(
       const stmts = newEntries.map((entry) => buildUpsertStmt(env.DB, entry));
       for (let i = 0; i < stmts.length; i += 50) {
         const results = await env.DB.batch(stmts.slice(i, i + 50));
-        totalCreated += results.filter((r) => (r.meta.changes ?? 0) > 0).length;
+        totalChanged += results.filter((r) => (r.meta.changes ?? 0) > 0).length;
       }
     }
 
@@ -245,7 +245,7 @@ async function fetchAndUpsertJvn(
     await new Promise((r) => setTimeout(r, 1000));
   }
 
-  return { fetched: totalFetched, created: totalCreated, cancelled: false };
+  return { fetched: totalFetched, changed: totalChanged, cancelled: false };
 }
 
 /**
@@ -333,8 +333,10 @@ export async function handleJvnSync(env: Env, forceFullSync = false): Promise<vo
     .run();
 
   let totalFetched = 0;
-  let totalCreated = 0;
+  let totalChanged = 0;
   const now = new Date();
+  // sync開始時刻（UTC）: 新規作成と更新の区別に使用
+  const syncStartUtcStr = now.toISOString();
   // JSTに変換 (UTC+9) - ログ表示とKV保存用
   const jstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
   const nowStr = jstNow.toISOString();
@@ -420,7 +422,7 @@ export async function handleJvnSync(env: Env, forceFullSync = false): Promise<vo
             settings.cvssMinScore,
           );
           totalFetched += result.fetched;
-          totalCreated += result.created;
+          totalChanged += result.changed;
           if (result.cancelled) {
             cancelled = true;
           }
@@ -439,7 +441,7 @@ export async function handleJvnSync(env: Env, forceFullSync = false): Promise<vo
             settings.cvssMinScore,
           );
           totalFetched += result.fetched;
-          totalCreated += result.created;
+          totalChanged += result.changed;
           if (result.cancelled) {
             cancelled = true;
           }
@@ -467,7 +469,7 @@ export async function handleJvnSync(env: Env, forceFullSync = false): Promise<vo
           settings.cvssMinScore,
         );
         totalFetched += result.fetched;
-        totalCreated += result.created;
+        totalChanged += result.changed;
         if (result.cancelled) {
           cancelled = true;
           break;
@@ -503,40 +505,62 @@ export async function handleJvnSync(env: Env, forceFullSync = false): Promise<vo
       await updateVendorsAndProducts(env);
     }
 
+    // 新規作成数をUTC基準でクエリ（created_atはdatetime('now')=UTC）
+    const newlyCreatedRow = await env.DB.prepare(`
+      SELECT COUNT(*) as total FROM vulnerabilities
+      WHERE source = 'jvn' AND created_at >= ?
+    `)
+      .bind(syncStartUtcStr)
+      .first<{ total: number }>();
+    const totalNewlyCreated = newlyCreatedRow?.total ?? 0;
+    const totalUpdated = totalChanged - totalNewlyCreated;
+
     await env.DB.prepare(
       `UPDATE jvn_sync_logs SET status=?, completed_at=datetime('now', '+9 hours'),
        total_fetched=?, total_created=? WHERE id=?`,
     )
-      .bind(cancelled ? "cancelled" : "completed", totalFetched, totalCreated, syncLogId)
+      .bind(cancelled ? "cancelled" : "completed", totalFetched, totalChanged, syncLogId)
       .run();
 
-    console.log(`JVN sync done: fetched=${totalFetched}, created=${totalCreated}`);
+    console.log(
+      `JVN sync done: fetched=${totalFetched}, created=${totalNewlyCreated}, updated=${totalUpdated}`,
+    );
 
-    // 新規作成された脆弱性がある場合は通知を発火
-    if (!cancelled && totalCreated > 0) {
-      // 同期開始時刻以降に作成されたCritical脆弱性を集計
-      const criticalRows = await env.DB.prepare(`
-        SELECT cve_id FROM vulnerabilities
-        WHERE source = 'jvn' AND severity = 'critical'
-          AND created_at >= ?
-      `)
-        .bind(nowStr)
-        .all<{ cve_id: string }>();
+    if (!cancelled) {
+      // 新規作成された脆弱性がある場合は通知
+      if (totalNewlyCreated > 0) {
+        // 同期開始時刻以降に作成されたCritical脆弱性を集計（UTC基準）
+        const criticalRows = await env.DB.prepare(`
+          SELECT cve_id FROM vulnerabilities
+          WHERE source = 'jvn' AND severity = 'critical'
+            AND created_at >= ?
+        `)
+          .bind(syncStartUtcStr)
+          .all<{ cve_id: string }>();
 
-      const criticalCount = criticalRows.results.length;
-      const criticalCveIds = criticalRows.results.map((r) => r.cve_id);
+        const criticalCount = criticalRows.results.length;
+        const criticalCveIds = criticalRows.results.map((r) => r.cve_id);
 
-      await dispatchNotification(env, "vulnerability_created", {
-        source: "jvn",
-        created_count: totalCreated,
-        critical_count: criticalCount,
-      });
-
-      if (criticalCount > 0) {
-        await dispatchNotification(env, "vulnerability_critical", {
+        await dispatchNotification(env, "vulnerability_created", {
           source: "jvn",
+          created_count: totalNewlyCreated,
           critical_count: criticalCount,
-          cve_ids: criticalCveIds,
+        });
+
+        if (criticalCount > 0) {
+          await dispatchNotification(env, "vulnerability_critical", {
+            source: "jvn",
+            critical_count: criticalCount,
+            cve_ids: criticalCveIds,
+          });
+        }
+      }
+
+      // 既存脆弱性がJVNで更新された場合は通知
+      if (totalUpdated > 0) {
+        await dispatchNotification(env, "vulnerability_updated", {
+          source: "jvn",
+          updated_count: totalUpdated,
         });
       }
     }

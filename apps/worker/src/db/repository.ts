@@ -261,14 +261,8 @@ export interface DbVulnerability {
   source: string;
   status: string;
   memo: string | null;
-  assignee_id: string | null;
-  due_date: string | null;
   created_at: string;
   updated_at: string;
-}
-
-export interface DbVulnerabilityWithAssignee extends DbVulnerability {
-  assignee_username: string | null;
 }
 
 export const vulnRepo = {
@@ -281,7 +275,6 @@ export const vulnRepo = {
       status,
       source,
       q,
-      assignee,
     }: {
       page: number;
       limit: number;
@@ -289,7 +282,6 @@ export const vulnRepo = {
       status?: string;
       source?: string;
       q?: string;
-      assignee?: string;
     },
   ) {
     const conditions: string[] = [];
@@ -323,10 +315,6 @@ export const vulnRepo = {
       conditions.push("(v.cve_id LIKE ? OR v.title LIKE ?)");
       params.push(`%${q}%`, `%${q}%`);
     }
-    if (assignee) {
-      conditions.push("v.assignee_id = ?");
-      params.push(assignee);
-    }
 
     const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const offset = (page - 1) * limit;
@@ -336,9 +324,8 @@ export const vulnRepo = {
       .bind(...params);
     const dataStmt = db
       .prepare(
-        `SELECT v.*, COALESCE(u.display_name, u.username) AS assignee_username
+        `SELECT v.*
          FROM vulnerabilities v
-         LEFT JOIN users u ON v.assignee_id = u.id
          ${where}
          ORDER BY v.created_at DESC LIMIT ? OFFSET ?`,
       )
@@ -349,14 +336,9 @@ export const vulnRepo = {
 
   findById(db: DB, id: string) {
     return db
-      .prepare(
-        `SELECT v.*, COALESCE(u.display_name, u.username) AS assignee_username
-         FROM vulnerabilities v
-         LEFT JOIN users u ON v.assignee_id = u.id
-         WHERE v.id = ?`,
-      )
+      .prepare("SELECT * FROM vulnerabilities WHERE id = ?")
       .bind(id)
-      .first<DbVulnerabilityWithAssignee>();
+      .first<DbVulnerability>();
   },
 
   findByCveId(db: DB, cveId: string) {
@@ -373,8 +355,8 @@ export const vulnRepo = {
           (id, cve_id, title, description, severity, cvss_v3_score, cvss_v3_vector,
            cvss_v2_score, cvss_v2_vector, cvss_v4_score, cvss_v4_vector,
            cwe_ids, affected_products, vuln_references,
-           published_at, modified_at, source, status, assignee_id, due_date)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+           published_at, modified_at, source, status)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       )
       .bind(
         v.id,
@@ -395,8 +377,6 @@ export const vulnRepo = {
         v.modified_at,
         v.source,
         v.status,
-        v.assignee_id ?? null,
-        v.due_date ?? null,
       )
       .run();
   },
@@ -420,8 +400,6 @@ export const vulnRepo = {
         | "published_at"
         | "modified_at"
         | "memo"
-        | "assignee_id"
-        | "due_date"
       >
     >,
   ) {
@@ -470,8 +448,8 @@ export const vulnRepo = {
           (id, cve_id, title, description, severity, cvss_v3_score, cvss_v3_vector,
            cvss_v2_score, cvss_v2_vector, cvss_v4_score, cvss_v4_vector,
            cwe_ids, affected_products, vuln_references,
-           published_at, modified_at, source, status, assignee_id, due_date)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+           published_at, modified_at, source, status)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
          ON CONFLICT(cve_id) DO UPDATE SET
            title = excluded.title,
            description = excluded.description,
@@ -489,8 +467,6 @@ export const vulnRepo = {
            modified_at = excluded.modified_at,
            source = excluded.source,
            status = excluded.status,
-           assignee_id = excluded.assignee_id,
-           due_date = excluded.due_date,
            updated_at = datetime('now')`,
       )
       .bind(
@@ -512,8 +488,6 @@ export const vulnRepo = {
         v.modified_at,
         v.source,
         v.status,
-        v.assignee_id ?? null,
-        v.due_date ?? null,
       )
       .run();
   },

@@ -36,8 +36,6 @@ reportRoutes.get("/vulnerabilities/csv", async (c) => {
     "Source",
     "Published At",
     "Created At",
-    "Assignee",
-    "Due Date",
   ];
 
   // CSV 行
@@ -55,8 +53,6 @@ reportRoutes.get("/vulnerabilities/csv", async (c) => {
       escapeCsv(r.source as string),
       r.published_at ?? "",
       r.created_at ?? "",
-      escapeCsv(r.assignee_username as string | null),
-      r.due_date ?? "",
     ];
     csvLines.push(line.join(","));
   }
@@ -114,7 +110,6 @@ reportRoutes.post("/vulnerabilities/csv/import", requireRole("editor"), async (c
       const description = cols[5]?.trim() || null;
       const source = cols[6]?.trim().toLowerCase() || "manual";
       const publishedAt = cols[7]?.trim() || null;
-      const dueDate = cols[10]?.trim() || null;
 
       if (!title) {
         errors.push({ row: rowNum, message: "Title is required" });
@@ -140,9 +135,6 @@ reportRoutes.post("/vulnerabilities/csv/import", requireRole("editor"), async (c
           ? new Date(publishedAt).toISOString()
           : null;
 
-      // due_date バリデーション
-      const finalDueDate = dueDate && /^\d{4}-\d{2}-\d{2}$/.test(dueDate) ? dueDate : null;
-
       if (cveId) {
         const existing = await vulnRepo.findByCveId(c.env.DB, cveId);
         if (existing) {
@@ -158,7 +150,6 @@ reportRoutes.post("/vulnerabilities/csv/import", requireRole("editor"), async (c
             status: finalStatus,
             ...(cvssV3Score !== null && { cvss_v3_score: cvssV3Score }),
             ...(finalPublishedAt && { published_at: finalPublishedAt }),
-            ...(finalDueDate !== null && { due_date: finalDueDate }),
           });
           await vulnHistoryRepo.create(c.env.DB, {
             id: crypto.randomUUID(),
@@ -195,8 +186,6 @@ reportRoutes.post("/vulnerabilities/csv/import", requireRole("editor"), async (c
         source: finalSource,
         status: finalStatus,
         memo: null,
-        assignee_id: null,
-        due_date: finalDueDate,
       });
       await vulnHistoryRepo.create(c.env.DB, {
         id: crypto.randomUUID(),
