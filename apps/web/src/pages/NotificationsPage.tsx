@@ -423,7 +423,10 @@ export function NotificationsPage() {
               <h3 className="text-lg font-semibold dark:text-white mb-4">新規チャネル</h3>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="channel-name" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  <label
+                    htmlFor="channel-name"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                  >
                     名前
                   </label>
                   <input
@@ -437,7 +440,10 @@ export function NotificationsPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="channel-type" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  <label
+                    htmlFor="channel-type"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                  >
                     タイプ
                   </label>
                   <select
@@ -453,7 +459,10 @@ export function NotificationsPage() {
 
                 {channelType === "webhook" && (
                   <div>
-                    <label htmlFor="channel-webhook-url" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                    <label
+                      htmlFor="channel-webhook-url"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                    >
                       Webhook URL
                     </label>
                     <input
@@ -470,7 +479,10 @@ export function NotificationsPage() {
                 {channelType === "email" && (
                   <>
                     <div>
-                      <label htmlFor="channel-email-from" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                      <label
+                        htmlFor="channel-email-from"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                      >
                         送信元アドレス
                       </label>
                       <input
@@ -483,7 +495,10 @@ export function NotificationsPage() {
                       />
                     </div>
                     <div>
-                      <label htmlFor="channel-email-to" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                      <label
+                        htmlFor="channel-email-to"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                      >
                         宛先アドレス（カンマ区切り）
                       </label>
                       <input
@@ -496,7 +511,10 @@ export function NotificationsPage() {
                       />
                     </div>
                     <div>
-                      <label htmlFor="channel-email-cc" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                      <label
+                        htmlFor="channel-email-cc"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                      >
                         CC（オプション、カンマ区切り）
                       </label>
                       <input
@@ -545,7 +563,10 @@ export function NotificationsPage() {
                     <h3 className="text-lg font-semibold dark:text-white mb-4">チャネル編集</h3>
                     <div className="space-y-4">
                       <div>
-                        <label htmlFor="edit-channel-name" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                        <label
+                          htmlFor="edit-channel-name"
+                          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                        >
                           名前
                         </label>
                         <input
@@ -577,7 +598,10 @@ export function NotificationsPage() {
 
                       {channel.type === "webhook" && (
                         <div>
-                          <label htmlFor="edit-channel-webhook-url" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                          <label
+                            htmlFor="edit-channel-webhook-url"
+                            className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                          >
                             Webhook URL
                           </label>
                           <input
@@ -594,7 +618,10 @@ export function NotificationsPage() {
                       {channel.type === "email" && (
                         <>
                           <div>
-                            <label htmlFor="edit-channel-email-from" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            <label
+                              htmlFor="edit-channel-email-from"
+                              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                            >
                               送信元アドレス
                             </label>
                             <input
@@ -607,7 +634,10 @@ export function NotificationsPage() {
                             />
                           </div>
                           <div>
-                            <label htmlFor="edit-channel-email-to" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            <label
+                              htmlFor="edit-channel-email-to"
+                              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                            >
                               宛先アドレス（カンマ区切り）
                             </label>
                             <input
@@ -620,7 +650,10 @@ export function NotificationsPage() {
                             />
                           </div>
                           <div>
-                            <label htmlFor="edit-channel-email-cc" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            <label
+                              htmlFor="edit-channel-email-cc"
+                              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                            >
                               CC（オプション、カンマ区切り）
                             </label>
                             <input
@@ -750,7 +783,10 @@ export function NotificationsPage() {
               <h3 className="text-lg font-semibold dark:text-white mb-4">新規ルール</h3>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="rule-channel" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  <label
+                    htmlFor="rule-channel"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                  >
                     チャネル
                   </label>
                   <select
@@ -769,7 +805,10 @@ export function NotificationsPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="rule-event-type" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  <label
+                    htmlFor="rule-event-type"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                  >
                     イベント
                   </label>
                   <select

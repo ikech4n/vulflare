@@ -95,7 +95,9 @@ export function ProfilePage() {
           <div className="flex justify-between">
             <span className="text-gray-500 dark:text-gray-400">表示名</span>
             <span className="text-gray-900 dark:text-gray-100">
-              {user?.displayName || <span className="text-gray-400 dark:text-gray-500">未設定</span>}
+              {user?.displayName || (
+                <span className="text-gray-400 dark:text-gray-500">未設定</span>
+              )}
             </span>
           </div>
           <div className="flex justify-between">
@@ -133,9 +135,7 @@ export function ProfilePage() {
             {updateDisplayNameMutation.isPending ? "保存中..." : "保存"}
           </button>
         </form>
-        {displayNameSuccess && (
-          <p className="text-sm text-green-600 mt-2">表示名を更新しました</p>
-        )}
+        {displayNameSuccess && <p className="text-sm text-green-600 mt-2">表示名を更新しました</p>}
         {updateDisplayNameMutation.isError && (
           <p className="text-sm text-red-600 mt-2">更新に失敗しました</p>
         )}
@@ -170,7 +170,10 @@ export function ProfilePage() {
         </h2>
         <form onSubmit={handlePasswordChange} className="space-y-3">
           <div>
-            <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            <label
+              htmlFor="current-password"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
               現在のパスワード
             </label>
             <input
@@ -183,7 +186,10 @@ export function ProfilePage() {
             />
           </div>
           <div>
-            <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            <label
+              htmlFor="new-password"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
               新しいパスワード
             </label>
             <input
@@ -197,7 +203,10 @@ export function ProfilePage() {
             />
           </div>
           <div>
-            <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            <label
+              htmlFor="confirm-password"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
               新しいパスワード（確認）
             </label>
             <input

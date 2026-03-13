@@ -98,7 +98,11 @@ export const updateVulnerabilitySchema = z.object({
   modifiedAt: z.string().datetime().nullable().optional(),
   memo: z.string().max(2000, "Memo too long").nullable().optional(),
   assigneeId: z.string().uuid("Invalid assignee ID").nullable().optional(),
-  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Due date must be in YYYY-MM-DD format").nullable().optional(),
+  dueDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Due date must be in YYYY-MM-DD format")
+    .nullable()
+    .optional(),
 });
 
 // ========================================

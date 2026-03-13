@@ -56,7 +56,10 @@ export function CsvImportModal({ onClose, onSuccess }: Props) {
         {!result ? (
           <>
             <div>
-              <label htmlFor="csv-file-input" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              <label
+                htmlFor="csv-file-input"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+              >
                 CSVファイル
               </label>
               <input

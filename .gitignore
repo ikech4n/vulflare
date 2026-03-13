@@ -13,5 +13,8 @@ apps/web/.env.production
 CLAUDE.md
 plan.md
 
+# 仕様書（個人用・非公開）
+docs/
+
 # TypeScriptビルドキャッシュ
 apps/web/tsconfig.tsbuildinfo

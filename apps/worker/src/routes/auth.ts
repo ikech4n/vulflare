@@ -127,7 +127,12 @@ authRoutes.post("/login", rateLimitPresets.login, validate(loginSchema), async (
 
   return c.json({
     accessToken,
-    user: { id: user.id, username: user.username, displayName: user.display_name ?? null, role: user.role },
+    user: {
+      id: user.id,
+      username: user.username,
+      displayName: user.display_name ?? null,
+      role: user.role,
+    },
   });
 });
 

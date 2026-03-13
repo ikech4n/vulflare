@@ -30,7 +30,13 @@ export const userRepo = {
     db: DB,
     user: Omit<
       DbUser,
-      "created_at" | "updated_at" | "failed_login_attempts" | "locked_at" | "email" | "theme" | "display_name"
+      | "created_at"
+      | "updated_at"
+      | "failed_login_attempts"
+      | "locked_at"
+      | "email"
+      | "theme"
+      | "display_name"
     > & { email?: string | null; display_name?: string | null },
   ) {
     return db
@@ -82,7 +88,12 @@ export const userRepo = {
   updateProfile(
     db: DB,
     id: string,
-    fields: { username?: string; email?: string | null; theme?: string; display_name?: string | null },
+    fields: {
+      username?: string;
+      email?: string | null;
+      theme?: string;
+      display_name?: string | null;
+    },
   ) {
     const sets: string[] = ["updated_at = datetime('now')"];
     const params: unknown[] = [];

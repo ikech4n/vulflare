@@ -227,7 +227,10 @@ export function SettingsPage() {
         <form onSubmit={handleAddUser} className="space-y-3" autoComplete="off">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label htmlFor="add-username" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              <label
+                htmlFor="add-username"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+              >
                 ユーザー名
               </label>
               <input
@@ -241,7 +244,10 @@ export function SettingsPage() {
               />
             </div>
             <div>
-              <label htmlFor="add-password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              <label
+                htmlFor="add-password"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+              >
                 パスワード
               </label>
               <input
@@ -256,7 +262,10 @@ export function SettingsPage() {
               />
             </div>
             <div>
-              <label htmlFor="add-role" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              <label
+                htmlFor="add-role"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+              >
                 ロール
               </label>
               <select
@@ -271,7 +280,10 @@ export function SettingsPage() {
               </select>
             </div>
             <div>
-              <label htmlFor="add-email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              <label
+                htmlFor="add-email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+              >
                 メールアドレス（任意）
               </label>
               <input

@@ -52,7 +52,10 @@ export function LoginPage() {
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">ログイン</h2>
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
         <div>
-          <label htmlFor="login-username" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+          <label
+            htmlFor="login-username"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+          >
             ユーザー名
           </label>
           <input
@@ -65,7 +68,10 @@ export function LoginPage() {
           />
         </div>
         <div>
-          <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+          <label
+            htmlFor="login-password"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+          >
             パスワード
           </label>
           <input

@@ -668,7 +668,10 @@ export function SyncPage() {
 
               {/* CVSS閾値 */}
               <div>
-                <label htmlFor="sync-cvss-min-score" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                <label
+                  htmlFor="sync-cvss-min-score"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                >
                   CVSS最小スコア
                 </label>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
@@ -701,7 +704,10 @@ export function SyncPage() {
 
               {/* 初回同期期間 */}
               <div>
-                <label htmlFor="sync-full-sync-days" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                <label
+                  htmlFor="sync-full-sync-days"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                >
                   初回取得期間
                 </label>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
@@ -721,7 +727,10 @@ export function SyncPage() {
 
               {/* 保持期間 */}
               <div>
-                <label htmlFor="sync-retention-days" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                <label
+                  htmlFor="sync-retention-days"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                >
                   データ保持期間
                 </label>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
