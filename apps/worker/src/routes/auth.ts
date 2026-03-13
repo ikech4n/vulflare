@@ -223,7 +223,7 @@ authRoutes.post(
       const fromSetting = await appSettingsRepo.get(c.env.DB, "noreply_email");
       const fromEmail = fromSetting?.value ?? c.env.NOREPLY_EMAIL;
       try {
-        await sendPasswordResetEmail(c.env, fromEmail, user.email!, resetUrl);
+        await sendPasswordResetEmail(c.env, fromEmail, user.email ?? "", resetUrl);
       } catch (err) {
         console.error("Failed to send password reset email:", err);
       }

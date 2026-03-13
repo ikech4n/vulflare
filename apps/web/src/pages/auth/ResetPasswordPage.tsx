@@ -59,10 +59,11 @@ export function ResetPasswordPage() {
       </h2>
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+          <label htmlFor="reset-password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             新しいパスワード
           </label>
           <input
+            id="reset-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -75,10 +76,11 @@ export function ResetPasswordPage() {
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+          <label htmlFor="reset-confirm-password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             パスワード（確認）
           </label>
           <input
+            id="reset-confirm-password"
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}

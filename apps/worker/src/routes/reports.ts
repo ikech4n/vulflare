@@ -96,7 +96,7 @@ reportRoutes.post("/vulnerabilities/csv/import", requireRole("editor"), async (c
 
   for (let i = 0; i < dataLines.length; i++) {
     const rowNum = i + 2; // 1-indexed, header is row 1
-    const line = dataLines[i]!;
+    const line = dataLines[i] ?? "";
 
     try {
       const cols = parseCsvLine(line);
@@ -315,7 +315,7 @@ function parseCsvLine(line: string): string[] {
   let inQuotes = false;
 
   for (let i = 0; i < line.length; i++) {
-    const ch = line[i]!;
+    const ch = line[i] ?? "";
     if (inQuotes) {
       if (ch === '"') {
         if (line[i + 1] === '"') {

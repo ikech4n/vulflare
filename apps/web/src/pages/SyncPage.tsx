@@ -329,6 +329,7 @@ export function SyncPage() {
           {isEditorOrAbove && (
             <div className="flex flex-wrap gap-2">
               <button
+                type="button"
                 onClick={() => triggerSyncMutation.mutate()}
                 disabled={
                   triggerSyncMutation.isPending ||
@@ -344,6 +345,7 @@ export function SyncPage() {
                 増分取得
               </button>
               <button
+                type="button"
                 onClick={() => setShowFullSyncConfirm(true)}
                 disabled={
                   triggerSyncMutation.isPending ||
@@ -405,6 +407,7 @@ export function SyncPage() {
       {isEditorOrAbove && (
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
           <button
+            type="button"
             onClick={() => setShowSettings(!showSettings)}
             className="flex items-center justify-between w-full text-left"
           >
@@ -416,9 +419,9 @@ export function SyncPage() {
             <div className="mt-6 space-y-6">
               {/* ベンダー/製品選択 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                <p className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                   ベンダー/製品選択
-                </label>
+                </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
                   MyJVN
                   APIから取得したベンダーと製品を選択できます。製品未選択の場合はそのベンダーの全製品が対象になります。
@@ -454,6 +457,7 @@ export function SyncPage() {
                         {vendorSearchResults.vendors.map((vendor) => (
                           <button
                             key={vendor.vid}
+                            type="button"
                             onClick={() => addVendor(vendor)}
                             className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-200 flex items-center justify-between"
                           >
@@ -477,6 +481,7 @@ export function SyncPage() {
                       >
                         <div className="flex items-center justify-between">
                           <button
+                            type="button"
                             onClick={() =>
                               setExpandedVendorId(
                                 expandedVendorId === vendor.vendorId ? null : vendor.vendorId,
@@ -499,6 +504,7 @@ export function SyncPage() {
                             </span>
                           </button>
                           <button
+                            type="button"
                             onClick={() => removeVendor(vendor.vendorId)}
                             className="text-gray-400 hover:text-red-600"
                           >
@@ -568,9 +574,9 @@ export function SyncPage() {
 
               {/* キーワードフィルター */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                <p className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                   キーワードフィルター
-                </label>
+                </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                   追加のキーワードで脆弱性を検索します。ベンダー/製品選択と併用できます。
                 </p>
@@ -614,9 +620,9 @@ export function SyncPage() {
 
               {/* 除外キーワード */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                <p className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                   除外キーワードフィルター
-                </label>
+                </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                   タイトルまたは説明文に除外キーワードが含まれる脆弱性を除外します。
                 </p>
@@ -662,7 +668,7 @@ export function SyncPage() {
 
               {/* CVSS閾値 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                <label htmlFor="sync-cvss-min-score" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                   CVSS最小スコア
                 </label>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
@@ -670,6 +676,7 @@ export function SyncPage() {
                 </p>
                 <div className="flex items-center gap-4">
                   <input
+                    id="sync-cvss-min-score"
                     type="number"
                     min="0"
                     max="10"
@@ -694,13 +701,14 @@ export function SyncPage() {
 
               {/* 初回同期期間 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                <label htmlFor="sync-full-sync-days" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                   初回取得期間
                 </label>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                   初回取得時に取得する過去の期間を指定します。2回目以降は前回取得以降の更新のみを取得します。
                 </p>
                 <input
+                  id="sync-full-sync-days"
                   type="number"
                   min="1"
                   max="3650"
@@ -713,13 +721,14 @@ export function SyncPage() {
 
               {/* 保持期間 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                <label htmlFor="sync-retention-days" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                   データ保持期間
                 </label>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                   指定日数より古いデータを自動削除します。0で無効化（削除しない）。
                 </p>
                 <input
+                  id="sync-retention-days"
                   type="number"
                   min="0"
                   max="3650"
@@ -733,6 +742,7 @@ export function SyncPage() {
               {/* 保存ボタン */}
               <div className="flex justify-end pt-4">
                 <button
+                  type="button"
                   onClick={handleSaveSettings}
                   disabled={updateSyncSettingsMut.isPending}
                   className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
@@ -750,6 +760,7 @@ export function SyncPage() {
       {!isEditorOrAbove && (
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
           <button
+            type="button"
             onClick={() => setShowSettings(!showSettings)}
             className="flex items-center justify-between w-full text-left"
           >
@@ -855,6 +866,7 @@ export function SyncPage() {
                 JVN (Japan Vulnerability Notes)
               </span>
               <button
+                type="button"
                 onClick={() => {
                   if (
                     confirm(
@@ -920,12 +932,14 @@ export function SyncPage() {
             </div>
             <div className="flex gap-3 justify-end">
               <button
+                type="button"
                 onClick={() => setShowFullSyncConfirm(false)}
                 className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
               >
                 キャンセル
               </button>
               <button
+                type="button"
                 onClick={() => triggerFullSyncMutation.mutate()}
                 disabled={triggerFullSyncMutation.isPending}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"

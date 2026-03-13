@@ -178,6 +178,7 @@ export function SettingsPage() {
                   className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 />
                 <button
+                  type="button"
                   onClick={() =>
                     updateAppSettingsMutation.mutate({ noreplyEmail: noreplyEmailInput })
                   }
@@ -187,6 +188,7 @@ export function SettingsPage() {
                   {updateAppSettingsMutation.isPending ? "保存中..." : "保存"}
                 </button>
                 <button
+                  type="button"
                   onClick={() => setEditingEmail(false)}
                   className="px-3 py-2 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0"
                 >
@@ -201,6 +203,7 @@ export function SettingsPage() {
                   )}
                 </span>
                 <button
+                  type="button"
                   onClick={() => {
                     setNoreplyEmailInput(appSettings?.noreplyEmail ?? "");
                     setEditingEmail(true);
@@ -224,10 +227,11 @@ export function SettingsPage() {
         <form onSubmit={handleAddUser} className="space-y-3" autoComplete="off">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              <label htmlFor="add-username" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                 ユーザー名
               </label>
               <input
+                id="add-username"
                 type="text"
                 value={addUsername}
                 onChange={(e) => setAddUsername(e.target.value)}
@@ -237,10 +241,11 @@ export function SettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              <label htmlFor="add-password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                 パスワード
               </label>
               <input
+                id="add-password"
                 type="password"
                 value={addPassword}
                 onChange={(e) => setAddPassword(e.target.value)}
@@ -251,10 +256,11 @@ export function SettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              <label htmlFor="add-role" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                 ロール
               </label>
               <select
+                id="add-role"
                 value={addRole}
                 onChange={(e) => setAddRole(e.target.value)}
                 className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -265,10 +271,11 @@ export function SettingsPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              <label htmlFor="add-email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                 メールアドレス（任意）
               </label>
               <input
+                id="add-email"
                 type="email"
                 value={addEmail}
                 onChange={(e) => setAddEmail(e.target.value)}
@@ -312,6 +319,7 @@ export function SettingsPage() {
                 </div>
                 <div className="flex items-center gap-2 ml-4 shrink-0">
                   <button
+                    type="button"
                     onClick={() => {
                       if (editUserId === u.id) {
                         setEditUserId(null);
@@ -331,6 +339,7 @@ export function SettingsPage() {
                   </button>
                   {u.lockedAt && (
                     <button
+                      type="button"
                       onClick={() => unlockMutation.mutate(u.id)}
                       disabled={unlockMutation.isPending}
                       className="p-1 text-red-500 hover:text-green-600 transition-colors disabled:opacity-50"
@@ -341,6 +350,7 @@ export function SettingsPage() {
                   )}
                   {u.id !== user.id && (
                     <button
+                      type="button"
                       onClick={() => {
                         if (confirm(`${u.username} を削除しますか？この操作は元に戻せません。`))
                           deleteUserMutation.mutate(u.id);
@@ -354,6 +364,7 @@ export function SettingsPage() {
                   )}
                   {u.id !== user.id && (
                     <button
+                      type="button"
                       onClick={() => {
                         setResetPwUserId(resetPwUserId === u.id ? null : u.id);
                         setResetPwValue("");
@@ -400,6 +411,7 @@ export function SettingsPage() {
                   {editError && <p className="text-xs text-red-600">{editError}</p>}
                   <div className="flex items-center gap-2">
                     <button
+                      type="button"
                       onClick={() =>
                         updateProfileMutation.mutate({
                           id: u.id,
@@ -413,6 +425,7 @@ export function SettingsPage() {
                       {updateProfileMutation.isPending ? "保存中..." : "保存"}
                     </button>
                     <button
+                      type="button"
                       onClick={() => {
                         setEditUserId(null);
                         setEditUsername("");
@@ -440,6 +453,7 @@ export function SettingsPage() {
                       className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     />
                     <button
+                      type="button"
                       onClick={() =>
                         resetPasswordMutation.mutate({ id: u.id, password: resetPwValue })
                       }
@@ -449,6 +463,7 @@ export function SettingsPage() {
                       {resetPasswordMutation.isPending ? "リセット中..." : "リセット"}
                     </button>
                     <button
+                      type="button"
                       onClick={() => {
                         setResetPwUserId(null);
                         setResetPwValue("");

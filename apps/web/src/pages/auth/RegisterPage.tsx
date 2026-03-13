@@ -29,10 +29,11 @@ export function RegisterPage() {
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">アカウント作成</h2>
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+          <label htmlFor="register-username" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             ユーザー名
           </label>
           <input
+            id="register-username"
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -41,10 +42,11 @@ export function RegisterPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+          <label htmlFor="register-password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
             パスワード
           </label>
           <input
+            id="register-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

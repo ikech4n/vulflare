@@ -43,10 +43,11 @@ export function ForgotPasswordPage() {
           </p>
           <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              <label htmlFor="forgot-email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                 メールアドレス
               </label>
               <input
+                id="forgot-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

@@ -102,6 +102,7 @@ export function EolProductDetailPage() {
           </div>
           {!product.eol_api_id && !isViewer && (
             <button
+              type="button"
               onClick={() => setShowAddModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
@@ -233,6 +234,7 @@ function CycleActions({ cycle, productId }: { cycle: EolCycle; productId: string
     <>
       <div className="flex items-center justify-end gap-2">
         <button
+          type="button"
           onClick={() => setShowEditModal(true)}
           className="p-1 text-gray-600 hover:text-gray-800"
           title="編集"
@@ -241,6 +243,7 @@ function CycleActions({ cycle, productId }: { cycle: EolCycle; productId: string
         </button>
         {user?.role === "admin" && (
           <button
+            type="button"
             onClick={() => {
               if (confirm("本当に削除しますか?")) {
                 deleteMutation.mutate();
@@ -441,12 +444,14 @@ function AddCycleModal({ productId, onClose }: { productId: string; onClose: () 
 
         <div className="flex justify-end gap-3 mt-6">
           <button
+            type="button"
             onClick={onClose}
             className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
           >
             キャンセル
           </button>
           <button
+            type="button"
             onClick={() => createMutation.mutate()}
             disabled={!formData.cycle || createMutation.isPending}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
@@ -639,12 +644,14 @@ function EditCycleModal({
 
         <div className="flex justify-end gap-3 mt-6">
           <button
+            type="button"
             onClick={onClose}
             className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
           >
             キャンセル
           </button>
           <button
+            type="button"
             onClick={() => updateMutation.mutate()}
             disabled={!formData.cycle || updateMutation.isPending}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"

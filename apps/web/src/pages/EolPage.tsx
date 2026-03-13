@@ -90,6 +90,7 @@ export function EolPage() {
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <button
+            type="button"
             onClick={() => setSearchParams({})}
             className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-left transition-all hover:shadow-md ${!selectedStatus ? "ring-2 ring-blue-400" : ""}`}
           >
@@ -105,6 +106,7 @@ export function EolPage() {
           </button>
 
           <button
+            type="button"
             onClick={() => handleStatusFilter("eol")}
             className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-left transition-all hover:shadow-md ${selectedStatus === "eol" ? "ring-2 ring-red-400" : ""}`}
           >
@@ -118,6 +120,7 @@ export function EolPage() {
           </button>
 
           <button
+            type="button"
             onClick={() => handleStatusFilter("approaching_30d")}
             className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-left transition-all hover:shadow-md ${selectedStatus === "approaching_30d" ? "ring-2 ring-orange-400" : ""}`}
           >
@@ -173,6 +176,7 @@ export function EolPage() {
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
               {STATUS_LABELS[selectedStatus]}
               <button
+                type="button"
                 onClick={() => setSearchParams({})}
                 className="ml-0.5 hover:text-orange-600"
                 aria-label="フィルター解除"
@@ -288,6 +292,7 @@ function ProductActions({ product }: { product: EolProduct }) {
       <div className="flex items-center justify-end gap-2">
         {user?.role !== "viewer" && (
           <button
+            type="button"
             onClick={() => setShowEditModal(true)}
             className="p-1 text-gray-600 hover:text-gray-800"
             title="編集"
@@ -297,6 +302,7 @@ function ProductActions({ product }: { product: EolProduct }) {
         )}
         {user?.role !== "viewer" && product.eol_api_id && (
           <button
+            type="button"
             onClick={() => syncMutation.mutate()}
             disabled={syncMutation.isPending}
             className="p-1 text-blue-600 hover:text-blue-800"
@@ -307,6 +313,7 @@ function ProductActions({ product }: { product: EolProduct }) {
         )}
         {user?.role === "admin" && (
           <button
+            type="button"
             onClick={() => {
               if (confirm("本当に削除しますか?")) {
                 deleteMutation.mutate();

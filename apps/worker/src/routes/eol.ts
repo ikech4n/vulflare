@@ -24,7 +24,7 @@ eolRoutes.get("/products", async (c) => {
 
 // GET /api/eol/products/:id - プロダクト詳細（サイクル一覧含む）
 eolRoutes.get("/products/:id", async (c) => {
-  const id = c.req.param("id")!;
+  const id = c.req.param("id") ?? "";
   const product = await eolProductRepo.findById(c.env.DB, id);
 
   if (!product) {
@@ -102,7 +102,7 @@ eolRoutes.post("/products", requireRole("editor"), async (c) => {
 
 // PATCH /api/eol/products/:id - プロダクト更新（admin/editor）
 eolRoutes.patch("/products/:id", requireRole("editor"), async (c) => {
-  const id = c.req.param("id")!;
+  const id = c.req.param("id") ?? "";
   const body = await c.req.json<{
     display_name?: string;
     category?: EolCategory;
@@ -136,7 +136,7 @@ eolRoutes.patch("/products/:id", requireRole("editor"), async (c) => {
 
 // DELETE /api/eol/products/:id - プロダクト削除（admin）
 eolRoutes.delete("/products/:id", requireRole("admin"), async (c) => {
-  const id = c.req.param("id")!;
+  const id = c.req.param("id") ?? "";
   const product = await eolProductRepo.findById(c.env.DB, id);
 
   if (!product) {
@@ -209,7 +209,7 @@ eolRoutes.post("/cycles", requireRole("editor"), async (c) => {
 
 // PATCH /api/eol/cycles/:id - サイクル更新（admin/editor）
 eolRoutes.patch("/cycles/:id", requireRole("editor"), async (c) => {
-  const id = c.req.param("id")!;
+  const id = c.req.param("id") ?? "";
   const body = await c.req.json<{
     cycle?: string;
     codename?: string;
@@ -260,7 +260,7 @@ eolRoutes.patch("/cycles/:id", requireRole("editor"), async (c) => {
 
 // DELETE /api/eol/cycles/:id - サイクル削除（admin）
 eolRoutes.delete("/cycles/:id", requireRole("admin"), async (c) => {
-  const id = c.req.param("id")!;
+  const id = c.req.param("id") ?? "";
   const cycle = await eolCycleRepo.findById(c.env.DB, id);
 
   if (!cycle) {
@@ -297,7 +297,7 @@ eolRoutes.get("/available-products", async (c) => {
 
 // POST /api/eol/sync/:productName - 手動同期トリガー（admin）
 eolRoutes.post("/sync/:productName", requireRole("admin"), async (c) => {
-  const productName = c.req.param("productName")!;
+  const productName = c.req.param("productName") ?? "";
   const product = await eolProductRepo.findByProductName(c.env.DB, productName);
 
   if (!product) {

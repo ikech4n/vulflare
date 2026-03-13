@@ -197,7 +197,7 @@ syncRoutes.get("/jvn-vendors", authMiddleware, async (c) => {
 
 // GET /api/sync/jvn-vendors/:vid/products - 指定ベンダーの製品一覧
 syncRoutes.get("/jvn-vendors/:vid/products", authMiddleware, async (c) => {
-  const vendorId = c.req.param("vid")!;
+  const vendorId = c.req.param("vid") ?? "";
   const CACHE_TTL_HOURS = 24;
 
   try {
@@ -360,7 +360,7 @@ syncRoutes.post(
 
 // DELETE /api/sync/data/:source - データソース別削除 (admin専用)
 syncRoutes.delete("/data/:source", authMiddleware, requireRole("admin"), async (c) => {
-  const source = c.req.param("source")!;
+  const source = c.req.param("source") ?? "";
 
   if (source !== "jvn") {
     return c.json({ error: "Invalid source. Must be: jvn" }, 400);

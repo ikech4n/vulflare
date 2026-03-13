@@ -49,7 +49,7 @@ userRoutes.post(
     const id = crypto.randomUUID();
     const passwordHash = await hashPassword(body.password);
     const role = VALID_ROLES.includes(body.role as (typeof VALID_ROLES)[number])
-      ? body.role!
+      ? (body.role as string)
       : "viewer";
 
     await userRepo.create(c.env.DB, {
@@ -72,7 +72,7 @@ userRoutes.patch(
   requireRole("admin"),
   validate(updateUserSchema),
   async (c) => {
-    const id = c.req.param("id")!;
+    const id = c.req.param("id") ?? "";
     const body = c.get("validatedBody") as {
       role?: string;
       isActive?: boolean;
@@ -106,7 +106,7 @@ userRoutes.patch(
 
 // Unlock user account - admin only
 userRoutes.post("/:id/unlock", authMiddleware, requireRole("admin"), async (c) => {
-  const id = c.req.param("id")!;
+  const id = c.req.param("id") ?? "";
 
   const user = await userRepo.findById(c.env.DB, id);
   if (!user) return c.json({ error: "User not found" }, 404);
@@ -122,7 +122,7 @@ userRoutes.post(
   requireRole("admin"),
   validate(resetPasswordSchema),
   async (c) => {
-    const id = c.req.param("id")!;
+    const id = c.req.param("id") ?? "";
     const body = c.get("validatedBody") as { password: string };
 
     const user = await userRepo.findById(c.env.DB, id);
@@ -136,7 +136,7 @@ userRoutes.post(
 
 // Delete user - admin only
 userRoutes.delete("/:id", authMiddleware, requireRole("admin"), async (c) => {
-  const id = c.req.param("id")!;
+  const id = c.req.param("id") ?? "";
 
   if (id === c.get("userId")) {
     return c.json({ error: "自分自身は削除できません" }, 400);

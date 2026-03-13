@@ -166,7 +166,7 @@ export function VulnerabilitiesPage() {
     });
   };
 
-  const today = new Date().toISOString().split("T")[0]!;
+  const today = new Date().toISOString().split("T")[0] ?? "";
 
   return (
     <div className="space-y-4">
@@ -351,6 +351,7 @@ export function VulnerabilitiesPage() {
           </select>
 
           <button
+            type="button"
             onClick={handleBatchUpdate}
             disabled={batchUpdateMutation.isPending || !batchStatus}
             className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -359,6 +360,7 @@ export function VulnerabilitiesPage() {
           </button>
 
           <button
+            type="button"
             onClick={() => setSelectedIds(new Set())}
             className="text-sm text-gray-600 hover:text-gray-800 ml-auto"
           >
@@ -508,6 +510,7 @@ export function VulnerabilitiesPage() {
           </span>
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={() => setPage(page - 1)}
               disabled={page <= 1}
               className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300"
@@ -515,6 +518,7 @@ export function VulnerabilitiesPage() {
               前へ
             </button>
             <button
+              type="button"
               onClick={() => setPage(page + 1)}
               disabled={page >= data.totalPages}
               className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300"

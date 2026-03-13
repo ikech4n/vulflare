@@ -369,6 +369,7 @@ export function NotificationsPage() {
       <div className="border-b border-gray-200 dark:border-gray-700">
         <nav className="-mb-px flex space-x-8">
           <button
+            type="button"
             onClick={() => setActiveTab("channels")}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === "channels"
@@ -379,6 +380,7 @@ export function NotificationsPage() {
             チャネル
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab("rules")}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === "rules"
@@ -389,6 +391,7 @@ export function NotificationsPage() {
             ルール
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab("logs")}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === "logs"
@@ -406,6 +409,7 @@ export function NotificationsPage() {
         <div className="space-y-4">
           <div className="flex justify-end">
             <button
+              type="button"
               onClick={() => setShowChannelForm(!showChannelForm)}
               className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
@@ -419,10 +423,11 @@ export function NotificationsPage() {
               <h3 className="text-lg font-semibold dark:text-white mb-4">新規チャネル</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  <label htmlFor="channel-name" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                     名前
                   </label>
                   <input
+                    id="channel-name"
                     type="text"
                     value={channelName}
                     onChange={(e) => setChannelName(e.target.value)}
@@ -432,10 +437,11 @@ export function NotificationsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  <label htmlFor="channel-type" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                     タイプ
                   </label>
                   <select
+                    id="channel-type"
                     value={channelType}
                     onChange={(e) => setChannelType(e.target.value as "webhook" | "email")}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
@@ -447,10 +453,11 @@ export function NotificationsPage() {
 
                 {channelType === "webhook" && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                    <label htmlFor="channel-webhook-url" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                       Webhook URL
                     </label>
                     <input
+                      id="channel-webhook-url"
                       type="url"
                       value={webhookUrl}
                       onChange={(e) => setWebhookUrl(e.target.value)}
@@ -463,10 +470,11 @@ export function NotificationsPage() {
                 {channelType === "email" && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                      <label htmlFor="channel-email-from" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                         送信元アドレス
                       </label>
                       <input
+                        id="channel-email-from"
                         type="email"
                         value={emailFrom}
                         onChange={(e) => setEmailFrom(e.target.value)}
@@ -475,10 +483,11 @@ export function NotificationsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                      <label htmlFor="channel-email-to" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                         宛先アドレス（カンマ区切り）
                       </label>
                       <input
+                        id="channel-email-to"
                         type="text"
                         value={emailTo}
                         onChange={(e) => setEmailTo(e.target.value)}
@@ -487,10 +496,11 @@ export function NotificationsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                      <label htmlFor="channel-email-cc" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                         CC（オプション、カンマ区切り）
                       </label>
                       <input
+                        id="channel-email-cc"
                         type="text"
                         value={emailCc}
                         onChange={(e) => setEmailCc(e.target.value)}
@@ -503,6 +513,7 @@ export function NotificationsPage() {
 
                 <div className="flex space-x-2">
                   <button
+                    type="button"
                     onClick={() => createChannelMutation.mutate()}
                     disabled={
                       !channelName ||
@@ -514,6 +525,7 @@ export function NotificationsPage() {
                     作成
                   </button>
                   <button
+                    type="button"
                     onClick={() => setShowChannelForm(false)}
                     className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500"
                   >
@@ -533,10 +545,11 @@ export function NotificationsPage() {
                     <h3 className="text-lg font-semibold dark:text-white mb-4">チャネル編集</h3>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                        <label htmlFor="edit-channel-name" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                           名前
                         </label>
                         <input
+                          id="edit-channel-name"
                           type="text"
                           value={editChannelName}
                           onChange={(e) => setEditChannelName(e.target.value)}
@@ -546,9 +559,9 @@ export function NotificationsPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                        <p className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                           タイプ
-                        </label>
+                        </p>
                         <select
                           value={channel.type}
                           disabled
@@ -564,10 +577,11 @@ export function NotificationsPage() {
 
                       {channel.type === "webhook" && (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                          <label htmlFor="edit-channel-webhook-url" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                             Webhook URL
                           </label>
                           <input
+                            id="edit-channel-webhook-url"
                             type="url"
                             value={editWebhookUrl}
                             onChange={(e) => setEditWebhookUrl(e.target.value)}
@@ -580,10 +594,11 @@ export function NotificationsPage() {
                       {channel.type === "email" && (
                         <>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            <label htmlFor="edit-channel-email-from" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                               送信元アドレス
                             </label>
                             <input
+                              id="edit-channel-email-from"
                               type="email"
                               value={editEmailFrom}
                               onChange={(e) => setEditEmailFrom(e.target.value)}
@@ -592,10 +607,11 @@ export function NotificationsPage() {
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            <label htmlFor="edit-channel-email-to" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                               宛先アドレス（カンマ区切り）
                             </label>
                             <input
+                              id="edit-channel-email-to"
                               type="text"
                               value={editEmailTo}
                               onChange={(e) => setEditEmailTo(e.target.value)}
@@ -604,10 +620,11 @@ export function NotificationsPage() {
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            <label htmlFor="edit-channel-email-cc" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                               CC（オプション、カンマ区切り）
                             </label>
                             <input
+                              id="edit-channel-email-cc"
                               type="text"
                               value={editEmailCc}
                               onChange={(e) => setEditEmailCc(e.target.value)}
@@ -634,6 +651,7 @@ export function NotificationsPage() {
 
                       <div className="flex space-x-2">
                         <button
+                          type="button"
                           onClick={() => handleSaveChannel(channel)}
                           disabled={
                             !editChannelName ||
@@ -645,6 +663,7 @@ export function NotificationsPage() {
                           保存
                         </button>
                         <button
+                          type="button"
                           onClick={handleCancelEdit}
                           className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500"
                         >
@@ -677,6 +696,7 @@ export function NotificationsPage() {
                     </div>
                     <div className="flex space-x-2">
                       <button
+                        type="button"
                         onClick={() => testChannelMutation.mutate(channel.id)}
                         className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
                         title="テスト送信"
@@ -684,6 +704,7 @@ export function NotificationsPage() {
                         <Send className="w-4 h-4" />
                       </button>
                       <button
+                        type="button"
                         onClick={() => handleEditChannel(channel)}
                         className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
                         title="編集"
@@ -691,6 +712,7 @@ export function NotificationsPage() {
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
+                        type="button"
                         onClick={() => {
                           if (!confirm("このチャネルを削除しますか？")) return;
                           deleteChannelMutation.mutate(channel.id);
@@ -714,6 +736,7 @@ export function NotificationsPage() {
         <div className="space-y-4">
           <div className="flex justify-end">
             <button
+              type="button"
               onClick={() => setShowRuleForm(!showRuleForm)}
               className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
@@ -727,10 +750,11 @@ export function NotificationsPage() {
               <h3 className="text-lg font-semibold dark:text-white mb-4">新規ルール</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  <label htmlFor="rule-channel" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                     チャネル
                   </label>
                   <select
+                    id="rule-channel"
                     value={ruleChannelId}
                     onChange={(e) => setRuleChannelId(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
@@ -745,10 +769,11 @@ export function NotificationsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  <label htmlFor="rule-event-type" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                     イベント
                   </label>
                   <select
+                    id="rule-event-type"
                     value={ruleEventType}
                     onChange={(e) => setRuleEventType(e.target.value as EventType)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
@@ -763,6 +788,7 @@ export function NotificationsPage() {
 
                 <div className="flex space-x-2">
                   <button
+                    type="button"
                     onClick={() => createRuleMutation.mutate()}
                     disabled={!ruleChannelId}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
@@ -770,6 +796,7 @@ export function NotificationsPage() {
                     作成
                   </button>
                   <button
+                    type="button"
                     onClick={() => setShowRuleForm(false)}
                     className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500"
                   >
@@ -822,6 +849,7 @@ export function NotificationsPage() {
                               {rule.is_active ? "有効" : "無効"}
                             </span>
                             <button
+                              type="button"
                               onClick={() =>
                                 toggleRuleMutation.mutate({
                                   id: rule.id,
@@ -846,6 +874,7 @@ export function NotificationsPage() {
                         </td>
                         <td className="px-6 py-4 text-right whitespace-nowrap">
                           <button
+                            type="button"
                             onClick={() => {
                               if (!confirm("このルールを削除しますか？")) return;
                               deleteRuleMutation.mutate(rule.id);

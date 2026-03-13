@@ -347,7 +347,7 @@ export async function handleJvnSync(env: Env, forceFullSync = false): Promise<vo
           Date.now() -
             (settings.fullSyncDays > 0 ? settings.fullSyncDays : 3650) * 24 * 60 * 60 * 1000,
         )
-      : new Date(lastSyncDate!);
+      : new Date(lastSyncDate ?? "");
 
     const baseParams = new URLSearchParams({
       method: "getVulnOverviewList",

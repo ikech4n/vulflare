@@ -73,7 +73,7 @@ vulnerabilityRoutes.get("/stats", async (c) => {
 
 // GET /api/vulnerabilities/:id/history
 vulnerabilityRoutes.get("/:id/history", async (c) => {
-  const id = c.req.param("id")!;
+  const id = c.req.param("id") ?? "";
   const page = Math.max(1, Number(c.req.query("page") ?? 1));
   const limit = Math.min(100, Math.max(1, Number(c.req.query("limit") ?? 20)));
 
@@ -96,7 +96,7 @@ vulnerabilityRoutes.get("/:id/history", async (c) => {
 
 // GET /api/vulnerabilities/:id
 vulnerabilityRoutes.get("/:id", async (c) => {
-  const vuln = await vulnRepo.findById(c.env.DB, c.req.param("id")!);
+  const vuln = await vulnRepo.findById(c.env.DB, c.req.param("id") ?? "");
   if (!vuln) return c.json({ error: "Not found" }, 404);
   return c.json(mapVuln(vuln as unknown as Record<string, unknown>));
 });
@@ -180,7 +180,7 @@ vulnerabilityRoutes.post(
     });
 
     const created = await vulnRepo.findById(c.env.DB, id);
-    const mapped = mapVuln(created! as unknown as Record<string, unknown>);
+    const mapped = mapVuln((created ?? {}) as unknown as Record<string, unknown>);
 
     const notifData = {
       vuln_id: mapped.cveId ?? id,
@@ -241,7 +241,7 @@ vulnerabilityRoutes.patch(
 
     const historyEntries = body.ids.map(() => ({
       id: crypto.randomUUID(),
-      vulnerability_id: body.ids[0]!, // individual below
+      vulnerability_id: body.ids[0] ?? "", // individual below
       user_id: userId,
       user_name: user?.display_name ?? user?.username ?? null,
       action: "updated" as const,
@@ -288,7 +288,7 @@ vulnerabilityRoutes.patch(
   requireRole("editor"),
   validate(updateVulnerabilitySchema),
   async (c) => {
-    const id = c.req.param("id")!;
+    const id = c.req.param("id") ?? "";
     const existing = await vulnRepo.findById(c.env.DB, id);
     if (!existing) return c.json({ error: "Not found" }, 404);
 
@@ -377,7 +377,7 @@ vulnerabilityRoutes.patch(
     }
 
     const updated = await vulnRepo.findById(c.env.DB, id);
-    const mappedUpdated = mapVuln(updated! as unknown as Record<string, unknown>);
+    const mappedUpdated = mapVuln((updated ?? {}) as unknown as Record<string, unknown>);
 
     c.executionCtx.waitUntil(
       dispatchNotification(c.env, "vulnerability_updated", {
@@ -394,7 +394,7 @@ vulnerabilityRoutes.patch(
 
 // DELETE /api/vulnerabilities/:id
 vulnerabilityRoutes.delete("/:id", requireRole("admin"), async (c) => {
-  const id = c.req.param("id")!;
+  const id = c.req.param("id") ?? "";
   const existing = await vulnRepo.findById(c.env.DB, id);
   if (!existing) return c.json({ error: "Not found" }, 404);
 

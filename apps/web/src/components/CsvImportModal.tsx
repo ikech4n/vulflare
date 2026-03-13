@@ -56,10 +56,11 @@ export function CsvImportModal({ onClose, onSuccess }: Props) {
         {!result ? (
           <>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              <label htmlFor="csv-file-input" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                 CSVファイル
               </label>
               <input
+                id="csv-file-input"
                 ref={fileInputRef}
                 type="file"
                 accept=".csv,text/csv"
@@ -78,9 +79,9 @@ export function CsvImportModal({ onClose, onSuccess }: Props) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              <p className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 重複時の動作
-              </label>
+              </p>
               <div className="flex gap-4">
                 <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
                   <input
