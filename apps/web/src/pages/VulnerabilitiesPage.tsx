@@ -1,3 +1,4 @@
+import { CsvImportModal } from "@/components/CsvImportModal.tsx";
 import { SeverityBadge } from "@/components/SeverityBadge.tsx";
 import { StatusBadge } from "@/components/StatusBadge.tsx";
 import { api } from "@/lib/api.ts";
@@ -6,11 +7,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   BatchUpdateVulnerabilityRequest,
   BatchUpdateVulnerabilityResponse,
+  MeResponse,
   PaginatedResponse,
   VulnStatus,
   Vulnerability,
 } from "@vulflare/shared/types";
-import { ChevronDown, Plus, Search } from "lucide-react";
+import { ChevronDown, Plus, Search, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
@@ -28,6 +30,7 @@ export function VulnerabilitiesPage() {
   const status = searchParams.get("status") ?? "";
   const selectedStatuses = status ? status.split(",").filter(Boolean) : [];
   const source = searchParams.get("source") ?? "";
+  const assigneeFilter = searchParams.get("assignee") ?? "";
 
   // 初回マウント時にstatusが未指定なら「新規+対応中」をデフォルト設定
   // biome-ignore lint/correctness/useExhaustiveDependencies: 初回マウント時のみ実行
@@ -43,6 +46,7 @@ export function VulnerabilitiesPage() {
   const [statusOpen, setStatusOpen] = useState(false);
   const severityRef = useRef<HTMLDivElement>(null);
   const statusRef = useRef<HTMLDivElement>(null);
+  const [csvImportOpen, setCsvImportOpen] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -63,17 +67,25 @@ export function VulnerabilitiesPage() {
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["vulnerabilities", page, severity, status, source, q],
+    queryKey: ["vulnerabilities", page, severity, status, source, q, assigneeFilter],
     queryFn: () => {
       const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
       if (severity) params.set("severity", severity);
       if (status) params.set("status", status);
       if (source) params.set("source", source);
       if (q) params.set("q", q);
+      if (assigneeFilter) params.set("assignee", assigneeFilter);
       return api
         .get<PaginatedResponse<Vulnerability>>(`/vulnerabilities?${params}`)
         .then((r) => r.data);
     },
+  });
+
+  // ユーザー一覧（担当者フィルタ用）
+  const { data: users } = useQuery({
+    queryKey: ["users"],
+    queryFn: () => api.get<MeResponse[]>("/users").then((r) => r.data),
+    enabled: user?.role !== "viewer",
   });
 
   const batchUpdateMutation = useMutation({
@@ -154,19 +166,33 @@ export function VulnerabilitiesPage() {
     });
   };
 
+  const today = new Date().toISOString().split("T")[0]!;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">脆弱性一覧</h1>
-        {!isViewer && (
-          <Link
-            to="/vulnerabilities/new"
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors self-start sm:self-auto"
-          >
-            <Plus size={16} />
-            脆弱性を追加
-          </Link>
-        )}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {!isViewer && (
+            <button
+              type="button"
+              onClick={() => setCsvImportOpen(true)}
+              className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              <Upload size={16} />
+              CSVインポート
+            </button>
+          )}
+          {!isViewer && (
+            <Link
+              to="/vulnerabilities/new"
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+            >
+              <Plus size={16} />
+              脆弱性を追加
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Filters */}
@@ -284,6 +310,26 @@ export function VulnerabilitiesPage() {
             </div>
           )}
         </div>
+
+        {/* 担当者フィルタ（admin/editor のみ） */}
+        {user?.role !== "viewer" && users && users.length > 0 && (
+          <select
+            value={assigneeFilter}
+            onChange={(e) => setFilter("assignee", e.target.value)}
+            className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+              assigneeFilter
+                ? "bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300"
+                : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300"
+            }`}
+          >
+            <option value="">担当者</option>
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.username}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* Batch update bar */}
@@ -362,69 +408,92 @@ export function VulnerabilitiesPage() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-32">
                     ステータス
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-28">
-                    公開日
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase whitespace-nowrap w-24">
+                    担当者
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase whitespace-nowrap w-28">
+                    期限
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-28">
-                    更新日
+                    公開日
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                {data?.data.map((vuln) => (
-                  <tr
-                    key={vuln.id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    {!isViewer && (
+                {data?.data.map((vuln) => {
+                  const isOverdue =
+                    vuln.dueDate &&
+                    vuln.dueDate < today &&
+                    (vuln.status === "new" || vuln.status === "open");
+                  return (
+                    <tr
+                      key={vuln.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      {!isViewer && (
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(vuln.id)}
+                            onChange={() => toggleSelect(vuln.id)}
+                            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                        </td>
+                      )}
                       <td className="px-4 py-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(vuln.id)}
-                          onChange={() => toggleSelect(vuln.id)}
-                          className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
+                        <Link
+                          to={`/vulnerabilities/${vuln.id}`}
+                          className="font-medium text-blue-600 hover:underline block"
+                        >
+                          {vuln.cveId ?? "—"}
+                        </Link>
+                        {vuln.title && vuln.title !== vuln.cveId && (
+                          <div className="text-gray-700 dark:text-gray-300 text-xs font-medium mt-0.5 line-clamp-1">
+                            {vuln.title}
+                          </div>
+                        )}
+                        {vuln.description && (
+                          <div className="text-gray-500 dark:text-gray-400 text-xs mt-0.5 line-clamp-2">
+                            {vuln.description}
+                          </div>
+                        )}
                       </td>
-                    )}
-                    <td className="px-4 py-3">
-                      <Link
-                        to={`/vulnerabilities/${vuln.id}`}
-                        className="font-medium text-blue-600 hover:underline block"
-                      >
-                        {vuln.cveId ?? "—"}
-                      </Link>
-                      {vuln.title && vuln.title !== vuln.cveId && (
-                        <div className="text-gray-700 dark:text-gray-300 text-xs font-medium mt-0.5 line-clamp-1">
-                          {vuln.title}
-                        </div>
-                      )}
-                      {vuln.description && (
-                        <div className="text-gray-500 dark:text-gray-400 text-xs mt-0.5 line-clamp-2">
-                          {vuln.description}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <SeverityBadge severity={vuln.severity} />
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                      {vuln.cvssV3Score != null ? vuln.cvssV3Score.toFixed(1) : "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={vuln.status} />
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">
-                      {vuln.publishedAt
-                        ? new Date(vuln.publishedAt).toLocaleDateString("ja-JP")
-                        : "—"}
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">
-                      {vuln.modifiedAt
-                        ? new Date(vuln.modifiedAt).toLocaleDateString("ja-JP")
-                        : "—"}
-                    </td>
-                  </tr>
-                ))}
+                      <td className="px-4 py-3">
+                        <SeverityBadge severity={vuln.severity} />
+                      </td>
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                        {vuln.cvssV3Score != null ? vuln.cvssV3Score.toFixed(1) : "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <StatusBadge status={vuln.status} />
+                      </td>
+                      <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs whitespace-nowrap">
+                        {vuln.assigneeUsername ?? "—"}
+                      </td>
+                      <td className="px-4 py-3 text-xs whitespace-nowrap">
+                        {vuln.dueDate ? (
+                          <span
+                            className={
+                              isOverdue
+                                ? "text-red-600 font-medium"
+                                : "text-gray-500 dark:text-gray-400"
+                            }
+                          >
+                            {vuln.dueDate}
+                            {isOverdue && " ⚠"}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">
+                        {vuln.publishedAt
+                          ? new Date(vuln.publishedAt).toLocaleDateString("ja-JP")
+                          : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
@@ -454,6 +523,16 @@ export function VulnerabilitiesPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* CSV Import Modal */}
+      {csvImportOpen && (
+        <CsvImportModal
+          onClose={() => setCsvImportOpen(false)}
+          onSuccess={() => {
+            void queryClient.invalidateQueries({ queryKey: ["vulnerabilities"] });
+          }}
+        />
       )}
     </div>
   );

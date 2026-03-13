@@ -61,6 +61,11 @@ export const resetPasswordWithTokenSchema = z.object({
 // 脆弱性スキーマ
 // ========================================
 
+const dueDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Due date must be in YYYY-MM-DD format")
+  .optional();
+
 export const createVulnerabilitySchema = z.object({
   cveId: cveIdSchema.optional(),
   title: z.string().min(1, "Title is required").max(500, "Title too long"),
@@ -74,6 +79,8 @@ export const createVulnerabilitySchema = z.object({
   references: z.array(z.unknown()).optional(),
   publishedAt: z.string().datetime().optional(),
   modifiedAt: z.string().datetime().optional(),
+  assigneeId: z.string().uuid("Invalid assignee ID").optional(),
+  dueDate: dueDateSchema,
 });
 
 export const updateVulnerabilitySchema = z.object({
@@ -90,6 +97,8 @@ export const updateVulnerabilitySchema = z.object({
   publishedAt: z.string().datetime().nullable().optional(),
   modifiedAt: z.string().datetime().nullable().optional(),
   memo: z.string().max(2000, "Memo too long").nullable().optional(),
+  assigneeId: z.string().uuid("Invalid assignee ID").nullable().optional(),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Due date must be in YYYY-MM-DD format").nullable().optional(),
 });
 
 // ========================================

@@ -1,6 +1,6 @@
 import { cvssScoreToSeverity } from "@vulflare/shared/utils";
 import { Hono } from "hono";
-import { vulnRepo } from "../db/repository.ts";
+import { userRepo, vulnHistoryRepo, vulnRepo } from "../db/repository.ts";
 import { authMiddleware, requireRole } from "../middleware/auth.ts";
 import { dispatchNotification } from "../services/notifications.ts";
 import type { Env, JwtVariables } from "../types.ts";
@@ -23,6 +23,7 @@ vulnerabilityRoutes.get("/", async (c) => {
   const status = c.req.query("status");
   const source = c.req.query("source");
   const q = c.req.query("q");
+  const assignee = c.req.query("assignee");
 
   const { countStmt, dataStmt } = vulnRepo.list(c.env.DB, {
     page,
@@ -31,6 +32,7 @@ vulnerabilityRoutes.get("/", async (c) => {
     ...(status && { status }),
     ...(source && { source }),
     ...(q && { q }),
+    ...(assignee && { assignee }),
   });
   const [countResult, dataResult] = await c.env.DB.batch([countStmt, dataStmt]);
 
@@ -69,6 +71,29 @@ vulnerabilityRoutes.get("/stats", async (c) => {
   });
 });
 
+// GET /api/vulnerabilities/:id/history
+vulnerabilityRoutes.get("/:id/history", async (c) => {
+  const id = c.req.param("id")!;
+  const page = Math.max(1, Number(c.req.query("page") ?? 1));
+  const limit = Math.min(100, Math.max(1, Number(c.req.query("limit") ?? 20)));
+
+  const vuln = await vulnRepo.findById(c.env.DB, id);
+  if (!vuln) return c.json({ error: "Not found" }, 404);
+
+  const { countStmt, dataStmt } = vulnHistoryRepo.listByVulnId(c.env.DB, id, { page, limit });
+  const [countResult, dataResult] = await c.env.DB.batch([countStmt, dataStmt]);
+
+  const total = (countResult?.results[0] as { total: number } | undefined)?.total ?? 0;
+
+  return c.json({
+    data: (dataResult?.results ?? []).map((h) => mapHistory(h as Record<string, unknown>)),
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  });
+});
+
 // GET /api/vulnerabilities/:id
 vulnerabilityRoutes.get("/:id", async (c) => {
   const vuln = await vulnRepo.findById(c.env.DB, c.req.param("id")!);
@@ -95,11 +120,18 @@ vulnerabilityRoutes.post(
       references?: unknown[];
       publishedAt?: string;
       modifiedAt?: string;
+      assigneeId?: string;
+      dueDate?: string;
     };
 
     if (body.cveId) {
       const existing = await vulnRepo.findByCveId(c.env.DB, body.cveId);
       if (existing) return c.json({ error: "CVE ID already exists" }, 409);
+    }
+
+    if (body.assigneeId) {
+      const assignee = await userRepo.findById(c.env.DB, body.assigneeId);
+      if (!assignee) return c.json({ error: "Assignee not found" }, 400);
     }
 
     const severity =
@@ -131,6 +163,20 @@ vulnerabilityRoutes.post(
       source: "manual",
       status: "new",
       memo: null,
+      assignee_id: body.assigneeId ?? null,
+      due_date: body.dueDate ?? null,
+    });
+
+    const userId = c.get("userId");
+    const user = await userRepo.findById(c.env.DB, userId);
+
+    await vulnHistoryRepo.create(c.env.DB, {
+      id: crypto.randomUUID(),
+      vulnerability_id: id,
+      user_id: userId,
+      user_name: user?.username ?? null,
+      action: "created",
+      changes: null,
     });
 
     const created = await vulnRepo.findById(c.env.DB, id);
@@ -190,6 +236,36 @@ vulnerabilityRoutes.patch(
 
     const affectedRows = result.meta?.changes ?? 0;
 
+    const userId = c.get("userId");
+    const user = await userRepo.findById(c.env.DB, userId);
+
+    const historyEntries = body.ids.map(() => ({
+      id: crypto.randomUUID(),
+      vulnerability_id: body.ids[0]!, // individual below
+      user_id: userId,
+      user_name: user?.username ?? null,
+      action: "updated" as const,
+      changes: Object.fromEntries(
+        Object.entries(body.updates).map(([k, v]) => [k, { old: null, new: v }]),
+      ),
+    }));
+
+    // 各IDに対して履歴を記録
+    const historyPromises = body.ids.map((vid) =>
+      vulnHistoryRepo.create(c.env.DB, {
+        id: crypto.randomUUID(),
+        vulnerability_id: vid,
+        user_id: userId,
+        user_name: user?.username ?? null,
+        action: "updated",
+        changes: Object.fromEntries(
+          Object.entries(body.updates).map(([k, v]) => [k, { old: null, new: v }]),
+        ),
+      }),
+    );
+    await Promise.all(historyPromises);
+    void historyEntries; // suppress unused warning
+
     c.executionCtx.waitUntil(
       dispatchNotification(c.env, "vulnerability_updated", {
         count: affectedRows,
@@ -230,7 +306,43 @@ vulnerabilityRoutes.patch(
       publishedAt?: string | null;
       modifiedAt?: string | null;
       memo?: string | null;
+      assigneeId?: string | null;
+      dueDate?: string | null;
     };
+
+    if (body.assigneeId !== undefined && body.assigneeId !== null) {
+      const assignee = await userRepo.findById(c.env.DB, body.assigneeId);
+      if (!assignee) return c.json({ error: "Assignee not found" }, 400);
+    }
+
+    // 変更差分を計算
+    const fieldMap: Record<string, { dbField: string; oldVal: unknown }> = {
+      title: { dbField: "title", oldVal: existing.title },
+      description: { dbField: "description", oldVal: existing.description },
+      severity: { dbField: "severity", oldVal: existing.severity },
+      status: { dbField: "status", oldVal: existing.status },
+      cvssV3Score: { dbField: "cvss_v3_score", oldVal: existing.cvss_v3_score },
+      cvssV3Vector: { dbField: "cvss_v3_vector", oldVal: existing.cvss_v3_vector },
+      cvssV4Score: { dbField: "cvss_v4_score", oldVal: existing.cvss_v4_score },
+      cvssV4Vector: { dbField: "cvss_v4_vector", oldVal: existing.cvss_v4_vector },
+      memo: { dbField: "memo", oldVal: existing.memo },
+      assigneeId: { dbField: "assignee_id", oldVal: existing.assignee_id },
+      dueDate: { dbField: "due_date", oldVal: existing.due_date },
+    };
+
+    const changes: Record<string, { old: unknown; new: unknown }> = {};
+    for (const [bodyKey, { dbField: _dbField, oldVal }] of Object.entries(fieldMap)) {
+      const newVal = body[bodyKey as keyof typeof body];
+      if (newVal !== undefined && newVal !== oldVal) {
+        changes[bodyKey] = { old: oldVal, new: newVal };
+      }
+    }
+    if (body.publishedAt !== undefined && body.publishedAt !== existing.published_at) {
+      changes.publishedAt = { old: existing.published_at, new: body.publishedAt };
+    }
+    if (body.modifiedAt !== undefined && body.modifiedAt !== existing.modified_at) {
+      changes.modifiedAt = { old: existing.modified_at, new: body.modifiedAt };
+    }
 
     await vulnRepo.update(c.env.DB, id, {
       ...(body.title !== undefined && { title: body.title }),
@@ -246,7 +358,23 @@ vulnerabilityRoutes.patch(
       ...(body.publishedAt !== undefined && { published_at: body.publishedAt }),
       ...(body.modifiedAt !== undefined && { modified_at: body.modifiedAt }),
       ...(body.memo !== undefined && { memo: body.memo }),
+      ...(body.assigneeId !== undefined && { assignee_id: body.assigneeId }),
+      ...(body.dueDate !== undefined && { due_date: body.dueDate }),
     });
+
+    const userId = c.get("userId");
+    const user = await userRepo.findById(c.env.DB, userId);
+
+    if (Object.keys(changes).length > 0) {
+      await vulnHistoryRepo.create(c.env.DB, {
+        id: crypto.randomUUID(),
+        vulnerability_id: id,
+        user_id: userId,
+        user_name: user?.username ?? null,
+        action: "updated",
+        changes,
+      });
+    }
 
     const updated = await vulnRepo.findById(c.env.DB, id);
     const mappedUpdated = mapVuln(updated! as unknown as Record<string, unknown>);
@@ -266,9 +394,23 @@ vulnerabilityRoutes.patch(
 
 // DELETE /api/vulnerabilities/:id
 vulnerabilityRoutes.delete("/:id", requireRole("admin"), async (c) => {
-  const existing = await vulnRepo.findById(c.env.DB, c.req.param("id")!);
+  const id = c.req.param("id")!;
+  const existing = await vulnRepo.findById(c.env.DB, id);
   if (!existing) return c.json({ error: "Not found" }, 404);
-  await vulnRepo.delete(c.env.DB, c.req.param("id")!);
+
+  const userId = c.get("userId");
+  const user = await userRepo.findById(c.env.DB, userId);
+
+  await vulnHistoryRepo.create(c.env.DB, {
+    id: crypto.randomUUID(),
+    vulnerability_id: id,
+    user_id: userId,
+    user_name: user?.username ?? null,
+    action: "deleted",
+    changes: null,
+  });
+
+  await vulnRepo.delete(c.env.DB, id);
   return c.json({ message: "Deleted" });
 });
 
@@ -293,8 +435,23 @@ function mapVuln(v: Record<string, unknown>) {
     source: v.source,
     status: v.status,
     memo: v.memo ?? null,
+    assigneeId: v.assignee_id ?? null,
+    assigneeUsername: v.assignee_username ?? null,
+    dueDate: v.due_date ?? null,
     createdAt: v.created_at,
     updatedAt: v.updated_at,
+  };
+}
+
+function mapHistory(h: Record<string, unknown>) {
+  return {
+    id: h.id,
+    vulnerabilityId: h.vulnerability_id,
+    userId: h.user_id ?? null,
+    userName: h.user_name ?? null,
+    action: h.action,
+    changes: h.changes ? safeParseJson(h.changes as string, null) : null,
+    createdAt: h.created_at,
   };
 }
 

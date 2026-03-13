@@ -244,8 +244,14 @@ export interface DbVulnerability {
   source: string;
   status: string;
   memo: string | null;
+  assignee_id: string | null;
+  due_date: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface DbVulnerabilityWithAssignee extends DbVulnerability {
+  assignee_username: string | null;
 }
 
 export const vulnRepo = {
@@ -258,6 +264,7 @@ export const vulnRepo = {
       status,
       source,
       q,
+      assignee,
     }: {
       page: number;
       limit: number;
@@ -265,6 +272,7 @@ export const vulnRepo = {
       status?: string;
       source?: string;
       q?: string;
+      assignee?: string;
     },
   ) {
     const conditions: string[] = [];
@@ -273,40 +281,50 @@ export const vulnRepo = {
     if (severity) {
       const severities = severity.split(",").filter(Boolean);
       if (severities.length === 1) {
-        conditions.push("severity = ?");
+        conditions.push("v.severity = ?");
         params.push(severities[0]);
       } else {
-        conditions.push(`severity IN (${severities.map(() => "?").join(",")})`);
+        conditions.push(`v.severity IN (${severities.map(() => "?").join(",")})`);
         params.push(...severities);
       }
     }
     if (status) {
       const statuses = status.split(",").filter(Boolean);
       if (statuses.length === 1) {
-        conditions.push("status = ?");
+        conditions.push("v.status = ?");
         params.push(statuses[0]);
       } else {
-        conditions.push(`status IN (${statuses.map(() => "?").join(",")})`);
+        conditions.push(`v.status IN (${statuses.map(() => "?").join(",")})`);
         params.push(...statuses);
       }
     }
     if (source) {
-      conditions.push("source = ?");
+      conditions.push("v.source = ?");
       params.push(source);
     }
     if (q) {
-      conditions.push("(cve_id LIKE ? OR title LIKE ?)");
+      conditions.push("(v.cve_id LIKE ? OR v.title LIKE ?)");
       params.push(`%${q}%`, `%${q}%`);
+    }
+    if (assignee) {
+      conditions.push("v.assignee_id = ?");
+      params.push(assignee);
     }
 
     const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
     const offset = (page - 1) * limit;
 
     const countStmt = db
-      .prepare(`SELECT COUNT(*) as total FROM vulnerabilities ${where}`)
+      .prepare(`SELECT COUNT(*) as total FROM vulnerabilities v ${where}`)
       .bind(...params);
     const dataStmt = db
-      .prepare(`SELECT * FROM vulnerabilities ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`)
+      .prepare(
+        `SELECT v.*, u.username AS assignee_username
+         FROM vulnerabilities v
+         LEFT JOIN users u ON v.assignee_id = u.id
+         ${where}
+         ORDER BY v.created_at DESC LIMIT ? OFFSET ?`,
+      )
       .bind(...params, limit, offset);
 
     return { countStmt, dataStmt };
@@ -314,9 +332,14 @@ export const vulnRepo = {
 
   findById(db: DB, id: string) {
     return db
-      .prepare("SELECT * FROM vulnerabilities WHERE id = ?")
+      .prepare(
+        `SELECT v.*, u.username AS assignee_username
+         FROM vulnerabilities v
+         LEFT JOIN users u ON v.assignee_id = u.id
+         WHERE v.id = ?`,
+      )
       .bind(id)
-      .first<DbVulnerability>();
+      .first<DbVulnerabilityWithAssignee>();
   },
 
   findByCveId(db: DB, cveId: string) {
@@ -333,8 +356,8 @@ export const vulnRepo = {
           (id, cve_id, title, description, severity, cvss_v3_score, cvss_v3_vector,
            cvss_v2_score, cvss_v2_vector, cvss_v4_score, cvss_v4_vector,
            cwe_ids, affected_products, vuln_references,
-           published_at, modified_at, source, status)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+           published_at, modified_at, source, status, assignee_id, due_date)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       )
       .bind(
         v.id,
@@ -355,6 +378,8 @@ export const vulnRepo = {
         v.modified_at,
         v.source,
         v.status,
+        v.assignee_id ?? null,
+        v.due_date ?? null,
       )
       .run();
   },
@@ -378,6 +403,8 @@ export const vulnRepo = {
         | "published_at"
         | "modified_at"
         | "memo"
+        | "assignee_id"
+        | "due_date"
       >
     >,
   ) {
@@ -419,6 +446,61 @@ export const vulnRepo = {
       .first<Record<string, number>>();
   },
 
+  upsertByCveId(db: DB, v: Omit<DbVulnerability, "created_at" | "updated_at">) {
+    return db
+      .prepare(
+        `INSERT INTO vulnerabilities
+          (id, cve_id, title, description, severity, cvss_v3_score, cvss_v3_vector,
+           cvss_v2_score, cvss_v2_vector, cvss_v4_score, cvss_v4_vector,
+           cwe_ids, affected_products, vuln_references,
+           published_at, modified_at, source, status, assignee_id, due_date)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         ON CONFLICT(cve_id) DO UPDATE SET
+           title = excluded.title,
+           description = excluded.description,
+           severity = excluded.severity,
+           cvss_v3_score = excluded.cvss_v3_score,
+           cvss_v3_vector = excluded.cvss_v3_vector,
+           cvss_v2_score = excluded.cvss_v2_score,
+           cvss_v2_vector = excluded.cvss_v2_vector,
+           cvss_v4_score = excluded.cvss_v4_score,
+           cvss_v4_vector = excluded.cvss_v4_vector,
+           cwe_ids = excluded.cwe_ids,
+           affected_products = excluded.affected_products,
+           vuln_references = excluded.vuln_references,
+           published_at = excluded.published_at,
+           modified_at = excluded.modified_at,
+           source = excluded.source,
+           status = excluded.status,
+           assignee_id = excluded.assignee_id,
+           due_date = excluded.due_date,
+           updated_at = datetime('now')`,
+      )
+      .bind(
+        v.id,
+        v.cve_id,
+        v.title,
+        v.description,
+        v.severity,
+        v.cvss_v3_score,
+        v.cvss_v3_vector,
+        v.cvss_v2_score,
+        v.cvss_v2_vector,
+        v.cvss_v4_score,
+        v.cvss_v4_vector,
+        v.cwe_ids,
+        v.affected_products,
+        v.vuln_references,
+        v.published_at,
+        v.modified_at,
+        v.source,
+        v.status,
+        v.assignee_id ?? null,
+        v.due_date ?? null,
+      )
+      .run();
+  },
+
   batchUpdate(
     db: DB,
     ids: string[],
@@ -444,5 +526,60 @@ export const vulnRepo = {
       .prepare(sql)
       .bind(...params)
       .run();
+  },
+};
+
+// --- Vulnerability History ---
+
+export interface DbVulnerabilityHistory {
+  id: string;
+  vulnerability_id: string;
+  user_id: string | null;
+  user_name: string | null;
+  action: string;
+  changes: string | null;
+  created_at: string;
+}
+
+export const vulnHistoryRepo = {
+  create(
+    db: DB,
+    entry: {
+      id: string;
+      vulnerability_id: string;
+      user_id: string | null;
+      user_name: string | null;
+      action: string;
+      changes: Record<string, { old: unknown; new: unknown }> | null;
+    },
+  ) {
+    return db
+      .prepare(
+        `INSERT INTO vulnerability_history (id, vulnerability_id, user_id, user_name, action, changes)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+      )
+      .bind(
+        entry.id,
+        entry.vulnerability_id,
+        entry.user_id,
+        entry.user_name,
+        entry.action,
+        entry.changes ? JSON.stringify(entry.changes) : null,
+      )
+      .run();
+  },
+
+  listByVulnId(db: DB, vulnId: string, { page, limit }: { page: number; limit: number }) {
+    const offset = (page - 1) * limit;
+    const countStmt = db
+      .prepare("SELECT COUNT(*) as total FROM vulnerability_history WHERE vulnerability_id = ?")
+      .bind(vulnId);
+    const dataStmt = db
+      .prepare(
+        `SELECT * FROM vulnerability_history WHERE vulnerability_id = ?
+         ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      )
+      .bind(vulnId, limit, offset);
+    return { countStmt, dataStmt };
   },
 };
