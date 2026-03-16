@@ -362,11 +362,11 @@ syncRoutes.post(
 syncRoutes.delete("/data/:source", authMiddleware, requireRole("admin"), async (c) => {
   const source = c.req.param("source") ?? "";
 
-  if (source !== "jvn") {
-    return c.json({ error: "Invalid source. Must be: jvn" }, 400);
+  if (!["jvn", "manual"].includes(source)) {
+    return c.json({ error: "Invalid source. Must be: jvn, manual" }, 400);
   }
 
-  const results = await deleteSyncData(c.env, "jvn");
+  const results = await deleteSyncData(c.env, source as "jvn" | "manual");
 
   return c.json(results);
 });

@@ -5,15 +5,15 @@ export interface DeletionResult {
   totalDeleted: number;
 }
 
-type DataSource = "jvn";
+type DataSource = "jvn" | "manual";
 
 /**
  * 指定されたデータソースの同期データを削除する
  * @param env - Cloudflare Worker環境
- * @param source - 削除対象のデータソース ('jvn')
+ * @param source - 削除対象のデータソース ('jvn' | 'manual')
  * @returns 削除結果 (各ソースの削除件数と合計)
  */
-export async function deleteSyncData(env: Env, source: "jvn"): Promise<DeletionResult> {
+export async function deleteSyncData(env: Env, source: DataSource): Promise<DeletionResult> {
   const deleted: Record<string, number> = {};
   let totalDeleted = 0;
 
@@ -55,20 +55,26 @@ async function deleteSingleSource(env: Env, source: DataSource): Promise<number>
 
   const deletedCount = vulnerabilitiesResult.meta.changes ?? 0;
 
-  // 2. 同期ログテーブルから該当ソースのレコードを削除
-  const syncLogTable = `${source}_sync_logs`;
-  try {
-    await env.DB.prepare(`DELETE FROM ${syncLogTable}`).run();
-  } catch (error) {
-    // sync_logs テーブルが存在しない場合はスキップ
-    console.warn(`[deleteSingleSource] Sync log table ${syncLogTable} not found or error:`, error);
-  }
+  // manual ソースは同期ログ・KVキャッシュ・ベンダーキャッシュを持たないためスキップ
+  if (source !== "manual") {
+    // 2. 同期ログテーブルから該当ソースのレコードを削除
+    const syncLogTable = `${source}_sync_logs`;
+    try {
+      await env.DB.prepare(`DELETE FROM ${syncLogTable}`).run();
+    } catch (error) {
+      // sync_logs テーブルが存在しない場合はスキップ
+      console.warn(
+        `[deleteSingleSource] Sync log table ${syncLogTable} not found or error:`,
+        error,
+      );
+    }
 
-  // 3. KVキャッシュを削除 (last_sync_date)
-  try {
-    await env.VULFLARE_KV_CACHE.delete(`${source}:last_sync_date`);
-  } catch (error) {
-    console.warn(`[deleteSingleSource] Error deleting KV cache for ${source}:`, error);
+    // 3. KVキャッシュを削除 (last_sync_date)
+    try {
+      await env.VULFLARE_KV_CACHE.delete(`${source}:last_sync_date`);
+    } catch (error) {
+      console.warn(`[deleteSingleSource] Error deleting KV cache for ${source}:`, error);
+    }
   }
 
   // 4. JVN専用: vendor/product キャッシュテーブルも削除

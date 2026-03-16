@@ -866,7 +866,7 @@ export function SyncPage() {
             データ管理
           </h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-            JVNから取得した脆弱性情報を削除します。この操作は元に戻せません。
+            データソース別に脆弱性情報を削除します。この操作は元に戻せません。
           </p>
 
           <div className="space-y-3">
@@ -883,6 +883,22 @@ export function SyncPage() {
                     )
                   ) {
                     deleteSyncDataMutation.mutate("jvn");
+                  }
+                }}
+                disabled={deleteSyncDataMutation.isPending}
+                className="flex items-center gap-1.5 text-red-600 hover:text-red-700 text-sm disabled:opacity-50"
+              >
+                <Trash2 size={14} />
+                削除
+              </button>
+            </div>
+            <div className="flex items-center justify-between py-2">
+              <span className="text-sm text-gray-700 dark:text-gray-300">手動登録</span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm("手動登録した脆弱性を削除しますか？\n\nこの操作は元に戻せません。")) {
+                    deleteSyncDataMutation.mutate("manual");
                   }
                 }}
                 disabled={deleteSyncDataMutation.isPending}
