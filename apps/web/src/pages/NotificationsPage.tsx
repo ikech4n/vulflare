@@ -59,6 +59,7 @@ function LogDetail({ log }: { log: NotificationLog }) {
     const severity = data.severity as string | undefined;
     const cvss = data.cvss_score as number | undefined;
     const createdCount = data.created_count as number | undefined;
+    const updatedCount = data.updated_count as number | undefined;
     const criticalCount = data.critical_count as number | undefined;
     const cveIds = data.cve_ids as string[] | undefined;
     return (
@@ -74,6 +75,7 @@ function LogDetail({ log }: { log: NotificationLog }) {
             {createdCount}件登録{criticalCount ? `（Critical: ${criticalCount}件）` : ""}
           </div>
         )}
+        {updatedCount != null && <div>{updatedCount}件更新</div>}
         {cveIds?.length && (
           <div className="text-xs text-gray-500 dark:text-gray-400">CVE: {cveIds.join(", ")}</div>
         )}
