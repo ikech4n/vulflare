@@ -8,7 +8,7 @@
  */
 
 import { fetchMock } from "cloudflare:test";
-import { afterEach, beforeAll, describe, expect, it } from "vite-plus/test";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { fetchProductList, fetchVendorList } from "./myjvn-api.ts";
 
 const MYJVN_HOST = "https://jvndb.jvn.jp";

@@ -11,7 +11,7 @@
 
 import { env } from "cloudflare:test";
 import { Hono } from "hono";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it } from "vitest";
 import { makeAccessToken, makeRefreshToken, signJwt } from "../services/auth.ts";
 import type { Env, JwtVariables } from "../types.ts";
 import { authMiddleware, requireRole } from "./auth.ts";

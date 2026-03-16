@@ -12,7 +12,7 @@
  */
 
 import { env, fetchMock } from "cloudflare:test";
-import { afterEach, beforeAll, describe, expect, it } from "vite-plus/test";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { app } from "../index.ts";
 import { signJwt } from "../services/auth.ts";
 import type { Env } from "../types.ts";

@@ -7,7 +7,7 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "type-check": "tsc --noEmit",
-    "test": "vp test"
+    "test": "vitest"
   },
   "dependencies": {
     "@vulflare/shared": "workspace:*",
