@@ -30,16 +30,6 @@ export function VulnerabilitiesPage() {
   const selectedStatuses = status ? status.split(",").filter(Boolean) : [];
   const source = searchParams.get("source") ?? "";
 
-  // 初回マウント時にstatusが未指定なら「新規+対応中」をデフォルト設定
-  // biome-ignore lint/correctness/useExhaustiveDependencies: 初回マウント時のみ実行
-  useEffect(() => {
-    if (!searchParams.has("status")) {
-      const next = new URLSearchParams(searchParams);
-      next.set("status", "new,open");
-      setSearchParams(next, { replace: true });
-    }
-  }, []);
-
   const [severityOpen, setSeverityOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
   const severityRef = useRef<HTMLDivElement>(null);

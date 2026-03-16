@@ -86,7 +86,7 @@ export function DashboardPage() {
           icon={<Clock className="text-orange-500" size={20} />}
           label="新規（未確認）"
           value={stats.byStatus.new ?? 0}
-          href="/vulnerabilities?status=new"
+          href="/vulnerabilities"
         />
         <StatCard
           icon={<CheckCircle2 className="text-green-500" size={20} />}
