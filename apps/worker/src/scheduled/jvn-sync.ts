@@ -558,9 +558,25 @@ export async function handleJvnSync(env: Env, forceFullSync = false): Promise<vo
 
       // 既存脆弱性がJVNで更新された場合は通知
       if (totalUpdated > 0) {
+        // updated_at はJST格納、created_at はUTC格納なのでそれぞれのフォーマットに合わせる
+        const syncStartJstSqlite = nowStr.replace("T", " ").replace(/\.\d{3}Z$/, "");
+        const syncStartUtcSqlite = syncStartUtcStr.replace("T", " ").replace(/\.\d{3}Z$/, "");
+        const updatedRows = await env.DB.prepare(`
+          SELECT cve_id FROM vulnerabilities
+          WHERE source = 'jvn'
+            AND updated_at >= ?
+            AND created_at < ?
+          ORDER BY cvss_v3_score DESC
+          LIMIT 20
+        `)
+          .bind(syncStartJstSqlite, syncStartUtcSqlite)
+          .all<{ cve_id: string }>();
+        const updatedCveIds = updatedRows.results.map((r) => r.cve_id);
+
         await dispatchNotification(env, "vulnerability_updated", {
           source: "jvn",
           updated_count: totalUpdated,
+          cve_ids: updatedCveIds,
         });
       }
     }
