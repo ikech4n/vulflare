@@ -274,6 +274,7 @@ vulnerabilityRoutes.patch(
     if (!existing) return c.json({ error: "Not found" }, 404);
 
     const body = c.get("validatedBody") as {
+      cveId?: string | null;
       title?: string;
       description?: string;
       severity?: string;
@@ -289,8 +290,18 @@ vulnerabilityRoutes.patch(
       memo?: string | null;
     };
 
+    // CVE ID の重複チェック（manual のみ変更可）
+    if (body.cveId !== undefined && existing.source !== "manual") {
+      return c.json({ error: "CVE ID can only be changed for manual vulnerabilities" }, 400);
+    }
+    if (body.cveId) {
+      const dup = await vulnRepo.findByCveId(c.env.DB, body.cveId);
+      if (dup && dup.id !== id) return c.json({ error: "CVE ID already exists" }, 409);
+    }
+
     // 変更差分を計算
     const fieldMap: Record<string, { dbField: string; oldVal: unknown }> = {
+      cveId: { dbField: "cve_id", oldVal: existing.cve_id },
       title: { dbField: "title", oldVal: existing.title },
       description: { dbField: "description", oldVal: existing.description },
       severity: { dbField: "severity", oldVal: existing.severity },
@@ -317,6 +328,7 @@ vulnerabilityRoutes.patch(
     }
 
     await vulnRepo.update(c.env.DB, id, {
+      ...(body.cveId !== undefined && { cve_id: body.cveId }),
       ...(body.title !== undefined && { title: body.title }),
       ...(body.description !== undefined && { description: body.description }),
       ...(body.severity !== undefined && { severity: body.severity }),

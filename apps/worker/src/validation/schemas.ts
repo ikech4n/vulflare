@@ -77,6 +77,7 @@ export const createVulnerabilitySchema = z.object({
 });
 
 export const updateVulnerabilitySchema = z.object({
+  cveId: cveIdSchema.nullable().optional(),
   title: z.string().min(1, "Title is required").max(500, "Title too long").optional(),
   description: z.string().max(10000, "Description too long").optional(),
   severity: severitySchema.optional(),
