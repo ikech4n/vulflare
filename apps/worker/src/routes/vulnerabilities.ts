@@ -2,7 +2,6 @@ import { cvssScoreToSeverity } from "@vulflare/shared/utils";
 import { Hono } from "hono";
 import { userRepo, vulnHistoryRepo, vulnRepo } from "../db/repository.ts";
 import { authMiddleware, requireRole } from "../middleware/auth.ts";
-import { dispatchNotification } from "../services/notifications.ts";
 import type { Env, JwtVariables } from "../types.ts";
 import { validate } from "../validation/middleware.ts";
 import {
@@ -170,16 +169,6 @@ vulnerabilityRoutes.post(
 
     const created = await vulnRepo.findById(c.env.DB, id);
     const mapped = mapVuln((created ?? {}) as unknown as Record<string, unknown>);
-
-    const notifData = {
-      vuln_id: mapped.cveId ?? id,
-      title: mapped.title,
-      severity: mapped.severity,
-    };
-    c.executionCtx.waitUntil(dispatchNotification(c.env, "vulnerability_created", notifData));
-    if (severity === "critical") {
-      c.executionCtx.waitUntil(dispatchNotification(c.env, "vulnerability_critical", notifData));
-    }
 
     return c.json(mapped, 201);
   },
