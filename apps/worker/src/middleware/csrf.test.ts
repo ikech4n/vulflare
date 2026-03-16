@@ -11,7 +11,7 @@
 
 import { env } from "cloudflare:test";
 import { Hono } from "hono";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import type { Env } from "../types.ts";
 import { csrfProtection } from "./csrf.ts";
 

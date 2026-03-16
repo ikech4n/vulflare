@@ -7,7 +7,7 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "type-check": "tsc --noEmit",
-    "test": "vitest"
+    "test": "vp test"
   },
   "dependencies": {
     "@vulflare/shared": "workspace:*",
@@ -18,7 +18,8 @@
     "@cloudflare/vitest-pool-workers": "^0.12.18",
     "@cloudflare/workers-types": "^4.20260301.1",
     "typescript": "^5.7.0",
-    "vitest": "^3.2.4",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:",
     "wrangler": "^4.0.0"
   }
 }

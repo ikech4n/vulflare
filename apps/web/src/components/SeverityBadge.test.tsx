@@ -1,5 +1,5 @@
 import { render, screen } from "@/test/utils";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { SeverityBadge } from "./SeverityBadge";
 
 describe("SeverityBadge", () => {
