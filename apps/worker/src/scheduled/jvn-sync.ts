@@ -153,7 +153,11 @@ function buildUpsertStmt(db: D1Database, entry: JvnEntry) {
       affected_products = excluded.affected_products,
       vuln_references = excluded.vuln_references,
       modified_at = excluded.modified_at,
-      updated_at = datetime('now', '+9 hours')
+      updated_at = CASE
+        WHEN vulnerabilities.modified_at IS NOT excluded.modified_at
+        THEN datetime('now', '+9 hours')
+        ELSE vulnerabilities.updated_at
+      END
     WHERE vulnerabilities.source = 'jvn'
   `)
     .bind(
@@ -556,26 +560,26 @@ export async function handleJvnSync(env: Env, forceFullSync = false): Promise<vo
         }
       }
 
-      // 既存脆弱性がJVNで更新された場合は通知
-      if (totalUpdated > 0) {
-        // updated_at はJST格納、created_at はUTC格納なのでそれぞれのフォーマットに合わせる
-        const syncStartJstSqlite = nowStr.replace("T", " ").replace(/\.\d{3}Z$/, "");
-        const syncStartUtcSqlite = syncStartUtcStr.replace("T", " ").replace(/\.\d{3}Z$/, "");
-        const updatedRows = await env.DB.prepare(`
-          SELECT cve_id FROM vulnerabilities
-          WHERE source = 'jvn'
-            AND updated_at >= ?
-            AND created_at < ?
-          ORDER BY cvss_v3_score DESC
-          LIMIT 20
-        `)
-          .bind(syncStartJstSqlite, syncStartUtcSqlite)
-          .all<{ cve_id: string }>();
-        const updatedCveIds = updatedRows.results.map((r) => r.cve_id);
+      // 既存脆弱性がJVNで実際に内容変更された場合のみ通知
+      // updated_at はJST格納、created_at はUTC格納なのでそれぞれのフォーマットに合わせる
+      const syncStartJstSqlite = nowStr.replace("T", " ").replace(/\.\d{3}Z$/, "");
+      const syncStartUtcSqlite = syncStartUtcStr.replace("T", " ").replace(/\.\d{3}Z$/, "");
+      const updatedRows = await env.DB.prepare(`
+        SELECT cve_id FROM vulnerabilities
+        WHERE source = 'jvn'
+          AND updated_at >= ?
+          AND created_at < ?
+        ORDER BY cvss_v3_score DESC
+        LIMIT 20
+      `)
+        .bind(syncStartJstSqlite, syncStartUtcSqlite)
+        .all<{ cve_id: string }>();
 
+      if (updatedRows.results.length > 0) {
+        const updatedCveIds = updatedRows.results.map((r) => r.cve_id);
         await dispatchNotification(env, "vulnerability_updated", {
           source: "jvn",
-          updated_count: totalUpdated,
+          updated_count: updatedRows.results.length,
           cve_ids: updatedCveIds,
         });
       }
