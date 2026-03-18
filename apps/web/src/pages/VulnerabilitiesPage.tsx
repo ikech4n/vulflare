@@ -8,10 +8,12 @@ import type {
   BatchUpdateVulnerabilityRequest,
   BatchUpdateVulnerabilityResponse,
   PaginatedResponse,
+  SortOrder,
+  VulnSortField,
   VulnStatus,
   Vulnerability,
 } from "@vulflare/shared/types";
-import { ChevronDown, Plus, Search, Upload } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Plus, Search, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
@@ -29,6 +31,8 @@ export function VulnerabilitiesPage() {
   const status = searchParams.get("status") ?? "";
   const selectedStatuses = status ? status.split(",").filter(Boolean) : [];
   const source = searchParams.get("source") ?? "";
+  const sort = (searchParams.get("sort") ?? "") as VulnSortField | "";
+  const order = (searchParams.get("order") ?? "") as SortOrder | "";
 
   const [severityOpen, setSeverityOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
@@ -55,13 +59,15 @@ export function VulnerabilitiesPage() {
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["vulnerabilities", page, severity, status, source, q],
+    queryKey: ["vulnerabilities", page, severity, status, source, q, sort, order],
     queryFn: () => {
       const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
       if (severity) params.set("severity", severity);
       if (status) params.set("status", status);
       if (source) params.set("source", source);
       if (q) params.set("q", q);
+      if (sort) params.set("sort", sort);
+      if (order) params.set("order", order);
       return api
         .get<PaginatedResponse<Vulnerability>>(`/vulnerabilities?${params}`)
         .then((r) => r.data);
@@ -87,6 +93,32 @@ export function VulnerabilitiesPage() {
     else next.delete(key);
     next.delete("page");
     setSearchParams(next);
+  };
+
+  const handleSort = (field: VulnSortField) => {
+    const next = new URLSearchParams(searchParams);
+    if (sort === field) {
+      if (order === "asc") {
+        next.set("order", "desc");
+      } else if (order === "desc") {
+        next.delete("sort");
+        next.delete("order");
+      } else {
+        next.set("order", "asc");
+      }
+    } else {
+      next.set("sort", field);
+      next.set("order", "asc");
+    }
+    next.delete("page");
+    setSearchParams(next);
+  };
+
+  const SortIcon = ({ field }: { field: VulnSortField }) => {
+    if (sort !== field)
+      return <ArrowUpDown size={12} className="text-gray-300 dark:text-gray-600" />;
+    if (order === "asc") return <ArrowUp size={12} className="text-blue-500" />;
+    return <ArrowDown size={12} className="text-blue-500" />;
   };
 
   const toggleStatus = (s: string) => {
@@ -359,20 +391,45 @@ export function VulnerabilitiesPage() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     CVE / タイトル
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-28">
-                    深刻度
+                  <th
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-28 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200"
+                    onClick={() => handleSort("severity")}
+                  >
+                    <span className="flex items-center gap-1">
+                      深刻度 <SortIcon field="severity" />
+                    </span>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-20">
-                    CVSS
+                  <th
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-20 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200"
+                    onClick={() => handleSort("cvss")}
+                  >
+                    <span className="flex items-center gap-1">
+                      CVSS <SortIcon field="cvss" />
+                    </span>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-32">
-                    ステータス
+                  <th
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-32 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200"
+                    onClick={() => handleSort("status")}
+                  >
+                    <span className="flex items-center gap-1">
+                      ステータス <SortIcon field="status" />
+                    </span>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-28">
-                    公開日
+                  <th
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-28 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200"
+                    onClick={() => handleSort("published_at")}
+                  >
+                    <span className="flex items-center gap-1">
+                      公開日 <SortIcon field="published_at" />
+                    </span>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-28">
-                    更新日
+                  <th
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-28 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200"
+                    onClick={() => handleSort("modified_at")}
+                  >
+                    <span className="flex items-center gap-1">
+                      更新日 <SortIcon field="modified_at" />
+                    </span>
                   </th>
                 </tr>
               </thead>

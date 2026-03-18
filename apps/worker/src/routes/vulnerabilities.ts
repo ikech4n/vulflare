@@ -23,6 +23,14 @@ vulnerabilityRoutes.get("/", async (c) => {
   const source = c.req.query("source");
   const q = c.req.query("q");
 
+  const SORT_FIELDS = ["severity", "cvss", "status", "published_at", "modified_at"] as const;
+  const sortParam = c.req.query("sort");
+  const orderParam = c.req.query("order");
+  const sort = SORT_FIELDS.includes(sortParam as (typeof SORT_FIELDS)[number])
+    ? (sortParam as (typeof SORT_FIELDS)[number])
+    : undefined;
+  const order = orderParam === "asc" || orderParam === "desc" ? orderParam : undefined;
+
   const { countStmt, dataStmt } = vulnRepo.list(c.env.DB, {
     page,
     limit,
@@ -30,6 +38,8 @@ vulnerabilityRoutes.get("/", async (c) => {
     ...(status && { status }),
     ...(source && { source }),
     ...(q && { q }),
+    ...(sort && { sort }),
+    ...(order && { order }),
   });
   const [countResult, dataResult] = await c.env.DB.batch([countStmt, dataStmt]);
 
