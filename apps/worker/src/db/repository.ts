@@ -330,14 +330,14 @@ export const vulnRepo = {
           return `CASE v.severity WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 WHEN 'low' THEN 4 WHEN 'informational' THEN 5 ELSE 6 END ${dir}`;
         case "cvss":
           return dir === "ASC"
-            ? `v.cvss_v3_score ASC NULLS LAST`
-            : `v.cvss_v3_score DESC NULLS LAST`;
+            ? "v.cvss_v3_score ASC NULLS LAST"
+            : "v.cvss_v3_score DESC NULLS LAST";
         case "status":
           return `CASE v.status WHEN 'new' THEN 1 WHEN 'open' THEN 2 WHEN 'fixed' THEN 3 WHEN 'accepted_risk' THEN 4 WHEN 'false_positive' THEN 5 ELSE 6 END ${dir}`;
         case "published_at":
-          return dir === "ASC" ? `v.published_at ASC NULLS LAST` : `v.published_at DESC NULLS LAST`;
+          return dir === "ASC" ? "v.published_at ASC NULLS LAST" : "v.published_at DESC NULLS LAST";
         case "modified_at":
-          return dir === "ASC" ? `v.modified_at ASC NULLS LAST` : `v.modified_at DESC NULLS LAST`;
+          return dir === "ASC" ? "v.modified_at ASC NULLS LAST" : "v.modified_at DESC NULLS LAST";
         default:
           return "v.created_at DESC";
       }
