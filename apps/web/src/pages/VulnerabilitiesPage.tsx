@@ -394,6 +394,7 @@ export function VulnerabilitiesPage() {
                   <th
                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-28 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200"
                     onClick={() => handleSort("severity")}
+                    onKeyDown={(e) => e.key === "Enter" && handleSort("severity")}
                   >
                     <span className="flex items-center gap-1">
                       深刻度 <SortIcon field="severity" />
@@ -402,6 +403,7 @@ export function VulnerabilitiesPage() {
                   <th
                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-20 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200"
                     onClick={() => handleSort("cvss")}
+                    onKeyDown={(e) => e.key === "Enter" && handleSort("cvss")}
                   >
                     <span className="flex items-center gap-1">
                       CVSS <SortIcon field="cvss" />
@@ -410,6 +412,7 @@ export function VulnerabilitiesPage() {
                   <th
                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-32 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200"
                     onClick={() => handleSort("status")}
+                    onKeyDown={(e) => e.key === "Enter" && handleSort("status")}
                   >
                     <span className="flex items-center gap-1">
                       ステータス <SortIcon field="status" />
@@ -418,6 +421,7 @@ export function VulnerabilitiesPage() {
                   <th
                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-28 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200"
                     onClick={() => handleSort("published_at")}
+                    onKeyDown={(e) => e.key === "Enter" && handleSort("published_at")}
                   >
                     <span className="flex items-center gap-1">
                       公開日 <SortIcon field="published_at" />
@@ -426,6 +430,7 @@ export function VulnerabilitiesPage() {
                   <th
                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-28 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200"
                     onClick={() => handleSort("modified_at")}
+                    onKeyDown={(e) => e.key === "Enter" && handleSort("modified_at")}
                   >
                     <span className="flex items-center gap-1">
                       更新日 <SortIcon field="modified_at" />
