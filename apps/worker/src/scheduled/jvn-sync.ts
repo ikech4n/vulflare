@@ -509,12 +509,16 @@ export async function handleJvnSync(env: Env, forceFullSync = false): Promise<vo
       await updateVendorsAndProducts(env);
     }
 
+    // SQLiteのcreated_atはdatetime('now')=UTC、スペース区切り形式で格納される
+    // ISO形式(syncStartUtcStr)と比較すると文字列順序が狂うためSQLite形式に変換して使用
+    const syncStartUtcSqlite = syncStartUtcStr.replace("T", " ").replace(/\.\d{3}Z$/, "");
+
     // 新規作成数をUTC基準でクエリ（created_atはdatetime('now')=UTC）
     const newlyCreatedRow = await env.DB.prepare(`
       SELECT COUNT(*) as total FROM vulnerabilities
       WHERE source = 'jvn' AND created_at >= ?
     `)
-      .bind(syncStartUtcStr)
+      .bind(syncStartUtcSqlite)
       .first<{ total: number }>();
     const totalNewlyCreated = newlyCreatedRow?.total ?? 0;
     const totalUpdated = totalChanged - totalNewlyCreated;
@@ -539,7 +543,7 @@ export async function handleJvnSync(env: Env, forceFullSync = false): Promise<vo
           WHERE source = 'jvn' AND severity = 'critical'
             AND created_at >= ?
         `)
-          .bind(syncStartUtcStr)
+          .bind(syncStartUtcSqlite)
           .all<{ cve_id: string }>();
 
         const criticalCount = criticalRows.results.length;
@@ -563,7 +567,6 @@ export async function handleJvnSync(env: Env, forceFullSync = false): Promise<vo
       // 既存脆弱性がJVNで実際に内容変更された場合のみ通知
       // updated_at はJST格納、created_at はUTC格納なのでそれぞれのフォーマットに合わせる
       const syncStartJstSqlite = nowStr.replace("T", " ").replace(/\.\d{3}Z$/, "");
-      const syncStartUtcSqlite = syncStartUtcStr.replace("T", " ").replace(/\.\d{3}Z$/, "");
       const updatedRows = await env.DB.prepare(`
         SELECT cve_id FROM vulnerabilities
         WHERE source = 'jvn'
