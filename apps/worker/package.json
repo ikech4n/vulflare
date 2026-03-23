@@ -16,10 +16,10 @@
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.12.18",
-    "@cloudflare/workers-types": "^4.20260301.1",
+    "@cloudflare/workers-types": "^4.20260317.1",
     "typescript": "^5.7.0",
     "vite-plus": "catalog:",
     "vitest": "^3.2.4",
-    "wrangler": "^4.0.0"
+    "wrangler": "^4.74.0"
   }
 }
