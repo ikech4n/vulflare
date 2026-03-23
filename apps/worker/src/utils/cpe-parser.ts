@@ -26,10 +26,10 @@ export function parseCPE(cpe: string): ParsedCPE | null {
     if (parts.length < 5) return null;
 
     const part = parts[2]; // h, o, a
-    const vendor = decodeURIComponent(parts[3]?.replace(/\\\:/g, ":") || "");
-    const product = decodeURIComponent(parts[4]?.replace(/\\\:/g, ":") || "");
+    const vendor = decodeURIComponent(parts[3]?.replace(/\\:/g, ":") || "");
+    const product = decodeURIComponent(parts[4]?.replace(/\\:/g, ":") || "");
     const version =
-      parts[5] && parts[5] !== "*" ? decodeURIComponent(parts[5].replace(/\\\:/g, ":")) : undefined;
+      parts[5] && parts[5] !== "*" ? decodeURIComponent(parts[5].replace(/\\:/g, ":")) : undefined;
 
     if (!vendor || vendor === "*" || !product || product === "*") return null;
 
@@ -43,10 +43,10 @@ export function parseCPE(cpe: string): ParsedCPE | null {
     if (parts.length < 3) return null;
 
     const part = parts[0]; // h, o, a
-    const vendor = decodeURIComponent(parts[1]?.replace(/\\\:/g, ":") || "");
-    const product = decodeURIComponent(parts[2]?.replace(/\\\:/g, ":") || "");
+    const vendor = decodeURIComponent(parts[1]?.replace(/\\:/g, ":") || "");
+    const product = decodeURIComponent(parts[2]?.replace(/\\:/g, ":") || "");
     const version =
-      parts[3] && parts[3] !== "*" ? decodeURIComponent(parts[3].replace(/\\\:/g, ":")) : undefined;
+      parts[3] && parts[3] !== "*" ? decodeURIComponent(parts[3].replace(/\\:/g, ":")) : undefined;
 
     if (!vendor || vendor === "*" || !product || product === "*") return null;
 

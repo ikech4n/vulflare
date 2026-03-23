@@ -1,16 +1,11 @@
 import { Hono } from "hono";
 import { authMiddleware, requireRole } from "../middleware/auth.ts";
 import { handleJvnSync } from "../scheduled/jvn-sync.ts";
-import {
-  type MyjvnProduct,
-  type MyjvnVendor,
-  fetchProductList,
-  fetchVendorList,
-} from "../services/myjvn-api.ts";
+import { fetchProductList, fetchVendorList } from "../services/myjvn-api.ts";
 import { deleteSyncData } from "../services/sync-data-deletion.ts";
 import {
-  type SyncSettings,
   getSyncSettings,
+  type SyncSettings,
   updateSyncSettings,
 } from "../services/sync-settings.ts";
 import type { Env, JwtVariables } from "../types.ts";

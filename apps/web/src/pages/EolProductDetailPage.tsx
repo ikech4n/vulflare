@@ -1,11 +1,11 @@
-import { EolStatusBadge } from "@/components/EolStatusBadge.tsx";
-import { api } from "@/lib/api.ts";
-import { useAuthStore } from "@/store/authStore.ts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { EolCycle, EolProductWithCycles } from "@vulflare/shared/types";
 import { ArrowLeft, Calendar, Edit, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { EolStatusBadge } from "@/components/EolStatusBadge.tsx";
+import { api } from "@/lib/api.ts";
+import { useAuthStore } from "@/store/authStore.ts";
 
 export function EolProductDetailPage() {
   const { user } = useAuthStore();
@@ -468,7 +468,11 @@ function EditCycleModal({
   cycle,
   productId,
   onClose,
-}: { cycle: EolCycle; productId: string; onClose: () => void }) {
+}: {
+  cycle: EolCycle;
+  productId: string;
+  onClose: () => void;
+}) {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     cycle: cycle.cycle,

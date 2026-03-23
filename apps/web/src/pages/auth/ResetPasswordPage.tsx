@@ -1,6 +1,6 @@
-import { api } from "@/lib/api.ts";
 import { type FormEvent, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { api } from "@/lib/api.ts";
 
 export function ResetPasswordPage() {
   const [searchParams] = useSearchParams();

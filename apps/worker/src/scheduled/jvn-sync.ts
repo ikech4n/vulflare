@@ -50,9 +50,9 @@ function parseStatus(xml: string): JvnApiStatus {
   if (!match) return { totalRes: 0, totalResRet: 0, firstRes: 1, retCd: "-1" };
   const attrs = match[1] ?? "";
   return {
-    totalRes: Number.parseInt(extractAttr(attrs, "totalRes") || "0"),
-    totalResRet: Number.parseInt(extractAttr(attrs, "totalResRet") || "0"),
-    firstRes: Number.parseInt(extractAttr(attrs, "firstRes") || "1"),
+    totalRes: Number.parseInt(extractAttr(attrs, "totalRes") || "0", 10),
+    totalResRet: Number.parseInt(extractAttr(attrs, "totalResRet") || "0", 10),
+    firstRes: Number.parseInt(extractAttr(attrs, "firstRes") || "1", 10),
     retCd: extractAttr(attrs, "retCd"),
   };
 }

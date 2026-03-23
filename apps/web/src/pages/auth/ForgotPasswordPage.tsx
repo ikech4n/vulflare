@@ -1,6 +1,6 @@
-import { api } from "@/lib/api.ts";
 import { type FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
+import { api } from "@/lib/api.ts";
 
 export function ForgotPasswordPage() {
   const [email, setEmail] = useState("");

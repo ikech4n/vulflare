@@ -1,9 +1,9 @@
-import { api } from "@/lib/api.ts";
-import { useAuthStore } from "@/store/authStore.ts";
-import { useThemeStore } from "@/store/themeStore.ts";
 import type { LoginResponse, MeResponse } from "@vulflare/shared/types";
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { api } from "@/lib/api.ts";
+import { useAuthStore } from "@/store/authStore.ts";
+import { useThemeStore } from "@/store/themeStore.ts";
 
 export function LoginPage() {
   const [username, setUsername] = useState("");

@@ -1,5 +1,4 @@
 import { hashPassword, makeAccessToken } from "../services/auth.ts";
-import type { Env } from "../types.ts";
 
 /**
  * テスト用ユーザーを作成

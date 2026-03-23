@@ -1,5 +1,3 @@
-import { api } from "@/lib/api.ts";
-import { useAuthStore } from "@/store/authStore.ts";
 import {
   Bell,
   Calendar,
@@ -17,6 +15,8 @@ import {
 import type { ElementType } from "react";
 import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { api } from "@/lib/api.ts";
+import { useAuthStore } from "@/store/authStore.ts";
 
 interface NavChild {
   to: string;
@@ -127,6 +127,7 @@ export function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
       {/* モバイルバックドロップ */}
       {mobileOpen && (
         // biome-ignore lint/a11y/useKeyWithClickEvents: モーダルバックドロップは視覚的なクリック領域のみ
+        // biome-ignore lint/a11y/noStaticElementInteractions: モーダルバックドロップは視覚的なクリック領域のみ
         <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={onClose} />
       )}
       <aside

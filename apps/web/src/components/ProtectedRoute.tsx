@@ -1,7 +1,7 @@
-import { api } from "@/lib/api.ts";
-import { useAuthStore } from "@/store/authStore.ts";
 import { type ReactNode, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { api } from "@/lib/api.ts";
+import { useAuthStore } from "@/store/authStore.ts";
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, accessToken, login } = useAuthStore();

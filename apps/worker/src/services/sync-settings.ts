@@ -86,9 +86,11 @@ export async function getSyncSettings(env: Env): Promise<SyncSettings> {
         ? JSON.parse(excludeKeywords)
         : DEFAULT_SETTINGS.excludeKeywords,
       cvssMinScore: cvssMinScore ? Number.parseFloat(cvssMinScore) : DEFAULT_SETTINGS.cvssMinScore,
-      fullSyncDays: fullSyncDays ? Number.parseInt(fullSyncDays) : DEFAULT_SETTINGS.fullSyncDays,
+      fullSyncDays: fullSyncDays
+        ? Number.parseInt(fullSyncDays, 10)
+        : DEFAULT_SETTINGS.fullSyncDays,
       retentionDays: retentionDays
-        ? Number.parseInt(retentionDays)
+        ? Number.parseInt(retentionDays, 10)
         : DEFAULT_SETTINGS.retentionDays,
       dataSources: parsedDataSources,
     };

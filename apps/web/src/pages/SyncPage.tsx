@@ -1,5 +1,3 @@
-import { api } from "@/lib/api.ts";
-import { useAuthStore } from "@/store/authStore.ts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
@@ -17,6 +15,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { api } from "@/lib/api.ts";
+import { useAuthStore } from "@/store/authStore.ts";
 
 interface JvnSyncLog {
   id: string;
@@ -719,7 +719,7 @@ export function SyncPage() {
                   min="1"
                   max="3650"
                   value={syncFullSyncDays}
-                  onChange={(e) => setSyncFullSyncDays(Number.parseInt(e.target.value) || 365)}
+                  onChange={(e) => setSyncFullSyncDays(Number.parseInt(e.target.value, 10) || 365)}
                   className="w-32 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 />
                 <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">日</span>
@@ -742,7 +742,7 @@ export function SyncPage() {
                   min="0"
                   max="3650"
                   value={syncRetentionDays}
-                  onChange={(e) => setSyncRetentionDays(Number.parseInt(e.target.value) || 0)}
+                  onChange={(e) => setSyncRetentionDays(Number.parseInt(e.target.value, 10) || 0)}
                   className="w-32 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 />
                 <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">日（0=無効）</span>

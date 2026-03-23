@@ -1,6 +1,6 @@
-import { api } from "@/lib/api.ts";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { api } from "@/lib/api.ts";
 
 export type Theme = "light" | "dark" | "system";
 

@@ -1,10 +1,10 @@
-import { api } from "@/lib/api.ts";
-import { useAuthStore } from "@/store/authStore.ts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { EolCategory, EolProduct, EolStats } from "@vulflare/shared/types";
 import { Calendar, Edit, Package, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { api } from "@/lib/api.ts";
+import { useAuthStore } from "@/store/authStore.ts";
 
 const CATEGORY_LABELS: Record<EolCategory, string> = {
   os: "OS",
@@ -28,7 +28,7 @@ const STATUS_LABELS: Record<EolStatusFilter, string> = {
 export function EolPage() {
   const { user } = useAuthStore();
   const isViewer = user?.role === "viewer";
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState<EolCategory | "">("");
   const [showAddModal, setShowAddModal] = useState(false);

@@ -1,10 +1,10 @@
-import { api } from "@/lib/api.ts";
-import { useAuthStore } from "@/store/authStore.ts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { KeyRound, LockOpen, Mail, Pencil, Trash2, UserPlus } from "lucide-react";
 import { type FormEvent, useState } from "react";
+import { api } from "@/lib/api.ts";
+import { useAuthStore } from "@/store/authStore.ts";
 
-const ROLE_LABELS: Record<string, string> = {
+const _ROLE_LABELS: Record<string, string> = {
   admin: "管理者",
   editor: "編集者",
   viewer: "閲覧者",

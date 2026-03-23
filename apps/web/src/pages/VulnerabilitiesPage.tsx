@@ -1,21 +1,21 @@
-import { CsvImportModal } from "@/components/CsvImportModal.tsx";
-import { SeverityBadge } from "@/components/SeverityBadge.tsx";
-import { StatusBadge } from "@/components/StatusBadge.tsx";
-import { api } from "@/lib/api.ts";
-import { useAuthStore } from "@/store/authStore.ts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   BatchUpdateVulnerabilityRequest,
   BatchUpdateVulnerabilityResponse,
   PaginatedResponse,
   SortOrder,
+  Vulnerability,
   VulnSortField,
   VulnStatus,
-  Vulnerability,
 } from "@vulflare/shared/types";
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Plus, Search, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { CsvImportModal } from "@/components/CsvImportModal.tsx";
+import { SeverityBadge } from "@/components/SeverityBadge.tsx";
+import { StatusBadge } from "@/components/StatusBadge.tsx";
+import { api } from "@/lib/api.ts";
+import { useAuthStore } from "@/store/authStore.ts";
 
 const PAGE_SIZE = 20;
 

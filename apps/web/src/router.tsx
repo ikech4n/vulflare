@@ -1,6 +1,11 @@
-import { ProtectedRoute } from "@/components/ProtectedRoute.tsx";
+import { createBrowserRouter } from "react-router-dom";
 import { AuthLayout } from "@/components/layout/AuthLayout.tsx";
 import { DashboardLayout } from "@/components/layout/DashboardLayout.tsx";
+import { ProtectedRoute } from "@/components/ProtectedRoute.tsx";
+import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage.tsx";
+import { LoginPage } from "@/pages/auth/LoginPage.tsx";
+import { RegisterPage } from "@/pages/auth/RegisterPage.tsx";
+import { ResetPasswordPage } from "@/pages/auth/ResetPasswordPage.tsx";
 import { DashboardPage } from "@/pages/DashboardPage.tsx";
 import { EolPage } from "@/pages/EolPage.tsx";
 import { EolProductDetailPage } from "@/pages/EolProductDetailPage.tsx";
@@ -11,11 +16,6 @@ import { SyncPage } from "@/pages/SyncPage.tsx";
 import { VulnerabilitiesPage } from "@/pages/VulnerabilitiesPage.tsx";
 import { VulnerabilityCreatePage } from "@/pages/VulnerabilityCreatePage.tsx";
 import { VulnerabilityDetailPage } from "@/pages/VulnerabilityDetailPage.tsx";
-import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage.tsx";
-import { LoginPage } from "@/pages/auth/LoginPage.tsx";
-import { RegisterPage } from "@/pages/auth/RegisterPage.tsx";
-import { ResetPasswordPage } from "@/pages/auth/ResetPasswordPage.tsx";
-import { createBrowserRouter } from "react-router-dom";
 
 export const router = createBrowserRouter([
   {

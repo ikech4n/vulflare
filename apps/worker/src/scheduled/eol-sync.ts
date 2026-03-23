@@ -1,4 +1,4 @@
-import { eolCycleRepo, eolProductRepo } from "../db/eol-repository.ts";
+import { eolCycleRepo } from "../db/eol-repository.ts";
 import { syncAllProducts } from "../services/eol-sync.ts";
 import { dispatchNotification } from "../services/notifications.ts";
 import type { Env } from "../types.ts";

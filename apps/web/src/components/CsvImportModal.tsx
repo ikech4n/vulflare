@@ -1,7 +1,7 @@
-import { api } from "@/lib/api.ts";
 import type { CsvImportResult } from "@vulflare/shared/types";
 import { X } from "lucide-react";
 import { useRef, useState } from "react";
+import { api } from "@/lib/api.ts";
 
 interface Props {
   onClose: () => void;

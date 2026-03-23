@@ -1,6 +1,6 @@
-import { api } from "@/lib/api.ts";
 import { type FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { api } from "@/lib/api.ts";
 
 export function RegisterPage() {
   const [username, setUsername] = useState("");

@@ -1,5 +1,5 @@
-import { useThemeStore } from "@/store/themeStore.ts";
 import { Outlet } from "react-router-dom";
+import { useThemeStore } from "@/store/themeStore.ts";
 
 function useDarkMode(): boolean {
   const { theme } = useThemeStore();

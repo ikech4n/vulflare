@@ -1,4 +1,3 @@
-import { api } from "@/lib/api.ts";
 import { useQuery } from "@tanstack/react-query";
 import type { EolStats, EolTimelineItem, VulnerabilityStats } from "@vulflare/shared/types";
 import { CheckCircle2, Clock, Flame, Shield } from "lucide-react";
@@ -8,7 +7,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -16,6 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { api } from "@/lib/api.ts";
 
 const SEVERITY_COLORS = {
   critical: "#dc2626",

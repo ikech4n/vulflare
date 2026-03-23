@@ -76,6 +76,7 @@ export function HelpTooltip({ content, position = "top" }: HelpTooltipProps) {
       </button>
 
       {isVisible && (
+        // biome-ignore lint/a11y/noStaticElementInteractions: ツールチップホバー領域は視覚的な補助のみ
         <div
           ref={tooltipRef}
           className={`absolute z-50 ${getPositionClasses()}`}
