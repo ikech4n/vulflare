@@ -58,7 +58,7 @@ aiRemediationRoutes.post("/:id/ai-remediation", async (c) => {
     }
   }
 
-  const { content, model } = await generateRemediation(c.env.AI, vuln);
+  const { content, model } = await generateRemediation(c.env.AI, vuln, c.env.AI_MODEL);
   const generatedAt = new Date().toISOString();
 
   await aiRemediationRepo.upsert(c.env.DB, {

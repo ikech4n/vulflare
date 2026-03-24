@@ -1,6 +1,6 @@
 import type { DbVulnerability } from "../db/repository.ts";
 
-const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+const DEFAULT_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
 export function buildPrompt(vuln: DbVulnerability): string {
   const lines: string[] = [];
@@ -40,6 +40,7 @@ export async function computePromptHash(content: string): Promise<string> {
 export async function generateRemediation(
   ai: Ai,
   vuln: DbVulnerability,
+  model?: string,
 ): Promise<{ content: string; model: string }> {
   const vulnerabilityInfo = buildPrompt(vuln);
 
@@ -74,7 +75,11 @@ export async function generateRemediation(
     },
   ];
 
-  const response = await ai.run(MODEL as Parameters<Ai["run"]>[0], { messages, max_tokens: 2048 });
+  const resolvedModel = model ?? DEFAULT_MODEL;
+  const response = await ai.run(resolvedModel as Parameters<Ai["run"]>[0], {
+    messages,
+    max_tokens: 2048,
+  });
 
   let content: string;
   if (typeof response === "object" && response !== null && "response" in response) {
@@ -83,5 +88,5 @@ export async function generateRemediation(
     throw new Error("Unexpected AI response format");
   }
 
-  return { content, model: MODEL };
+  return { content, model: resolvedModel };
 }

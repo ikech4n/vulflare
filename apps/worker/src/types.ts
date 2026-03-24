@@ -8,6 +8,7 @@ export interface Env {
   PAGES_URL: string;
   NOREPLY_EMAIL: string;
   ENVIRONMENT: "development" | "production";
+  AI_MODEL?: string;
 }
 
 export interface JwtVariables {
