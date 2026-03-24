@@ -1,6 +1,6 @@
 import type { DbVulnerability } from "../db/repository.ts";
 
-const MODEL = "@cf/meta/llama-3.1-70b-instruct";
+const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
 export function buildPrompt(vuln: DbVulnerability): string {
   const lines: string[] = [];
