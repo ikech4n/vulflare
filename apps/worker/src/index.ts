@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { csrfProtection } from "./middleware/csrf.ts";
+import { aiRemediationRoutes } from "./routes/ai-remediation.ts";
 import { appSettingsRoutes } from "./routes/app-settings.ts";
 import { authRoutes } from "./routes/auth.ts";
 import { dashboardRoutes } from "./routes/dashboard.ts";
@@ -46,6 +47,7 @@ app.use("/api/*", csrfProtection);
 app.get("/health", (c) => c.json({ status: "ok", version: "1.0.0" }));
 
 app.route("/api/auth", authRoutes);
+app.route("/api/vulnerabilities", aiRemediationRoutes);
 app.route("/api/vulnerabilities", vulnerabilityRoutes);
 app.route("/api/jvn", jvnRoutes);
 app.route("/api/users", userRoutes);

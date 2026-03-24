@@ -598,3 +598,49 @@ export const vulnHistoryRepo = {
     return { countStmt, dataStmt };
   },
 };
+
+// --- AI Remediations ---
+
+export interface DbAiRemediation {
+  id: string;
+  vulnerability_id: string;
+  content: string;
+  model: string;
+  prompt_hash: string;
+  generated_at: string;
+  created_at: string;
+}
+
+export const aiRemediationRepo = {
+  findByVulnId(db: DB, vulnId: string) {
+    return db
+      .prepare("SELECT * FROM ai_remediations WHERE vulnerability_id = ?")
+      .bind(vulnId)
+      .first<DbAiRemediation>();
+  },
+  upsert(db: DB, record: Omit<DbAiRemediation, "created_at">) {
+    return db
+      .prepare(
+        `INSERT INTO ai_remediations (id, vulnerability_id, content, model, prompt_hash, generated_at)
+         VALUES (?, ?, ?, ?, ?, ?)
+         ON CONFLICT(vulnerability_id) DO UPDATE SET
+           id = excluded.id,
+           content = excluded.content,
+           model = excluded.model,
+           prompt_hash = excluded.prompt_hash,
+           generated_at = excluded.generated_at`,
+      )
+      .bind(
+        record.id,
+        record.vulnerability_id,
+        record.content,
+        record.model,
+        record.prompt_hash,
+        record.generated_at,
+      )
+      .run();
+  },
+  deleteByVulnId(db: DB, vulnId: string) {
+    return db.prepare("DELETE FROM ai_remediations WHERE vulnerability_id = ?").bind(vulnId).run();
+  },
+};
