@@ -19,7 +19,7 @@
     "prepare": "vp config"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.7",
+    "@biomejs/biome": "^2.4.8",
     "typescript": "^5.7.0",
     "vite-plus": "catalog:",
     "wrangler": "^4.0.0"
