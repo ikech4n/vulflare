@@ -9,9 +9,9 @@ const STYLES: Record<string, string> = {
 const LABELS: Record<string, string> = {
   new: "新規",
   open: "対応中",
-  fixed: "解決済み",
+  fixed: "対応済み",
   accepted_risk: "リスク受容",
-  false_positive: "誤検知",
+  false_positive: "対象外",
 };
 
 export function StatusBadge({ status }: { status: string }) {

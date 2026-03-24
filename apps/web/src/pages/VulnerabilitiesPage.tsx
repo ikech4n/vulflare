@@ -289,9 +289,9 @@ export function VulnerabilitiesPage() {
               {[
                 { value: "new", label: "新規" },
                 { value: "open", label: "対応中" },
-                { value: "fixed", label: "解決済み" },
+                { value: "fixed", label: "対応済み" },
                 { value: "accepted_risk", label: "リスク受容" },
-                { value: "false_positive", label: "誤検知" },
+                { value: "false_positive", label: "対象外" },
               ].map((s) => (
                 <label
                   key={s.value}
@@ -335,9 +335,9 @@ export function VulnerabilitiesPage() {
             <option value="">ステータスを変更...</option>
             <option value="new">新規</option>
             <option value="open">対応中</option>
-            <option value="fixed">解決済み</option>
+            <option value="fixed">対応済み</option>
             <option value="accepted_risk">リスク受容</option>
-            <option value="false_positive">誤検知</option>
+            <option value="false_positive">対象外</option>
           </select>
 
           <button

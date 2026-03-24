@@ -10,7 +10,7 @@ describe("StatusBadge", () => {
 
   it("renders fixed status correctly", () => {
     render(<StatusBadge status="fixed" />);
-    expect(screen.getByText("解決済み")).toBeInTheDocument();
+    expect(screen.getByText("対応済み")).toBeInTheDocument();
   });
 
   it("renders accepted_risk status correctly", () => {
@@ -20,7 +20,7 @@ describe("StatusBadge", () => {
 
   it("renders false_positive status correctly", () => {
     render(<StatusBadge status="false_positive" />);
-    expect(screen.getByText("誤検知")).toBeInTheDocument();
+    expect(screen.getByText("対象外")).toBeInTheDocument();
   });
 
   it("applies correct color classes for open", () => {
