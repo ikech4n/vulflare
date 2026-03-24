@@ -74,7 +74,7 @@ export async function generateRemediation(
     },
   ];
 
-  const response = await ai.run(MODEL as Parameters<Ai["run"]>[0], { messages });
+  const response = await ai.run(MODEL as Parameters<Ai["run"]>[0], { messages, max_tokens: 2048 });
 
   let content: string;
   if (typeof response === "object" && response !== null && "response" in response) {
