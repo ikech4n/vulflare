@@ -1,4 +1,4 @@
-/// <reference types="@cloudflare/vitest-pool-workers" />
+/// <reference types="@cloudflare/vitest-pool-workers/types" />
 /**
  * authMiddleware / requireRole ユニットテスト
  *

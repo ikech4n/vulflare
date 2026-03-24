@@ -1,4 +1,4 @@
-/// <reference types="@cloudflare/vitest-pool-workers" />
+/// <reference types="@cloudflare/vitest-pool-workers/types" />
 /**
  * sync ルート統合テスト
  *
@@ -7,12 +7,12 @@
  *
  * テスト環境:
  * - D1はminiflareが migrations/ を適用したクリーンなインメモリDB
- * - 外部API（MyJVN）はfetchMockでインターセプト
+ * - 外部API（MyJVN）はvi.fn()でインターセプト
  * - JWT_SECRETはvitest.config.tsのminiflare.bindingsで注入
  */
 
-import { env, fetchMock } from "cloudflare:test";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { env } from "cloudflare:test";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { app } from "../index.ts";
 import { signJwt } from "../services/auth.ts";
 import type { Env } from "../types.ts";
@@ -48,6 +48,8 @@ function makeProductListXml(
   ].join("\n");
 }
 
+const mockFetch = vi.fn();
+
 describe("GET /api/sync/jvn-vendors/:vid/products", () => {
   let authHeader: string;
 
@@ -62,13 +64,19 @@ describe("GET /api/sync/jvn-vendors/:vid/products", () => {
       "CREATE TABLE IF NOT EXISTS jvn_product_cache (pid TEXT PRIMARY KEY, pname TEXT NOT NULL, cpe TEXT NOT NULL DEFAULT '', vendor_vid TEXT NOT NULL, fetched_at TEXT NOT NULL DEFAULT (datetime('now', '+9 hours')), FOREIGN KEY (vendor_vid) REFERENCES jvn_vendor_cache(vid) ON DELETE CASCADE)",
     );
 
-    fetchMock.activate();
-    fetchMock.disableNetConnect();
+    vi.stubGlobal("fetch", mockFetch);
     authHeader = await makeAuthHeader("editor");
   });
 
+  beforeEach(() => {
+    mockFetch.mockReset();
+    // デフォルト: モックされていないリクエストはエラー（disableNetConnect 相当）
+    mockFetch.mockImplementation((input: RequestInfo | URL) => {
+      throw new Error(`Unexpected fetch: ${input.toString()}`);
+    });
+  });
+
   afterEach(async () => {
-    fetchMock.assertNoPendingInterceptors();
     // テスト間のDB状態を隔離するためキャッシュをクリア
     await testEnv.DB.prepare("DELETE FROM jvn_product_cache").run();
     await testEnv.DB.prepare("DELETE FROM jvn_vendor_cache").run();
@@ -79,15 +87,14 @@ describe("GET /api/sync/jvn-vendors/:vid/products", () => {
     // jvn_vendor_cache が空のまま jvn_product_cache への INSERT を試みると
     // FK制約違反で500エラーになっていた問題
     // 修正後はベンダーUPSERTを先に実行するため正常に動作する
-    fetchMock
-      .get("https://jvndb.jvn.jp")
-      .intercept({ path: /getProductList/, method: "GET" })
-      .reply(
-        200,
+    mockFetch.mockResolvedValueOnce(
+      new Response(
         makeProductListXml("vid-test", "Test Vendor", [
           { pid: "p001", pname: "Test Product", cpe: "cpe:/a:test:product:1.0" },
         ]),
-      );
+        { status: 200 },
+      ),
+    );
 
     const res = await app.request(
       "/api/sync/jvn-vendors/vid-test/products",
@@ -104,16 +111,15 @@ describe("GET /api/sync/jvn-vendors/:vid/products", () => {
   });
 
   it("MyJVN APIレスポンスがベンダー・製品ともにDBにキャッシュされる", async () => {
-    fetchMock
-      .get("https://jvndb.jvn.jp")
-      .intercept({ path: /getProductList/, method: "GET" })
-      .reply(
-        200,
+    mockFetch.mockResolvedValueOnce(
+      new Response(
         makeProductListXml("vid-microsoft", "Microsoft Corporation", [
           { pid: "p-windows", pname: "Windows 11", cpe: "cpe:/o:microsoft:windows_11" },
           { pid: "p-edge", pname: "Microsoft Edge", cpe: "cpe:/a:microsoft:edge" },
         ]),
-      );
+        { status: 200 },
+      ),
+    );
 
     await app.request(
       "/api/sync/jvn-vendors/vid-microsoft/products",
@@ -153,7 +159,7 @@ describe("GET /api/sync/jvn-vendors/:vid/products", () => {
       .bind("p-httpd", "Apache HTTP Server", "cpe:/a:apache:http_server", "vid-apache")
       .run();
 
-    // fetchMockに何もセットしない → APIが呼ばれたらエラーになる
+    // mockFetchに何もセットしない → APIが呼ばれたらデフォルト実装でエラーになる
 
     const res = await app.request(
       "/api/sync/jvn-vendors/vid-apache/products",

@@ -1,14 +1,13 @@
-/// <reference types="@cloudflare/vitest-pool-workers" />
+/// <reference types="@cloudflare/vitest-pool-workers/types" />
 /**
  * myjvn-api ユニットテスト
  *
  * fetchVendorList / fetchProductList の XML パース・HTMLエンティティデコード・
  * エラーハンドリングを検証する。
- * fetchMock で MyJVN API への HTTP リクエストをインターセプト。
+ * vi.fn() で MyJVN API への HTTP リクエストをインターセプト。
  */
 
-import { fetchMock } from "cloudflare:test";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchProductList, fetchVendorList } from "./myjvn-api.ts";
 
 const MYJVN_HOST = "https://jvndb.jvn.jp";
@@ -38,14 +37,23 @@ function makeProductListXml(
   ].join("\n");
 }
 
-// fetchMock はファイル全体で共有（各 describe でのアクティベートは冪等）
+const mockFetch = vi.fn();
+
 beforeAll(() => {
-  fetchMock.activate();
-  fetchMock.disableNetConnect();
+  vi.stubGlobal("fetch", mockFetch);
+});
+
+beforeEach(() => {
+  mockFetch.mockReset();
+  // デフォルト: モックされていないURLへのリクエストはエラー
+  mockFetch.mockImplementation((input: RequestInfo | URL) => {
+    throw new Error(`Unexpected fetch: ${input.toString()}`);
+  });
 });
 
 afterEach(() => {
-  fetchMock.assertNoPendingInterceptors();
+  // 未消費のモックがないことを確認
+  expect(mockFetch.mock.calls.length).toBe(mockFetch.mock.results.length);
 });
 
 // ─────────────────────────────────────────────
@@ -53,16 +61,15 @@ afterEach(() => {
 // ─────────────────────────────────────────────
 describe("fetchVendorList", () => {
   it("有効なXMLからベンダーリストを返す", async () => {
-    fetchMock
-      .get(MYJVN_HOST)
-      .intercept({ path: /getVendorList/ })
-      .reply(
-        200,
+    mockFetch.mockResolvedValueOnce(
+      new Response(
         makeVendorListXml([
           { vid: "v001", vname: "Microsoft" },
           { vid: "v002", vname: "Apache" },
         ]),
-      );
+        { status: 200 },
+      ),
+    );
 
     const vendors = await fetchVendorList();
     expect(vendors).toHaveLength(2);
@@ -71,53 +78,54 @@ describe("fetchVendorList", () => {
   });
 
   it("HTMLエンティティ（&amp; &lt; &gt; &quot; &apos;）をデコードする", async () => {
-    fetchMock
-      .get(MYJVN_HOST)
-      .intercept({ path: /getVendorList/ })
-      .reply(200, makeVendorListXml([{ vid: "v001", vname: "AT&amp;T &lt;Corp&gt;" }]));
+    mockFetch.mockResolvedValueOnce(
+      new Response(makeVendorListXml([{ vid: "v001", vname: "AT&amp;T &lt;Corp&gt;" }]), {
+        status: 200,
+      }),
+    );
 
     const vendors = await fetchVendorList();
     expect(vendors[0]?.vname).toBe("AT&T <Corp>");
   });
 
   it("vendorが0件 → 空配列を返す", async () => {
-    fetchMock
-      .get(MYJVN_HOST)
-      .intercept({ path: /getVendorList/ })
-      .reply(200, "<Response></Response>");
+    mockFetch.mockResolvedValueOnce(new Response("<Response></Response>", { status: 200 }));
 
     const vendors = await fetchVendorList();
     expect(vendors).toHaveLength(0);
   });
 
   it("非200レスポンス → エラーをthrowする", async () => {
-    fetchMock
-      .get(MYJVN_HOST)
-      .intercept({ path: /getVendorList/ })
-      .reply(500, "Internal Server Error");
+    mockFetch.mockResolvedValueOnce(new Response("Internal Server Error", { status: 500 }));
 
     await expect(fetchVendorList()).rejects.toThrow("MyJVN getVendorList failed: 500");
   });
 
   it("keyword指定あり → URLにkeywordパラメータを追加する", async () => {
-    // keyword=microsoft を含むURLのみマッチするインターセプタ
-    fetchMock
-      .get(MYJVN_HOST)
-      .intercept({ path: /keyword=microsoft/ })
-      .reply(200, makeVendorListXml([{ vid: "v001", vname: "Microsoft" }]));
+    mockFetch.mockImplementationOnce(async (input: RequestInfo | URL) => {
+      const url = input.toString();
+      if (/keyword=microsoft/.test(url)) {
+        return new Response(makeVendorListXml([{ vid: "v001", vname: "Microsoft" }]), {
+          status: 200,
+        });
+      }
+      throw new Error(`URL did not match keyword pattern: ${url}`);
+    });
 
     const vendors = await fetchVendorList("microsoft");
     expect(vendors).toHaveLength(1);
-    // インターセプタがマッチしなければ disableNetConnect によりエラーになる
   });
 
   it("keyword未指定/空文字/空白のみ → URLにkeywordを追加しない", async () => {
-    // keyword= を含まないURLのみマッチするインターセプタを3回分用意
+    // 3回分のレスポンスを用意（keyword= を含まないURLのみ許可）
     for (let i = 0; i < 3; i++) {
-      fetchMock
-        .get(MYJVN_HOST)
-        .intercept({ path: /getVendorList(?!.*keyword=)/ })
-        .reply(200, "<Response></Response>");
+      mockFetch.mockImplementationOnce(async (input: RequestInfo | URL) => {
+        const url = input.toString();
+        if (/keyword=/.test(url)) {
+          throw new Error(`Unexpected keyword in URL: ${url}`);
+        }
+        return new Response("<Response></Response>", { status: 200 });
+      });
     }
 
     await fetchVendorList(undefined);
@@ -126,11 +134,8 @@ describe("fetchVendorList", () => {
   });
 
   it("vid または vname が空のvendorをスキップする", async () => {
-    fetchMock
-      .get(MYJVN_HOST)
-      .intercept({ path: /getVendorList/ })
-      .reply(
-        200,
+    mockFetch.mockResolvedValueOnce(
+      new Response(
         [
           '<?xml version="1.0" encoding="UTF-8"?>',
           "<Response>",
@@ -140,7 +145,9 @@ describe("fetchVendorList", () => {
           '  <Vendor vname="No VID attr" />',
           "</Response>",
         ].join("\n"),
-      );
+        { status: 200 },
+      ),
+    );
 
     const vendors = await fetchVendorList();
     expect(vendors).toHaveLength(1);
@@ -153,16 +160,15 @@ describe("fetchVendorList", () => {
 // ─────────────────────────────────────────────
 describe("fetchProductList", () => {
   it("有効なXMLからベンダー名と製品リストを返す", async () => {
-    fetchMock
-      .get(MYJVN_HOST)
-      .intercept({ path: /getProductList/ })
-      .reply(
-        200,
+    mockFetch.mockResolvedValueOnce(
+      new Response(
         makeProductListXml("v001", "Microsoft", [
           { pid: "p001", pname: "Windows 11", cpe: "cpe:/o:microsoft:windows_11" },
           { pid: "p002", pname: "Edge Browser", cpe: "cpe:/a:microsoft:edge" },
         ]),
-      );
+        { status: 200 },
+      ),
+    );
 
     const result = await fetchProductList("v001");
     expect(result.vendorName).toBe("Microsoft");
@@ -175,15 +181,14 @@ describe("fetchProductList", () => {
   });
 
   it("HTMLエンティティをデコードする（ベンダー名・製品名）", async () => {
-    fetchMock
-      .get(MYJVN_HOST)
-      .intercept({ path: /getProductList/ })
-      .reply(
-        200,
+    mockFetch.mockResolvedValueOnce(
+      new Response(
         makeProductListXml("v001", "AT&amp;T", [
           { pid: "p001", pname: "AT&amp;T Software", cpe: "" },
         ]),
-      );
+        { status: 200 },
+      ),
+    );
 
     const result = await fetchProductList("v001");
     expect(result.vendorName).toBe("AT&T");
@@ -191,23 +196,23 @@ describe("fetchProductList", () => {
   });
 
   it("cpe属性が存在しない → 空文字列をデフォルト値として使用", async () => {
-    fetchMock
-      .get(MYJVN_HOST)
-      .intercept({ path: /getProductList/ })
-      .reply(
-        200,
+    mockFetch.mockResolvedValueOnce(
+      new Response(
         '<Response><Vendor vid="v001" vname="Test"><Product pid="p001" pname="No CPE" /></Vendor></Response>',
-      );
+        { status: 200 },
+      ),
+    );
 
     const result = await fetchProductList("v001");
     expect(result.products[0]?.cpe).toBe("");
   });
 
   it("製品が0件 → vendorNameは取得し、productsは空配列を返す", async () => {
-    fetchMock
-      .get(MYJVN_HOST)
-      .intercept({ path: /getProductList/ })
-      .reply(200, '<Response><Vendor vid="v001" vname="Empty Vendor"></Vendor></Response>');
+    mockFetch.mockResolvedValueOnce(
+      new Response('<Response><Vendor vid="v001" vname="Empty Vendor"></Vendor></Response>', {
+        status: 200,
+      }),
+    );
 
     const result = await fetchProductList("v001");
     expect(result.vendorName).toBe("Empty Vendor");
@@ -215,20 +220,14 @@ describe("fetchProductList", () => {
   });
 
   it("非200レスポンス → エラーをthrowする", async () => {
-    fetchMock
-      .get(MYJVN_HOST)
-      .intercept({ path: /getProductList/ })
-      .reply(404, "Not Found");
+    mockFetch.mockResolvedValueOnce(new Response("Not Found", { status: 404 }));
 
     await expect(fetchProductList("v999")).rejects.toThrow("MyJVN getProductList failed: 404");
   });
 
   it("pid または pname が空の製品をスキップする", async () => {
-    fetchMock
-      .get(MYJVN_HOST)
-      .intercept({ path: /getProductList/ })
-      .reply(
-        200,
+    mockFetch.mockResolvedValueOnce(
+      new Response(
         [
           "<Response>",
           '  <Vendor vid="v001" vname="Test Vendor">',
@@ -238,7 +237,9 @@ describe("fetchProductList", () => {
           "  </Vendor>",
           "</Response>",
         ].join("\n"),
-      );
+        { status: 200 },
+      ),
+    );
 
     const result = await fetchProductList("v001");
     expect(result.products).toHaveLength(1);

@@ -1,4 +1,4 @@
-/// <reference types="@cloudflare/vitest-pool-workers" />
+/// <reference types="@cloudflare/vitest-pool-workers/types" />
 /**
  * GET /api/sync/jvn-vendors 統合テスト
  *
@@ -7,8 +7,8 @@
  * - クエリパラメータ q でフィルタリング
  */
 
-import { env, fetchMock } from "cloudflare:test";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { env } from "cloudflare:test";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { app } from "../index.ts";
 import { signJwt } from "../services/auth.ts";
 import type { Env } from "../types.ts";
@@ -31,6 +31,8 @@ function makeVendorListXml(vendors: Array<{ vid: string; vname: string }>): stri
   return `<?xml version="1.0" encoding="UTF-8"?>\n<Response>\n${items}\n</Response>`;
 }
 
+const mockFetch = vi.fn();
+
 describe("GET /api/sync/jvn-vendors", () => {
   let authHeader: string;
 
@@ -40,27 +42,32 @@ describe("GET /api/sync/jvn-vendors", () => {
       "CREATE TABLE IF NOT EXISTS jvn_vendor_cache (vid TEXT PRIMARY KEY, vname TEXT NOT NULL, fetched_at TEXT NOT NULL DEFAULT (datetime('now', '+9 hours')))",
     );
 
-    fetchMock.activate();
-    fetchMock.disableNetConnect();
+    vi.stubGlobal("fetch", mockFetch);
     authHeader = await makeAuthHeader("editor");
   });
 
+  beforeEach(() => {
+    mockFetch.mockReset();
+    // デフォルト: モックされていないリクエストはエラー（disableNetConnect 相当）
+    mockFetch.mockImplementation((input: RequestInfo | URL) => {
+      throw new Error(`Unexpected fetch: ${input.toString()}`);
+    });
+  });
+
   afterEach(async () => {
-    fetchMock.assertNoPendingInterceptors();
     await testEnv.DB.prepare("DELETE FROM jvn_vendor_cache").run();
   });
 
   it("キャッシュが空の場合はMyJVN APIを呼んでキャッシュし200を返す", async () => {
-    fetchMock
-      .get("https://jvndb.jvn.jp")
-      .intercept({ path: /getVendorList/, method: "GET" })
-      .reply(
-        200,
+    mockFetch.mockResolvedValueOnce(
+      new Response(
         makeVendorListXml([
           { vid: "v-msft", vname: "Microsoft" },
           { vid: "v-apch", vname: "Apache" },
         ]),
-      );
+        { status: 200 },
+      ),
+    );
 
     const res = await app.request(
       "/api/sync/jvn-vendors",
@@ -86,7 +93,7 @@ describe("GET /api/sync/jvn-vendors", () => {
       .bind("v-oracle", "Oracle")
       .run();
 
-    // fetchMock に何もセットしない → API が呼ばれたら disableNetConnect でエラー
+    // mockFetch に何もセットしない → API が呼ばれたらデフォルト実装でエラーになる
 
     const res = await app.request(
       "/api/sync/jvn-vendors",
