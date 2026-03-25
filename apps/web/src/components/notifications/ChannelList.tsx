@@ -28,7 +28,10 @@ export function ChannelList({ channels }: ChannelListProps) {
       <div className="flex justify-end">
         <button
           type="button"
-          onClick={() => setShowCreateForm(!showCreateForm)}
+          onClick={() => {
+            setShowCreateForm(!showCreateForm);
+            setEditingChannel(null);
+          }}
           className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -78,7 +81,10 @@ export function ChannelList({ channels }: ChannelListProps) {
             <ChannelCard
               key={channel.id}
               channel={channel}
-              onEdit={setEditingChannel}
+              onEdit={(channel) => {
+                setEditingChannel(channel);
+                setShowCreateForm(false);
+              }}
               onTest={(id) => testChannel.mutate(id)}
               onDelete={(id) => deleteChannel.mutate(id)}
               isTestPending={testChannel.isPending}

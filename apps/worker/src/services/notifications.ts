@@ -220,8 +220,18 @@ async function sendEmail(
     throw new Error("Email to addresses are required");
   }
 
+  const eventTypeLabels: Record<string, string> = {
+    vulnerability_created: "新規脆弱性が登録されました",
+    vulnerability_updated: "脆弱性が更新されました",
+    vulnerability_critical: "クリティカル脆弱性が検出されました",
+    eol_approaching: "EOL期限が近づいています",
+    eol_expired: "サポートが終了しました",
+  };
   const subjectTemplate = (config.subject as string) || "Vulflare: {eventType}";
-  const subject = subjectTemplate.replace("{eventType}", payload.eventType);
+  const subject = subjectTemplate.replace(
+    "{eventType}",
+    eventTypeLabels[payload.eventType] ?? payload.eventType,
+  );
   const appUrl = env.PAGES_URL ?? "";
   const htmlBody = generateEmailBody(payload, appUrl);
   const textBody = generateEmailBodyText(payload, appUrl);
@@ -377,61 +387,149 @@ function generateEmailBodyText(payload: NotificationPayload, appUrl: string): st
 }
 
 /**
+ * メール共通テンプレートビルダー
+ */
+function buildEmailTemplate({
+  accentColor,
+  title,
+  badge,
+  alertHtml,
+  infoItems,
+  ctaUrl,
+  ctaText,
+  timestamp,
+  appUrl,
+}: {
+  accentColor: string;
+  title: string;
+  badge?: { text: string; color: string } | undefined;
+  alertHtml?: string | undefined;
+  infoItems: { label: string; value: string }[];
+  ctaUrl?: string | undefined;
+  ctaText?: string | undefined;
+  timestamp: string;
+  appUrl?: string | undefined;
+}): string {
+  const formattedTime = new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
+
+  const badgeHtml = badge
+    ? `<span style="display:inline-block;background:${badge.color};color:white;padding:2px 10px;border-radius:9999px;font-size:11px;font-weight:700;letter-spacing:0.08em;vertical-align:middle;margin-left:10px;">${badge.text}</span>`
+    : "";
+
+  const alertBlock = alertHtml
+    ? `<div style="background:#fef2f2;border-left:4px solid ${accentColor};padding:12px 16px;margin:0 0 16px;border-radius:0 6px 6px 0;color:#1e293b;font-size:14px;line-height:1.6;">${alertHtml}</div>`
+    : "";
+
+  const tableRows = infoItems
+    .map(
+      ({ label, value }) =>
+        `<tr>
+          <td style="padding:9px 14px;background:#f8fafc;border-bottom:1px solid #e2e8f0;width:32%;vertical-align:top;white-space:nowrap;">
+            <span style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;">${label}</span>
+          </td>
+          <td style="padding:9px 14px;background:white;border-bottom:1px solid #e2e8f0;color:#1e293b;font-size:14px;word-break:break-all;">${value}</td>
+        </tr>`,
+    )
+    .join("");
+
+  const infoTable = tableRows
+    ? `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;margin-bottom:20px;">${tableRows}</table>`
+    : "";
+
+  const ctaBlock =
+    ctaUrl && ctaText
+      ? `<div style="margin-bottom:4px;"><a href="${ctaUrl}" style="display:inline-block;padding:11px 22px;background:${accentColor};color:white;text-decoration:none;border-radius:6px;font-weight:600;font-size:14px;">${ctaText} &rarr;</a></div>`
+      : "";
+
+  const footerLinks = appUrl
+    ? `<a href="${appUrl}" style="color:#94a3b8;text-decoration:none;">Vulflare</a>&ensp;&middot;&ensp;<a href="${appUrl}/notifications" style="color:#94a3b8;text-decoration:none;">通知設定</a>`
+    : "Vulflare";
+
+  return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title}</title>
+</head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+<tr><td align="center" style="padding:32px 16px;">
+
+  <table width="600" cellpadding="0" cellspacing="0" role="presentation" style="max-width:600px;width:100%;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.12);">
+
+    <!-- ヘッダー -->
+    <tr>
+      <td style="background:#ffffff;border-top:4px solid #f97316;padding:22px 28px 20px;border-bottom:1px solid #f1f5f9;">
+        <div style="font-size:13px;font-weight:800;color:#ea580c;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;">VULFLARE</div>
+        <div style="font-size:20px;font-weight:700;color:#1e293b;line-height:1.3;">${title}${badgeHtml}</div>
+      </td>
+    </tr>
+
+    <!-- 本文 -->
+    <tr>
+      <td style="background:white;padding:24px 28px;">
+        ${alertBlock}${infoTable}${ctaBlock}
+      </td>
+    </tr>
+
+    <!-- フッター -->
+    <tr>
+      <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:14px 28px;text-align:center;">
+        <p style="margin:0;font-size:12px;color:#94a3b8;">${footerLinks}</p>
+        <p style="margin:5px 0 0;font-size:11px;color:#cbd5e1;">通知日時: ${formattedTime}</p>
+      </td>
+    </tr>
+
+  </table>
+
+</td></tr>
+</table>
+</body>
+</html>`;
+}
+
+/**
+ * 深刻度カラーマップ
+ */
+const SEVERITY_COLORS: Record<string, string> = {
+  critical: "#dc2626",
+  high: "#ea580c",
+  medium: "#d97706",
+  low: "#65a30d",
+  info: "#6b7280",
+};
+
+/**
  * メール本文の生成
  */
 function generateEmailBody(payload: NotificationPayload, appUrl: string): string {
   const { eventType, data, timestamp } = payload;
 
-  // EOL関連イベントの場合は専用のフォーマットを使用
-  if (eventType === "eol_approaching") {
-    return generateEolApproachingEmail(data, timestamp);
-  }
-  if (eventType === "eol_expired") {
-    return generateEolExpiredEmail(data, timestamp);
-  }
-
-  // 脆弱性関連イベント
   if (eventType === "vulnerability_created") {
     return generateVulnerabilityCreatedEmail(data, timestamp, appUrl);
   }
   if (eventType === "vulnerability_updated") {
-    return generateVulnerabilityUpdatedEmail(data, timestamp);
+    return generateVulnerabilityUpdatedEmail(data, timestamp, appUrl);
   }
   if (eventType === "vulnerability_critical") {
-    return generateVulnerabilityCriticalEmail(data, timestamp);
+    return generateVulnerabilityCriticalEmail(data, timestamp, appUrl);
+  }
+  if (eventType === "eol_approaching") {
+    return generateEolApproachingEmail(data, timestamp, appUrl);
+  }
+  if (eventType === "eol_expired") {
+    return generateEolExpiredEmail(data, timestamp, appUrl);
   }
 
-  // デフォルトのフォーマット
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #1e40af; color: white; padding: 20px; border-radius: 5px; }
-    .content { padding: 20px; background: #f9fafb; margin-top: 20px; border-radius: 5px; }
-    .event-type { font-weight: bold; color: #1e40af; }
-    .timestamp { color: #6b7280; font-size: 0.9em; }
-    pre { background: #1f2937; color: #f3f4f6; padding: 15px; border-radius: 5px; overflow-x: auto; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Vulflare Notification</h1>
-    </div>
-    <div class="content">
-      <p><strong>Event Type:</strong> <span class="event-type">${escapeHtml(eventType)}</span></p>
-      <p class="timestamp"><strong>Timestamp:</strong> ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}</p>
-      <h3>Event Data:</h3>
-      <pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>
-    </div>
-  </div>
-</body>
-</html>
-  `.trim();
+  // デフォルト
+  return buildEmailTemplate({
+    accentColor: "#1e40af",
+    title: "Vulflare Notification",
+    infoItems: [{ label: "Event", value: escapeHtml(eventType) }],
+    timestamp,
+    appUrl,
+  });
 }
 
 /**
@@ -447,43 +545,35 @@ function generateVulnerabilityCreatedEmail(
   const title = data.title as string | undefined;
   const vulnId = data.vuln_id as string | undefined;
   const severity = data.severity as string | undefined;
-  const severityColor = severity === "critical" ? "#dc2626" : "#1e40af";
+  const accentColor = severity === "critical" ? "#dc2626" : "#1e40af";
 
-  const summary =
+  const alertHtml =
     count != null
-      ? `新規脆弱性が <strong>${count}件</strong> 登録されました。${criticalCount ? `（うちCritical: <strong>${criticalCount}件</strong>）` : ""}`
+      ? `新規脆弱性が <strong>${count}件</strong> 登録されました。${criticalCount ? `うち Critical: <strong>${criticalCount}件</strong>` : ""}`
       : `脆弱性が登録されました: <strong>${escapeHtml(vulnId)}</strong>`;
 
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: ${severityColor}; color: white; padding: 20px; border-radius: 5px; }
-    .content { padding: 20px; background: #f9fafb; margin-top: 20px; border-radius: 5px; }
-    .info-item { padding: 10px; background: white; border-radius: 3px; margin: 8px 0; }
-    .info-label { font-weight: bold; color: #6b7280; font-size: 0.9em; }
-    .link-button { display: inline-block; margin-top: 16px; padding: 10px 20px; background: ${severityColor}; color: white !important; text-decoration: none; border-radius: 4px; font-weight: bold; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header"><h1>脆弱性が登録されました</h1></div>
-    <div class="content">
-      <p>${summary}</p>
-      ${vulnId ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${escapeHtml(vulnId)}</div></div>` : ""}
-      ${title ? `<div class="info-item"><div class="info-label">タイトル</div><div>${escapeHtml(title)}</div></div>` : ""}
-      ${severity ? `<div class="info-item"><div class="info-label">深刻度</div><div>${escapeHtml(severity)}</div></div>` : ""}
-      ${appUrl ? `<a href="${appUrl}/vulnerabilities" class="link-button">脆弱性一覧を確認する</a>` : ""}
-      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}</p>
-    </div>
-  </div>
-</body>
-</html>
-  `.trim();
+  const infoItems: { label: string; value: string }[] = [];
+  if (vulnId) infoItems.push({ label: "CVE ID", value: escapeHtml(vulnId) });
+  if (title) infoItems.push({ label: "タイトル", value: escapeHtml(title) });
+  if (severity) {
+    const color = SEVERITY_COLORS[severity] ?? "#6b7280";
+    infoItems.push({
+      label: "深刻度",
+      value: `<span style="display:inline-block;background:${color};color:white;padding:2px 10px;border-radius:9999px;font-size:12px;font-weight:700;">${escapeHtml(severity.toUpperCase())}</span>`,
+    });
+  }
+
+  return buildEmailTemplate({
+    accentColor,
+    title: "脆弱性が登録されました",
+    badge: severity === "critical" ? { text: "CRITICAL", color: "#dc2626" } : undefined,
+    alertHtml,
+    infoItems,
+    ctaUrl: appUrl ? `${appUrl}/vulnerabilities` : undefined,
+    ctaText: "脆弱性一覧を確認する",
+    timestamp,
+    appUrl,
+  });
 }
 
 /**
@@ -492,44 +582,33 @@ function generateVulnerabilityCreatedEmail(
 function generateVulnerabilityUpdatedEmail(
   data: Record<string, unknown>,
   timestamp: string,
+  appUrl: string,
 ): string {
   const count = data.count as number | undefined;
   const title = data.title as string | undefined;
   const vulnId = data.vuln_id as string | undefined;
   const status = data.status as string | undefined;
 
-  const summary =
+  const alertHtml =
     count != null
       ? `<strong>${count}件</strong> の脆弱性が一括更新されました。`
-      : `脆弱性が更新されました: <strong>${escapeHtml(vulnId)}</strong> ${escapeHtml(title)}`;
+      : `脆弱性が更新されました: <strong>${escapeHtml(vulnId)}</strong>${title ? ` — ${escapeHtml(title)}` : ""}`;
 
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #0284c7; color: white; padding: 20px; border-radius: 5px; }
-    .content { padding: 20px; background: #f9fafb; margin-top: 20px; border-radius: 5px; }
-    .info-item { padding: 10px; background: white; border-radius: 3px; margin: 8px 0; }
-    .info-label { font-weight: bold; color: #6b7280; font-size: 0.9em; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header"><h1>脆弱性が更新されました</h1></div>
-    <div class="content">
-      <p>${summary}</p>
-      ${vulnId ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${escapeHtml(vulnId)}</div></div>` : ""}
-      ${status ? `<div class="info-item"><div class="info-label">ステータス</div><div>${escapeHtml(status)}</div></div>` : ""}
-      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}</p>
-    </div>
-  </div>
-</body>
-</html>
-  `.trim();
+  const infoItems: { label: string; value: string }[] = [];
+  if (vulnId) infoItems.push({ label: "CVE ID", value: escapeHtml(vulnId) });
+  if (title) infoItems.push({ label: "タイトル", value: escapeHtml(title) });
+  if (status) infoItems.push({ label: "ステータス", value: escapeHtml(status) });
+
+  return buildEmailTemplate({
+    accentColor: "#1e40af",
+    title: "脆弱性が更新されました",
+    alertHtml,
+    infoItems,
+    ctaUrl: appUrl ? `${appUrl}/vulnerabilities` : undefined,
+    ctaText: "脆弱性一覧を確認する",
+    timestamp,
+    appUrl,
+  });
 }
 
 /**
@@ -538,189 +617,111 @@ function generateVulnerabilityUpdatedEmail(
 function generateVulnerabilityCriticalEmail(
   data: Record<string, unknown>,
   timestamp: string,
+  appUrl: string,
 ): string {
   const criticalCount = data.critical_count as number | undefined;
   const cveIds = data.cve_ids as string[] | undefined;
   const vulnId = data.vuln_id as string | undefined;
   const title = data.title as string | undefined;
 
-  const summary =
+  const alertHtml =
     criticalCount != null
-      ? `Critical脆弱性が <strong>${criticalCount}件</strong> 検出されました。`
-      : `クリティカル脆弱性が検出されました: <strong>${escapeHtml(vulnId)}</strong> ${escapeHtml(title)}`;
+      ? `Critical脆弱性が <strong>${criticalCount}件</strong> 検出されました。即時対応を推奨します。`
+      : `クリティカル脆弱性が検出されました: <strong>${escapeHtml(vulnId)}</strong>${title ? ` — ${escapeHtml(title)}` : ""}`;
 
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #dc2626; color: white; padding: 20px; border-radius: 5px; }
-    .content { padding: 20px; background: #f9fafb; margin-top: 20px; border-radius: 5px; }
-    .alert { background: #fee2e2; border-left: 4px solid #dc2626; padding: 15px; margin: 15px 0; }
-    .info-item { padding: 10px; background: white; border-radius: 3px; margin: 8px 0; }
-    .info-label { font-weight: bold; color: #6b7280; font-size: 0.9em; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header"><h1>クリティカル脆弱性が検出されました</h1></div>
-    <div class="content">
-      <div class="alert">${summary}</div>
-      ${cveIds?.length ? `<div class="info-item"><div class="info-label">CVE ID一覧</div><div>${cveIds.map(escapeHtml).join(", ")}</div></div>` : ""}
-      ${vulnId && !cveIds?.length ? `<div class="info-item"><div class="info-label">CVE ID</div><div>${escapeHtml(vulnId)}</div></div>` : ""}
-      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}</p>
-    </div>
-  </div>
-</body>
-</html>
-  `.trim();
+  const infoItems: { label: string; value: string }[] = [];
+  if (cveIds?.length) {
+    infoItems.push({ label: "CVE ID一覧", value: cveIds.map(escapeHtml).join(",&nbsp; ") });
+  } else if (vulnId) {
+    infoItems.push({ label: "CVE ID", value: escapeHtml(vulnId) });
+  }
+  if (title) infoItems.push({ label: "タイトル", value: escapeHtml(title) });
+
+  return buildEmailTemplate({
+    accentColor: "#dc2626",
+    title: "クリティカル脆弱性が検出されました",
+    badge: { text: "CRITICAL", color: "#dc2626" },
+    alertHtml,
+    infoItems,
+    ctaUrl: appUrl ? `${appUrl}/vulnerabilities` : undefined,
+    ctaText: "今すぐ確認する",
+    timestamp,
+    appUrl,
+  });
 }
 
 /**
  * EOL期限が近づいている場合のメール本文
  */
-function generateEolApproachingEmail(data: Record<string, unknown>, timestamp: string): string {
-  const severity = data.severity as string;
-  const severityColor =
-    severity === "critical" ? "#dc2626" : severity === "high" ? "#ea580c" : "#f59e0b";
+function generateEolApproachingEmail(
+  data: Record<string, unknown>,
+  timestamp: string,
+  appUrl: string,
+): string {
+  const severity = data.severity as string | undefined;
+  const accentColor = SEVERITY_COLORS[severity ?? ""] ?? "#d97706";
+  const daysUntilEol = data.days_until_eol as number | undefined;
 
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: ${severityColor}; color: white; padding: 20px; border-radius: 5px; }
-    .content { padding: 20px; background: #f9fafb; margin-top: 20px; border-radius: 5px; }
-    .warning { background: #fef3c7; border-left: 4px solid ${severityColor}; padding: 15px; margin: 15px 0; }
-    .info-grid { display: grid; gap: 10px; }
-    .info-item { padding: 10px; background: white; border-radius: 3px; }
-    .info-label { font-weight: bold; color: #6b7280; font-size: 0.9em; }
-    .info-value { color: #1f2937; margin-top: 5px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>EOL期限が近づいています</h1>
-    </div>
-    <div class="content">
-      <div class="warning">
-        <strong>${escapeHtml(data.display_name)} (${escapeHtml(data.cycle)})</strong> のサポート終了が <strong>${escapeHtml(data.days_until_eol)}日後</strong> に迫っています。
-      </div>
+  const alertHtml = `<strong>${escapeHtml(data.display_name)} (${escapeHtml(data.cycle)})</strong> のサポート終了が <strong>${escapeHtml(data.days_until_eol)}日後</strong> に迫っています。`;
 
-      <div class="info-grid">
-        <div class="info-item">
-          <div class="info-label">プロダクト</div>
-          <div class="info-value">${escapeHtml(data.display_name)} (${escapeHtml(data.product_name)})</div>
-        </div>
-        <div class="info-item">
-          <div class="info-label">バージョン</div>
-          <div class="info-value">${escapeHtml(data.cycle)}</div>
-        </div>
-        <div class="info-item">
-          <div class="info-label">カテゴリ</div>
-          <div class="info-value">${escapeHtml(data.category)}</div>
-        </div>
-        ${
-          data.vendor
-            ? `
-        <div class="info-item">
-          <div class="info-label">ベンダー</div>
-          <div class="info-value">${escapeHtml(data.vendor)}</div>
-        </div>
-        `
-            : ""
-        }
-        <div class="info-item">
-          <div class="info-label">EOL日</div>
-          <div class="info-value">${escapeHtml(data.eol_date)}</div>
-        </div>
-      </div>
+  const infoItems: { label: string; value: string }[] = [
+    {
+      label: "プロダクト",
+      value: `${escapeHtml(data.display_name)} (${escapeHtml(data.product_name)})`,
+    },
+    { label: "バージョン", value: escapeHtml(data.cycle) },
+    { label: "カテゴリ", value: escapeHtml(data.category) },
+  ];
+  if (data.vendor) infoItems.push({ label: "ベンダー", value: escapeHtml(data.vendor) });
+  infoItems.push({ label: "EOL日", value: `<strong>${escapeHtml(data.eol_date)}</strong>` });
 
-      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">
-        通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}
-      </p>
-    </div>
-  </div>
-</body>
-</html>
-  `.trim();
+  const badgeText = daysUntilEol != null ? `残り ${daysUntilEol}日` : undefined;
+
+  return buildEmailTemplate({
+    accentColor,
+    title: "EOL期限が近づいています",
+    badge: badgeText ? { text: badgeText, color: accentColor } : undefined,
+    alertHtml,
+    infoItems,
+    ctaUrl: appUrl ? `${appUrl}/eol` : undefined,
+    ctaText: "EOL一覧を確認する",
+    timestamp,
+    appUrl,
+  });
 }
 
 /**
  * EOL期限切れの場合のメール本文
  */
-function generateEolExpiredEmail(data: Record<string, unknown>, timestamp: string): string {
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #dc2626; color: white; padding: 20px; border-radius: 5px; }
-    .content { padding: 20px; background: #f9fafb; margin-top: 20px; border-radius: 5px; }
-    .alert { background: #fee2e2; border-left: 4px solid #dc2626; padding: 15px; margin: 15px 0; }
-    .info-grid { display: grid; gap: 10px; }
-    .info-item { padding: 10px; background: white; border-radius: 3px; }
-    .info-label { font-weight: bold; color: #6b7280; font-size: 0.9em; }
-    .info-value { color: #1f2937; margin-top: 5px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>サポート終了（EOL）</h1>
-    </div>
-    <div class="content">
-      <div class="alert">
-        <strong>${escapeHtml(data.display_name)} (${escapeHtml(data.cycle)})</strong> のサポートが終了しました。早急な対応が必要です。
-      </div>
+function generateEolExpiredEmail(
+  data: Record<string, unknown>,
+  timestamp: string,
+  appUrl: string,
+): string {
+  const alertHtml = `<strong>${escapeHtml(data.display_name)} (${escapeHtml(data.cycle)})</strong> のサポートが終了しました。早急な対応が必要です。`;
 
-      <div class="info-grid">
-        <div class="info-item">
-          <div class="info-label">プロダクト</div>
-          <div class="info-value">${escapeHtml(data.display_name)} (${escapeHtml(data.product_name)})</div>
-        </div>
-        <div class="info-item">
-          <div class="info-label">バージョン</div>
-          <div class="info-value">${escapeHtml(data.cycle)}</div>
-        </div>
-        <div class="info-item">
-          <div class="info-label">カテゴリ</div>
-          <div class="info-value">${escapeHtml(data.category)}</div>
-        </div>
-        ${
-          data.vendor
-            ? `
-        <div class="info-item">
-          <div class="info-label">ベンダー</div>
-          <div class="info-value">${escapeHtml(data.vendor)}</div>
-        </div>
-        `
-            : ""
-        }
-        <div class="info-item">
-          <div class="info-label">EOL日</div>
-          <div class="info-value">${escapeHtml(data.eol_date)}</div>
-        </div>
-      </div>
+  const infoItems: { label: string; value: string }[] = [
+    {
+      label: "プロダクト",
+      value: `${escapeHtml(data.display_name)} (${escapeHtml(data.product_name)})`,
+    },
+    { label: "バージョン", value: escapeHtml(data.cycle) },
+    { label: "カテゴリ", value: escapeHtml(data.category) },
+  ];
+  if (data.vendor) infoItems.push({ label: "ベンダー", value: escapeHtml(data.vendor) });
+  infoItems.push({ label: "EOL日", value: `<strong>${escapeHtml(data.eol_date)}</strong>` });
 
-      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9em;">
-        通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}
-      </p>
-    </div>
-  </div>
-</body>
-</html>
-  `.trim();
+  return buildEmailTemplate({
+    accentColor: "#dc2626",
+    title: "サポートが終了しました",
+    badge: { text: "EOL", color: "#dc2626" },
+    alertHtml,
+    infoItems,
+    ctaUrl: appUrl ? `${appUrl}/eol` : undefined,
+    ctaText: "EOL一覧を確認する",
+    timestamp,
+    appUrl,
+  });
 }
 
 /**
