@@ -76,10 +76,10 @@ export function useCreateChannel() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications", "channels"] });
-      toast.success("チャネルを作成しました");
+      toast.success("通知先を作成しました");
     },
     onError: () => {
-      toast.error("チャネルの作成に失敗しました");
+      toast.error("通知先の作成に失敗しました");
     },
   });
 }
@@ -98,10 +98,10 @@ export function useUpdateChannel() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications", "channels"] });
-      toast.success("チャネルを更新しました");
+      toast.success("通知先を更新しました");
     },
     onError: () => {
-      toast.error("チャネルの更新に失敗しました");
+      toast.error("通知先の更新に失敗しました");
     },
   });
 }
@@ -114,10 +114,10 @@ export function useDeleteChannel() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      toast.success("チャネルを削除しました");
+      toast.success("通知先を削除しました");
     },
     onError: () => {
-      toast.error("チャネルの削除に失敗しました");
+      toast.error("通知先の削除に失敗しました");
     },
   });
 }

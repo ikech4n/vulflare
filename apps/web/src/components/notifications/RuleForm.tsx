@@ -63,7 +63,7 @@ export function RuleForm({ channels, onSubmit, onCancel, isPending }: RuleFormPr
             htmlFor="rule-channel"
             className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
           >
-            チャネル
+            通知先
           </label>
           <select
             id="rule-channel"

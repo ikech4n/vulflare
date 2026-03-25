@@ -40,7 +40,7 @@ export function LogTable({ channels }: LogTableProps) {
           onChange={(e) => updateFilter({ channelId: e.target.value || undefined })}
           className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
         >
-          <option value="">全チャネル</option>
+          <option value="">全通知先</option>
           {channels.map((ch) => (
             <option key={ch.id} value={ch.id}>
               {ch.name}
@@ -116,7 +116,7 @@ export function LogTable({ channels }: LogTableProps) {
                     送信日時
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                    チャネル
+                    通知先
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                     イベント

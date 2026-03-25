@@ -24,7 +24,7 @@ export function NotificationsPage() {
   }
 
   const tabs = [
-    { id: "channels" as const, label: "チャネル" },
+    { id: "channels" as const, label: "通知先" },
     { id: "rules" as const, label: "ルール" },
     { id: "logs" as const, label: "ログ" },
   ];
@@ -33,9 +33,7 @@ export function NotificationsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">通知設定</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
-          イベント通知のチャネルとルールを管理します
-        </p>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">通知先とルールを管理します</p>
       </div>
 
       <div className="border-b border-gray-200 dark:border-gray-700">

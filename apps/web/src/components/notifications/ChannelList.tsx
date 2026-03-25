@@ -32,7 +32,7 @@ export function ChannelList({ channels }: ChannelListProps) {
           className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
         >
           <Plus className="w-4 h-4 mr-2" />
-          チャネル追加
+          通知先追加
         </button>
       </div>
 
@@ -70,7 +70,7 @@ export function ChannelList({ channels }: ChannelListProps) {
 
       {channels.length === 0 && !showCreateForm ? (
         <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-          チャネルがありません。「チャネル追加」から作成してください。
+          通知先がありません。「通知先追加」から作成してください。
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

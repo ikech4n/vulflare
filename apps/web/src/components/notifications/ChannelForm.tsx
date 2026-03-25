@@ -74,7 +74,7 @@ export function ChannelForm({ mode, channel, onSubmit, onCancel, isPending }: Ch
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
       <h3 className="text-lg font-semibold dark:text-white mb-4">
-        {mode === "create" ? "新規チャネル" : "チャネル編集"}
+        {mode === "create" ? "新規通知先" : "通知先編集"}
       </h3>
       <div className="space-y-4">
         <div>

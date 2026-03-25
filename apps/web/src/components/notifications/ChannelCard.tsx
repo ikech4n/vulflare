@@ -62,7 +62,7 @@ export function ChannelCard({
           <button
             type="button"
             onClick={() => {
-              if (!confirm("このチャネルを削除しますか？")) return;
+              if (!confirm("この通知先を削除しますか？")) return;
               onDelete(channel.id);
             }}
             disabled={isDeletePending}
