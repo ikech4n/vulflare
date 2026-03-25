@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  lint:
-    name: Lint
+  install:
+    name: Install Dependencies
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,11 +17,43 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/web/node_modules
+            apps/worker/node_modules
+            packages/shared/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile
+
+  lint:
+    name: Lint
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/web/node_modules
+            apps/worker/node_modules
+            packages/shared/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm lint
 
   type-check:
     name: Type Check
+    needs: install
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,12 +61,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/web/node_modules
+            apps/worker/node_modules
+            packages/shared/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm type-check
 
   test-web:
     name: Test Web
+    needs: install
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,12 +81,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/web/node_modules
+            apps/worker/node_modules
+            packages/shared/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm test:web
 
   test-worker:
     name: Test Worker
+    needs: install
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,9 +101,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
+      - uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/web/node_modules
+            apps/worker/node_modules
+            packages/shared/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: sudo apt-get install -y libatomic1
-      - run: pnpm install --frozen-lockfile
       # wrangler.toml は .gitignore 対象のためサンプルからコピー
       # @cloudflare/vitest-pool-workers はローカル D1 を使用するため実際の ID は不要
       - run: cp wrangler.toml.example wrangler.toml
@@ -78,6 +130,7 @@ jobs:
 
   build-worker:
     name: Build Worker
+    needs: install
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -85,13 +138,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/web/node_modules
+            apps/worker/node_modules
+            packages/shared/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: sudo apt-get install -y libatomic1
       - run: cp wrangler.toml.example wrangler.toml
       - run: pnpm exec wrangler deploy --dry-run --env production
 
   build:
     name: Build Web
+    needs: install
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -99,8 +160,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/web/node_modules
+            apps/worker/node_modules
+            packages/shared/node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm build:web
         env:
           # ビルド確認用のダミー URL（実際のデプロイは手動で pnpm deploy:web を実行）
