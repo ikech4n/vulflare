@@ -102,7 +102,7 @@ export async function sendToChannelById(
     if (channel.type === "email") {
       await sendEmail(env, config, payload);
     } else if (channel.type === "slack") {
-      await sendSlack(config, payload);
+      await sendSlack(config, payload, env.PAGES_URL ?? "");
     }
 
     await notificationRepo.createLog(env.DB, {
@@ -131,6 +131,7 @@ export async function sendToChannelById(
 async function sendSlack(
   config: Record<string, unknown>,
   payload: NotificationPayload,
+  appUrl = "",
 ): Promise<void> {
   const url = config.webhookUrl as string;
   if (!url) throw new Error("Slack webhook URL is required");
@@ -178,6 +179,16 @@ async function sendSlack(
       fields.push({ type: "mrkdwn", text: `*登録件数*\n${data.created_count}件` });
   }
 
+  const listPath =
+    eventType === "eol_approaching" || eventType === "eol_expired" ? "/eol" : "/vulnerabilities";
+  const listLabel =
+    eventType === "eol_approaching" || eventType === "eol_expired"
+      ? "EOL一覧を確認する"
+      : "脆弱性一覧を確認する";
+  const linkBlock = appUrl
+    ? [{ type: "section", text: { type: "mrkdwn", text: `<${appUrl}${listPath}|${listLabel}>` } }]
+    : [];
+
   const body = {
     attachments: [
       {
@@ -188,6 +199,7 @@ async function sendSlack(
             text: { type: "plain_text", text: headerText },
           },
           ...(fields.length > 0 ? [{ type: "section", fields }] : []),
+          ...linkBlock,
         ],
       },
     ],
@@ -747,6 +759,6 @@ export async function sendTestNotification(
   if (channel.type === "email") {
     await sendEmail(env, config, testPayload);
   } else if (channel.type === "slack") {
-    await sendSlack(config, testPayload);
+    await sendSlack(config, testPayload, env.PAGES_URL ?? "");
   }
 }
