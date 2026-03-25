@@ -29,7 +29,7 @@ notificationRoutes.get("/channels/:id", async (c) => {
 notificationRoutes.post("/channels", requireRole("editor"), async (c) => {
   const body = await c.req.json<{
     name: string;
-    type: "webhook" | "email";
+    type: "webhook" | "email" | "slack";
     config: Record<string, unknown>;
   }>();
 
@@ -37,7 +37,7 @@ notificationRoutes.post("/channels", requireRole("editor"), async (c) => {
     return c.json({ error: "Missing required fields" }, 400);
   }
 
-  if (!["webhook", "email"].includes(body.type)) {
+  if (!["webhook", "email", "slack"].includes(body.type)) {
     return c.json({ error: "Invalid channel type" }, 400);
   }
 
@@ -124,6 +124,7 @@ notificationRoutes.post("/rules", requireRole("editor"), async (c) => {
     "vulnerability_updated",
     "vulnerability_critical",
     "eol_approaching",
+    "eol_expired",
   ];
 
   if (!validEvents.includes(body.eventType)) {
@@ -179,11 +180,42 @@ notificationRoutes.delete("/rules/:id", requireRole("admin"), async (c) => {
 // GET /api/notifications/logs - ログ一覧
 notificationRoutes.get("/logs", async (c) => {
   const channelId = c.req.query("channelId");
-  const limit = c.req.query("limit") ? Number(c.req.query("limit")) : undefined;
+  const eventType = c.req.query("eventType");
+  const status = c.req.query("status") as "sent" | "failed" | "pending" | undefined;
+  const dateFrom = c.req.query("dateFrom");
+  const dateTo = c.req.query("dateTo");
+  const page = c.req.query("page") ? Number(c.req.query("page")) : 1;
+  const limit = c.req.query("limit") ? Number(c.req.query("limit")) : 50;
 
-  const logs = await notificationRepo.listLogs(c.env.DB, {
+  const result = await notificationRepo.listLogs(c.env.DB, {
     ...(channelId && { channelId }),
-    ...(limit !== undefined && { limit }),
+    ...(eventType && { eventType }),
+    ...(status && { status }),
+    ...(dateFrom && { dateFrom }),
+    ...(dateTo && { dateTo }),
+    page,
+    limit,
   });
-  return c.json(logs);
+  return c.json(result);
+});
+
+// POST /api/notifications/logs/:id/resend - ログ再送信（editor以上）
+notificationRoutes.post("/logs/:id/resend", requireRole("editor"), async (c) => {
+  const log = await notificationRepo.findLogById(c.env.DB, c.req.param("id") ?? "");
+  if (!log) return c.json({ error: "Log not found" }, 404);
+
+  const channel = await notificationRepo.findChannelById(c.env.DB, log.channel_id);
+  if (!channel) return c.json({ error: "Channel not found" }, 404);
+
+  const { sendToChannelById } = await import("../services/notifications.ts");
+  c.executionCtx.waitUntil(
+    sendToChannelById(
+      c.env,
+      channel,
+      JSON.parse(log.payload) as import("../services/notifications.ts").NotificationPayload,
+    ).catch((error) => {
+      console.error("Resend notification error:", error);
+    }),
+  );
+  return c.json({ message: "Resend triggered" });
 });

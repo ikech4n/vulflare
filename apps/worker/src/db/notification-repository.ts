@@ -1,7 +1,7 @@
 export interface NotificationChannel {
   id: string;
   name: string;
-  type: "webhook" | "email";
+  type: "webhook" | "email" | "slack";
   config: string; // JSON
   is_active: number;
   created_at: string;
@@ -187,26 +187,72 @@ export const notificationRepo = {
       .run();
   },
 
+  async findLogById(db: D1Database, id: string): Promise<NotificationLog | null> {
+    const result = await db
+      .prepare("SELECT * FROM notification_logs WHERE id = ?")
+      .bind(id)
+      .first();
+    return result as NotificationLog | null;
+  },
+
   async listLogs(
     db: D1Database,
-    options: { channelId?: string; limit?: number },
-  ): Promise<NotificationLog[]> {
-    const limit = options.limit ?? 100;
-    let query = "SELECT * FROM notification_logs";
+    options: {
+      channelId?: string;
+      eventType?: string;
+      status?: "sent" | "failed" | "pending";
+      dateFrom?: string;
+      dateTo?: string;
+      page?: number;
+      limit?: number;
+    },
+  ): Promise<{ data: NotificationLog[]; total: number; page: number; limit: number }> {
+    const limit = options.limit ?? 50;
+    const page = options.page ?? 1;
+    const offset = (page - 1) * limit;
+
+    const conditions: string[] = [];
     const params: unknown[] = [];
 
     if (options.channelId) {
-      query += " WHERE channel_id = ?";
+      conditions.push("channel_id = ?");
       params.push(options.channelId);
     }
+    if (options.eventType) {
+      conditions.push("event_type = ?");
+      params.push(options.eventType);
+    }
+    if (options.status) {
+      conditions.push("status = ?");
+      params.push(options.status);
+    }
+    if (options.dateFrom) {
+      conditions.push("sent_at >= ?");
+      params.push(options.dateFrom);
+    }
+    if (options.dateTo) {
+      conditions.push("sent_at <= ?");
+      params.push(options.dateTo);
+    }
 
-    query += " ORDER BY sent_at DESC LIMIT ?";
-    params.push(limit);
+    const where = conditions.length > 0 ? ` WHERE ${conditions.join(" AND ")}` : "";
 
-    const result = await db
-      .prepare(query)
+    const countResult = await db
+      .prepare(`SELECT COUNT(*) as count FROM notification_logs${where}`)
       .bind(...params)
+      .first<{ count: number }>();
+    const total = countResult?.count ?? 0;
+
+    const dataResult = await db
+      .prepare(`SELECT * FROM notification_logs${where} ORDER BY sent_at DESC LIMIT ? OFFSET ?`)
+      .bind(...params, limit, offset)
       .all();
-    return result.results as unknown as NotificationLog[];
+
+    return {
+      data: dataResult.results as unknown as NotificationLog[],
+      total,
+      page,
+      limit,
+    };
   },
 };

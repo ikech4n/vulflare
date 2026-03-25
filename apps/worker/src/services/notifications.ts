@@ -40,13 +40,19 @@ export async function dispatchNotification(
     const channel = await notificationRepo.findChannelById(env.DB, rule.channel_id);
     if (!channel || !channel.is_active) continue;
 
-    // フィルター条件チェック（簡易版）
+    // フィルター条件チェック
     if (rule.filter_config) {
       try {
         const filter = JSON.parse(rule.filter_config) as Record<string, unknown>;
         let match = true;
         for (const [key, value] of Object.entries(filter)) {
-          if (data[key] !== value) {
+          // 配列の場合は includes で判定（例: severity: ["critical", "high"]）
+          if (Array.isArray(value)) {
+            if (!value.includes(data[key])) {
+              match = false;
+              break;
+            }
+          } else if (data[key] !== value) {
             match = false;
             break;
           }
@@ -70,9 +76,20 @@ export async function dispatchNotification(
 }
 
 /**
- * チャネルに通知を送信
+ * チャネルに通知を送信（内部用）
  */
 async function sendToChannel(
+  env: Env,
+  channel: { id: string; type: string; config: string },
+  payload: NotificationPayload,
+): Promise<void> {
+  await sendToChannelById(env, channel, payload);
+}
+
+/**
+ * チャネルに通知を送信（再送信などで外部から呼ぶ用）
+ */
+export async function sendToChannelById(
   env: Env,
   channel: { id: string; type: string; config: string },
   payload: NotificationPayload,
@@ -86,6 +103,8 @@ async function sendToChannel(
       await sendWebhook(config, payload);
     } else if (channel.type === "email") {
       await sendEmail(env, config, payload);
+    } else if (channel.type === "slack") {
+      await sendSlack(config, payload);
     }
 
     await notificationRepo.createLog(env.DB, {
@@ -131,6 +150,85 @@ async function sendWebhook(
 
   if (!response.ok) {
     throw new Error(`Webhook failed with status ${response.status}`);
+  }
+}
+
+/**
+ * Slack送信（Block Kit形式）
+ */
+async function sendSlack(
+  config: Record<string, unknown>,
+  payload: NotificationPayload,
+): Promise<void> {
+  const url = config.webhookUrl as string;
+  if (!url) throw new Error("Slack webhook URL is required");
+
+  const { eventType, data } = payload;
+
+  const colorMap: Record<string, string> = {
+    vulnerability_critical: "#dc2626",
+    vulnerability_created: "#1e40af",
+    vulnerability_updated: "#0284c7",
+    eol_approaching: "#f59e0b",
+    eol_expired: "#dc2626",
+  };
+  const color = colorMap[eventType] ?? "#6b7280";
+
+  const headerText =
+    eventType === "vulnerability_critical"
+      ? "クリティカル脆弱性が検出されました"
+      : eventType === "vulnerability_created"
+        ? "脆弱性が登録されました"
+        : eventType === "vulnerability_updated"
+          ? "脆弱性が更新されました"
+          : eventType === "eol_approaching"
+            ? "EOL期限が近づいています"
+            : eventType === "eol_expired"
+              ? "サポート終了（EOL）"
+              : `Vulflare: ${eventType}`;
+
+  const fields: { type: "mrkdwn"; text: string }[] = [];
+
+  if (eventType === "eol_approaching" || eventType === "eol_expired") {
+    if (data.display_name)
+      fields.push({
+        type: "mrkdwn",
+        text: `*プロダクト*\n${data.display_name} (${data.cycle ?? ""})`,
+      });
+    if (data.eol_date) fields.push({ type: "mrkdwn", text: `*EOL日*\n${data.eol_date}` });
+    if (data.days_until_eol != null)
+      fields.push({ type: "mrkdwn", text: `*残り日数*\n${data.days_until_eol}日` });
+  } else {
+    if (data.vuln_id) fields.push({ type: "mrkdwn", text: `*CVE ID*\n${data.vuln_id}` });
+    if (data.title) fields.push({ type: "mrkdwn", text: `*タイトル*\n${data.title}` });
+    if (data.severity) fields.push({ type: "mrkdwn", text: `*深刻度*\n${data.severity}` });
+    if (data.created_count != null)
+      fields.push({ type: "mrkdwn", text: `*登録件数*\n${data.created_count}件` });
+  }
+
+  const body = {
+    attachments: [
+      {
+        color,
+        blocks: [
+          {
+            type: "header",
+            text: { type: "plain_text", text: headerText },
+          },
+          ...(fields.length > 0 ? [{ type: "section", fields }] : []),
+        ],
+      },
+    ],
+  };
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Slack webhook failed with status ${response.status}`);
   }
 }
 
@@ -677,5 +775,7 @@ export async function sendTestNotification(
     await sendWebhook(config, testPayload);
   } else if (channel.type === "email") {
     await sendEmail(env, config, testPayload);
+  } else if (channel.type === "slack") {
+    await sendSlack(config, testPayload);
   }
 }
