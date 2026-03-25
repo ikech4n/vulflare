@@ -11,9 +11,8 @@ interface ChannelCardProps {
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  webhook: "Webhook",
-  email: "Email",
   slack: "Slack",
+  email: "Email",
 };
 
 export function ChannelCard({

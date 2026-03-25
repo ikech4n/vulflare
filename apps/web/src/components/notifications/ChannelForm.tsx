@@ -15,7 +15,6 @@ interface ChannelFormProps {
 }
 
 function parseChannelConfig(channel: NotificationChannel): {
-  url?: string;
   from?: string;
   to?: string[];
   cc?: string[];
@@ -30,12 +29,10 @@ function parseChannelConfig(channel: NotificationChannel): {
 
 export function ChannelForm({ mode, channel, onSubmit, onCancel, isPending }: ChannelFormProps) {
   const initConfig = channel ? parseChannelConfig(channel) : {};
-  const initType: NotificationChannelType =
-    mode === "edit" ? (channel?.type ?? "webhook") : "webhook";
+  const initType: NotificationChannelType = mode === "edit" ? (channel?.type ?? "slack") : "slack";
 
   const [name, setName] = useState(channel?.name ?? "");
   const [type, setType] = useState<NotificationChannelType>(initType);
-  const [webhookUrl, setWebhookUrl] = useState(initConfig.url ?? "");
   const [emailFrom, setEmailFrom] = useState(initConfig.from ?? "");
   const [emailTo, setEmailTo] = useState(initConfig.to?.join(", ") ?? "");
   const [emailCc, setEmailCc] = useState(initConfig.cc?.join(", ") ?? "");
@@ -44,19 +41,13 @@ export function ChannelForm({ mode, channel, onSubmit, onCancel, isPending }: Ch
 
   const resolvedType = mode === "edit" ? initType : type;
 
-  const isValid =
-    !!name &&
-    (resolvedType === "webhook"
-      ? !!webhookUrl
-      : resolvedType === "email"
-        ? !!emailFrom && !!emailTo
-        : !!slackUrl);
+  const isValid = !!name && (resolvedType === "slack" ? !!slackUrl : !!emailFrom && !!emailTo);
 
   const handleSubmit = () => {
     let config: Record<string, unknown>;
-    if (resolvedType === "webhook") {
-      config = { url: webhookUrl };
-    } else if (resolvedType === "email") {
+    if (resolvedType === "slack") {
+      config = { webhookUrl: slackUrl };
+    } else {
       config = {
         from: emailFrom,
         to: emailTo
@@ -70,8 +61,6 @@ export function ChannelForm({ mode, channel, onSubmit, onCancel, isPending }: Ch
             .filter((e) => e),
         }),
       };
-    } else {
-      config = { webhookUrl: slackUrl };
     }
 
     onSubmit({
@@ -119,9 +108,8 @@ export function ChannelForm({ mode, channel, onSubmit, onCancel, isPending }: Ch
               onChange={(e) => setType(e.target.value as NotificationChannelType)}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
             >
-              <option value="webhook">Webhook</option>
-              <option value="email">Email</option>
               <option value="slack">Slack</option>
+              <option value="email">Email</option>
             </select>
           ) : (
             <>
@@ -130,9 +118,8 @@ export function ChannelForm({ mode, channel, onSubmit, onCancel, isPending }: Ch
                 disabled
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-600 cursor-not-allowed dark:text-gray-300"
               >
-                <option value="webhook">Webhook</option>
-                <option value="email">Email</option>
                 <option value="slack">Slack</option>
+                <option value="email">Email</option>
               </select>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 タイプは変更できません
@@ -140,25 +127,6 @@ export function ChannelForm({ mode, channel, onSubmit, onCancel, isPending }: Ch
             </>
           )}
         </div>
-
-        {resolvedType === "webhook" && (
-          <div>
-            <label
-              htmlFor="channel-webhook-url"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-            >
-              Webhook URL
-            </label>
-            <input
-              id="channel-webhook-url"
-              type="url"
-              value={webhookUrl}
-              onChange={(e) => setWebhookUrl(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-              placeholder="https://example.com/webhook"
-            />
-          </div>
-        )}
 
         {resolvedType === "slack" && (
           <div>

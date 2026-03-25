@@ -1,4 +1,4 @@
-export type NotificationChannelType = "webhook" | "email" | "slack";
+export type NotificationChannelType = "slack" | "email";
 
 export type EventType =
   | "vulnerability_created"

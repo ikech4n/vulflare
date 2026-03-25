@@ -29,7 +29,7 @@ notificationRoutes.get("/channels/:id", async (c) => {
 notificationRoutes.post("/channels", requireRole("editor"), async (c) => {
   const body = await c.req.json<{
     name: string;
-    type: "webhook" | "email" | "slack";
+    type: "slack" | "email";
     config: Record<string, unknown>;
   }>();
 
@@ -37,7 +37,7 @@ notificationRoutes.post("/channels", requireRole("editor"), async (c) => {
     return c.json({ error: "Missing required fields" }, 400);
   }
 
-  if (!["webhook", "email", "slack"].includes(body.type)) {
+  if (!["slack", "email"].includes(body.type)) {
     return c.json({ error: "Invalid channel type" }, 400);
   }
 

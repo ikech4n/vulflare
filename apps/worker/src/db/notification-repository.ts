@@ -1,7 +1,7 @@
 export interface NotificationChannel {
   id: string;
   name: string;
-  type: "webhook" | "email" | "slack";
+  type: "slack" | "email";
   config: string; // JSON
   is_active: number;
   created_at: string;

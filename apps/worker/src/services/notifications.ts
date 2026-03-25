@@ -99,9 +99,7 @@ export async function sendToChannelById(
   try {
     const config = JSON.parse(channel.config) as Record<string, unknown>;
 
-    if (channel.type === "webhook") {
-      await sendWebhook(config, payload);
-    } else if (channel.type === "email") {
+    if (channel.type === "email") {
       await sendEmail(env, config, payload);
     } else if (channel.type === "slack") {
       await sendSlack(config, payload);
@@ -124,32 +122,6 @@ export async function sendToChannelById(
       status: "failed",
       error_message: error instanceof Error ? error.message : "Unknown error",
     });
-  }
-}
-
-/**
- * Webhook送信
- */
-async function sendWebhook(
-  config: Record<string, unknown>,
-  payload: NotificationPayload,
-): Promise<void> {
-  const url = config.url as string;
-  if (!url) throw new Error("Webhook URL is required");
-
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(config.headers as Record<string, string> | undefined),
-  };
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Webhook failed with status ${response.status}`);
   }
 }
 
@@ -771,9 +743,7 @@ export async function sendTestNotification(
 
   const config = JSON.parse(channel.config) as Record<string, unknown>;
 
-  if (channel.type === "webhook") {
-    await sendWebhook(config, testPayload);
-  } else if (channel.type === "email") {
+  if (channel.type === "email") {
     await sendEmail(env, config, testPayload);
   } else if (channel.type === "slack") {
     await sendSlack(config, testPayload);

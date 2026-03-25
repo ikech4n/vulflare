@@ -298,7 +298,7 @@ export function SyncPage() {
 
   const formatDateTime = (dateStr: string | null) => {
     if (!dateStr) return "—";
-    return new Date(dateStr).toLocaleString("ja-JP");
+    return new Date(dateStr).toLocaleString("ja-JP", { hour12: false });
   };
 
   const getSyncTypeText = (syncType: string) => {
