@@ -545,7 +545,7 @@ function generateVulnerabilityCreatedEmail(
   const title = data.title as string | undefined;
   const vulnId = data.vuln_id as string | undefined;
   const severity = data.severity as string | undefined;
-  const accentColor = severity === "critical" ? "#dc2626" : "#1e40af";
+  const accentColor = severity === "critical" ? "#dc2626" : "#ea580c";
 
   const alertHtml =
     count != null
@@ -600,7 +600,7 @@ function generateVulnerabilityUpdatedEmail(
   if (status) infoItems.push({ label: "ステータス", value: escapeHtml(status) });
 
   return buildEmailTemplate({
-    accentColor: "#1e40af",
+    accentColor: "#ea580c",
     title: "脆弱性が更新されました",
     alertHtml,
     infoItems,
@@ -659,7 +659,7 @@ function generateEolApproachingEmail(
   appUrl: string,
 ): string {
   const severity = data.severity as string | undefined;
-  const accentColor = SEVERITY_COLORS[severity ?? ""] ?? "#d97706";
+  const accentColor = severity === "critical" ? "#dc2626" : "#ea580c";
   const daysUntilEol = data.days_until_eol as number | undefined;
 
   const alertHtml = `<strong>${escapeHtml(data.display_name)} (${escapeHtml(data.cycle)})</strong> のサポート終了が <strong>${escapeHtml(data.days_until_eol)}日後</strong> に迫っています。`;
