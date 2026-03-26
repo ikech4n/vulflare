@@ -2,7 +2,7 @@ import type { EolCategory, EolStats, EolTimelineItem } from "@vulflare/shared/ty
 import { Hono } from "hono";
 import { eolCycleRepo, eolProductRepo, eolSyncLogRepo } from "../db/eol-repository.ts";
 import { authMiddleware, requireRole } from "../middleware/auth.ts";
-import { getAvailableProducts, syncProductCycles } from "../services/eol-sync.ts";
+import { getAvailableProducts, syncAllProducts, syncProductCycles } from "../services/eol-sync.ts";
 import type { Env, JwtVariables } from "../types.ts";
 
 export const eolRoutes = new Hono<{ Bindings: Env; Variables: JwtVariables }>();
@@ -315,6 +315,22 @@ eolRoutes.post("/sync/:productName", requireRole("admin"), async (c) => {
   } catch (err) {
     console.error("Sync failed:", err);
     return c.json({ error: "Sync failed", details: String(err) }, 500);
+  }
+});
+
+// POST /api/eol/sync-all - 全プロダクト一括同期（admin）
+eolRoutes.post("/sync-all", requireRole("admin"), async (c) => {
+  try {
+    const result = await syncAllProducts(c.env);
+    return c.json({
+      message: "Sync completed",
+      total: result.total,
+      synced: result.synced,
+      failed: result.failed,
+    });
+  } catch (err) {
+    console.error("Bulk sync failed:", err);
+    return c.json({ error: "Bulk sync failed", details: String(err) }, 500);
   }
 });
 

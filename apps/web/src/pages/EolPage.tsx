@@ -28,12 +28,36 @@ const STATUS_LABELS: Record<EolStatusFilter, string> = {
 export function EolPage() {
   const { user } = useAuthStore();
   const isViewer = user?.role === "viewer";
-  const _queryClient = useQueryClient();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState<EolCategory | "">("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   const selectedStatus = searchParams.get("status") as EolStatusFilter | null;
+
+  const showToast = (message: string, type: "success" | "error") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const bulkSyncMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.post("/eol/sync-all");
+      return res.data as { total: number; synced: number; failed: string[] };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["eol"] });
+      const msg =
+        data.failed.length > 0
+          ? `同期完了 (${data.total}件中 ${data.failed.length}件失敗)`
+          : `全${data.total}件の同期が完了しました`;
+      showToast(msg, data.failed.length > 0 ? "error" : "success");
+    },
+    onError: () => {
+      showToast("一括同期に失敗しました", "error");
+    },
+  });
 
   // 統計情報
   const { data: stats } = useQuery<EolStats>({
@@ -67,6 +91,13 @@ export function EolPage() {
 
   return (
     <div className="space-y-6">
+      {toast && (
+        <div
+          className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white text-sm ${toast.type === "success" ? "bg-green-600" : "bg-red-600"}`}
+        >
+          {toast.message}
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">EOL 管理</h1>
@@ -75,14 +106,29 @@ export function EolPage() {
           </p>
         </div>
         {!isViewer && (
-          <button
-            type="button"
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 self-start sm:self-auto"
-          >
-            <Plus className="w-4 h-4" />
-            プロダクト追加
-          </button>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            {user?.role === "admin" && (
+              <button
+                type="button"
+                onClick={() => bulkSyncMutation.mutate()}
+                disabled={bulkSyncMutation.isPending}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${bulkSyncMutation.isPending ? "animate-spin" : ""}`}
+                />
+                {bulkSyncMutation.isPending ? "同期中..." : "一括同期"}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <Plus className="w-4 h-4" />
+              プロダクト追加
+            </button>
+          </div>
         )}
       </div>
 
@@ -263,7 +309,7 @@ export function EolPage() {
                         )}
                       </td>
                       <td className="px-4 py-4 text-right">
-                        <ProductActions product={product} />
+                        <ProductActions product={product} onToast={showToast} />
                       </td>
                     </tr>
                   ))}
@@ -279,7 +325,13 @@ export function EolPage() {
   );
 }
 
-function ProductActions({ product }: { product: EolProduct }) {
+function ProductActions({
+  product,
+  onToast,
+}: {
+  product: EolProduct;
+  onToast: (message: string, type: "success" | "error") => void;
+}) {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [showEditModal, setShowEditModal] = useState(false);
@@ -290,10 +342,10 @@ function ProductActions({ product }: { product: EolProduct }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["eol"] });
-      alert("同期が完了しました");
+      onToast(`${product.display_name} の同期が完了しました`, "success");
     },
     onError: () => {
-      alert("同期に失敗しました");
+      onToast(`${product.display_name} の同期に失敗しました`, "error");
     },
   });
 
@@ -305,7 +357,7 @@ function ProductActions({ product }: { product: EolProduct }) {
       queryClient.invalidateQueries({ queryKey: ["eol"] });
     },
     onError: () => {
-      alert("削除に失敗しました");
+      onToast("削除に失敗しました", "error");
     },
   });
 
