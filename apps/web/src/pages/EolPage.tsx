@@ -125,29 +125,14 @@ export function EolPage() {
           </p>
         </div>
         {!isViewer && (
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            {user?.role === "admin" && (
-              <button
-                type="button"
-                onClick={() => bulkSyncMutation.mutate()}
-                disabled={bulkSyncMutation.isPending}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
-              >
-                <RefreshCw
-                  className={`w-4 h-4 ${bulkSyncMutation.isPending ? "animate-spin" : ""}`}
-                />
-                {bulkSyncMutation.isPending ? "同期中..." : "一括同期"}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              <Plus className="w-4 h-4" />
-              プロダクト追加
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 self-start sm:self-auto"
+          >
+            <Plus className="w-4 h-4" />
+            プロダクト追加
+          </button>
         )}
       </div>
 
@@ -244,28 +229,43 @@ export function EolPage() {
         </nav>
       </div>
 
-      {/* カテゴリフィルタ（ソフトウェアタブのみ） */}
+      {/* カテゴリフィルタ・一括同期（ソフトウェアタブのみ） */}
       {activeTab === "software" && (
-        <div className="flex items-center gap-2">
-          <label
-            htmlFor="category-filter"
-            className="text-sm font-medium text-gray-700 dark:text-gray-200 whitespace-nowrap"
-          >
-            カテゴリ:
-          </label>
-          <select
-            id="category-filter"
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value as EolCategory | "")}
-            className="min-w-0 flex-1 sm:flex-none px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-gray-200"
-          >
-            <option value="">すべて</option>
-            {SOFTWARE_CATEGORIES.map((key) => (
-              <option key={key} value={key}>
-                {CATEGORY_LABELS[key]}
-              </option>
-            ))}
-          </select>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="category-filter"
+              className="text-sm font-medium text-gray-700 dark:text-gray-200 whitespace-nowrap"
+            >
+              カテゴリ:
+            </label>
+            <select
+              id="category-filter"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value as EolCategory | "")}
+              className="min-w-0 flex-1 sm:flex-none px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-gray-200"
+            >
+              <option value="">すべて</option>
+              {SOFTWARE_CATEGORIES.map((key) => (
+                <option key={key} value={key}>
+                  {CATEGORY_LABELS[key]}
+                </option>
+              ))}
+            </select>
+          </div>
+          {user?.role === "admin" && (
+            <button
+              type="button"
+              onClick={() => bulkSyncMutation.mutate()}
+              disabled={bulkSyncMutation.isPending}
+              className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md text-sm hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${bulkSyncMutation.isPending ? "animate-spin" : ""}`}
+              />
+              {bulkSyncMutation.isPending ? "同期中..." : "一括同期"}
+            </button>
+          )}
         </div>
       )}
 
@@ -381,19 +381,6 @@ function ProductActions({
   const queryClient = useQueryClient();
   const [showEditModal, setShowEditModal] = useState(false);
 
-  const syncMutation = useMutation({
-    mutationFn: async () => {
-      await api.post(`/eol/sync/${product.product_name}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["eol"] });
-      onToast(`${product.display_name} の同期が完了しました`, "success");
-    },
-    onError: () => {
-      onToast(`${product.display_name} の同期に失敗しました`, "error");
-    },
-  });
-
   const deleteMutation = useMutation({
     mutationFn: async () => {
       await api.delete(`/eol/products/${product.id}`);
@@ -417,17 +404,6 @@ function ProductActions({
             title="編集"
           >
             <Edit className="w-4 h-4" />
-          </button>
-        )}
-        {user?.role !== "viewer" && product.eol_api_id && (
-          <button
-            type="button"
-            onClick={() => syncMutation.mutate()}
-            disabled={syncMutation.isPending}
-            className="p-1 text-blue-600 hover:text-blue-800"
-            title="同期"
-          >
-            <RefreshCw className={`w-4 h-4 ${syncMutation.isPending ? "animate-spin" : ""}`} />
           </button>
         )}
         {user?.role === "admin" && (
