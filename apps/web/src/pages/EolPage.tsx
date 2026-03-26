@@ -14,6 +14,10 @@ const CATEGORY_LABELS: Record<EolCategory, string> = {
   framework: "フレームワーク",
   library: "ライブラリ",
   cloud_service: "クラウドサービス",
+  database: "データベース",
+  container: "コンテナ",
+  ai_model: "AI モデル",
+  security: "セキュリティ",
   hardware: "ハードウェア",
 };
 
@@ -33,6 +37,10 @@ const SOFTWARE_CATEGORIES = Object.keys({
   framework: true,
   library: true,
   cloud_service: true,
+  database: true,
+  container: true,
+  ai_model: true,
+  security: true,
 }) as Exclude<EolCategory, "hardware">[];
 
 export function EolPage() {

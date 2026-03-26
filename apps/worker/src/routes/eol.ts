@@ -61,6 +61,10 @@ eolRoutes.post("/products", requireRole("editor"), async (c) => {
     "framework",
     "library",
     "cloud_service",
+    "database",
+    "container",
+    "ai_model",
+    "security",
     "hardware",
   ];
 

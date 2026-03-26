@@ -8,6 +8,10 @@ export type EolCategory =
   | "framework"
   | "library"
   | "cloud_service"
+  | "database"
+  | "container"
+  | "ai_model"
+  | "security"
   | "hardware";
 
 export type EolSource = "endoflife_date" | "manual";
