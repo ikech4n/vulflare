@@ -20,10 +20,12 @@ export interface EolProduct {
   display_name: string;
   category: EolCategory;
   eol_api_id: string | null;
-  vendor: string | null;
   link: string | null;
   created_at: string;
   updated_at: string;
+  // 一覧表示用の集計フィールド（APIから返される場合のみ）
+  latest_version?: string | null;
+  next_eol_date?: string | null;
 }
 
 export interface EolCycle {

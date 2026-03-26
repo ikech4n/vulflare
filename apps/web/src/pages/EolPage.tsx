@@ -204,7 +204,10 @@ export function EolPage() {
                       カテゴリ
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                      ベンダー
+                      最新バージョン
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                      次のEOL日
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                       データソース
@@ -231,7 +234,26 @@ export function EolPage() {
                         </span>
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">
-                        {product.vendor || "-"}
+                        {product.latest_version ?? "-"}
+                      </td>
+                      <td className="px-4 py-4 text-sm">
+                        {product.next_eol_date ? (
+                          <span
+                            className={
+                              new Date(product.next_eol_date) <=
+                              new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                                ? "text-red-600 font-medium"
+                                : new Date(product.next_eol_date) <=
+                                    new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+                                  ? "text-yellow-600"
+                                  : "text-gray-900 dark:text-gray-100"
+                            }
+                          >
+                            {product.next_eol_date}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">
                         {product.eol_api_id ? (
@@ -340,7 +362,6 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
     display_name: "",
     category: "os" as EolCategory,
     eol_api_id: "",
-    vendor: "",
     link: "",
   });
 
@@ -379,7 +400,6 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
       await api.post("/eol/products", {
         ...formData,
         eol_api_id: formData.eol_api_id || undefined,
-        vendor: formData.vendor || undefined,
         link: formData.link || undefined,
       });
     },
@@ -497,23 +517,6 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
 
           <div>
             <label
-              htmlFor="create-vendor"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-            >
-              ベンダー
-            </label>
-            <input
-              id="create-vendor"
-              type="text"
-              value={formData.vendor}
-              onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-              placeholder="例: Canonical"
-            />
-          </div>
-
-          <div>
-            <label
               htmlFor="create-link"
               className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
             >
@@ -558,7 +561,6 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
     display_name: product.display_name,
     category: product.category,
     eol_api_id: product.eol_api_id || "",
-    vendor: product.vendor || "",
     link: product.link || "",
   });
 
@@ -568,7 +570,6 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
         display_name: formData.display_name,
         category: formData.category,
         eol_api_id: formData.eol_api_id || undefined,
-        vendor: formData.vendor || undefined,
         link: formData.link || undefined,
       });
     },
@@ -665,23 +666,6 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               設定すると自動同期されます（任意）
             </p>
-          </div>
-
-          <div>
-            <label
-              htmlFor="edit-vendor"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-            >
-              ベンダー
-            </label>
-            <input
-              id="edit-vendor"
-              type="text"
-              value={formData.vendor}
-              onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-              placeholder="例: Canonical"
-            />
           </div>
 
           <div>

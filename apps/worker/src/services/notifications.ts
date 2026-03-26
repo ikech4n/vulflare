@@ -314,7 +314,6 @@ function generateEmailBodyText(payload: NotificationPayload, appUrl: string): st
       `プロダクト: ${data.display_name} (${data.product_name})`,
       `バージョン: ${data.cycle}`,
       `カテゴリ: ${data.category}`,
-      ...(data.vendor ? [`ベンダー: ${data.vendor}`] : []),
       `EOL日: ${data.eol_date}`,
       "",
       `通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}`,
@@ -381,7 +380,6 @@ function generateEmailBodyText(payload: NotificationPayload, appUrl: string): st
       `プロダクト: ${data.display_name} (${data.product_name})`,
       `バージョン: ${data.cycle}`,
       `カテゴリ: ${data.category}`,
-      ...(data.vendor ? [`ベンダー: ${data.vendor}`] : []),
       `EOL日: ${data.eol_date}`,
       "",
       `通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}`,
@@ -684,7 +682,6 @@ function generateEolApproachingEmail(
     { label: "バージョン", value: escapeHtml(data.cycle) },
     { label: "カテゴリ", value: escapeHtml(data.category) },
   ];
-  if (data.vendor) infoItems.push({ label: "ベンダー", value: escapeHtml(data.vendor) });
   infoItems.push({ label: "EOL日", value: `<strong>${escapeHtml(data.eol_date)}</strong>` });
 
   const badgeText = daysUntilEol != null ? `残り ${daysUntilEol}日` : undefined;
@@ -720,7 +717,6 @@ function generateEolExpiredEmail(
     { label: "バージョン", value: escapeHtml(data.cycle) },
     { label: "カテゴリ", value: escapeHtml(data.category) },
   ];
-  if (data.vendor) infoItems.push({ label: "ベンダー", value: escapeHtml(data.vendor) });
   infoItems.push({ label: "EOL日", value: `<strong>${escapeHtml(data.eol_date)}</strong>` });
 
   return buildEmailTemplate({

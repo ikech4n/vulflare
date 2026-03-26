@@ -46,7 +46,6 @@ eolRoutes.post("/products", requireRole("editor"), async (c) => {
     display_name: string;
     category: EolCategory;
     eol_api_id?: string;
-    vendor?: string;
     link?: string;
   }>();
 
@@ -82,7 +81,6 @@ eolRoutes.post("/products", requireRole("editor"), async (c) => {
     display_name: body.display_name,
     category: body.category,
     eol_api_id: body.eol_api_id ?? null,
-    vendor: body.vendor ?? null,
     link: body.link ?? null,
   });
 
@@ -106,7 +104,6 @@ eolRoutes.patch("/products/:id", requireRole("editor"), async (c) => {
   const body = await c.req.json<{
     display_name?: string;
     category?: EolCategory;
-    vendor?: string;
     link?: string;
     eol_api_id?: string;
   }>();

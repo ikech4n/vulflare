@@ -71,12 +71,6 @@ export function EolProductDetailPage() {
             <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">{product.category}</dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">ベンダー</dt>
-            <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-              {product.vendor || "-"}
-            </dd>
-          </div>
-          <div>
             <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">データソース</dt>
             <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">
               {product.eol_api_id ? (

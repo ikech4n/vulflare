@@ -35,7 +35,14 @@ export const eolProductRepo = {
       );
     }
 
-    let sql = "SELECT p.* FROM eol_products p";
+    let sql = `SELECT p.*,
+      (SELECT c.latest_version FROM eol_cycles c
+       WHERE c.product_id = p.id AND c.latest_version IS NOT NULL
+       ORDER BY c.release_date DESC NULLS LAST, c.cycle DESC LIMIT 1) AS latest_version,
+      (SELECT MIN(c.eol_date) FROM eol_cycles c
+       WHERE c.product_id = p.id AND c.is_eol = 0 AND c.eol_date IS NOT NULL
+         AND c.eol_date > date('now')) AS next_eol_date
+    FROM eol_products p`;
     if (conditions.length > 0) {
       sql += ` WHERE ${conditions.join(" AND ")}`;
     }
@@ -65,8 +72,8 @@ export const eolProductRepo = {
     await db
       .prepare(
         `INSERT INTO eol_products
-         (id, product_name, display_name, category, eol_api_id, vendor, link)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+         (id, product_name, display_name, category, eol_api_id, link)
+         VALUES (?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         product.id,
@@ -74,7 +81,6 @@ export const eolProductRepo = {
         product.display_name,
         product.category,
         product.eol_api_id,
-        product.vendor,
         product.link,
       )
       .run();
@@ -83,9 +89,7 @@ export const eolProductRepo = {
   async update(
     db: DB,
     id: string,
-    fields: Partial<
-      Pick<EolProduct, "display_name" | "category" | "vendor" | "link" | "eol_api_id">
-    >,
+    fields: Partial<Pick<EolProduct, "display_name" | "category" | "link" | "eol_api_id">>,
   ): Promise<void> {
     const sets: string[] = ["updated_at = datetime('now')"];
     const params: unknown[] = [];

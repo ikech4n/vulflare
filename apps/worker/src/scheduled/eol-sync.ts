@@ -52,7 +52,7 @@ async function checkEolDatesAndNotify(env: Env): Promise<void> {
 
     // 180日以内にEOLを迎えるサイクルを取得
     const approachingCycles = await env.DB.prepare(
-      `SELECT c.*, p.display_name, p.product_name, p.category, p.vendor
+      `SELECT c.*, p.display_name, p.product_name, p.category
        FROM eol_cycles c
        JOIN eol_products p ON c.product_id = p.id
        WHERE c.is_eol = 0
@@ -64,7 +64,7 @@ async function checkEolDatesAndNotify(env: Env): Promise<void> {
 
     // 既にEOL済みのサイクル（is_eolフラグが更新されていない可能性がある）
     const expiredCycles = await env.DB.prepare(
-      `SELECT c.*, p.display_name, p.product_name, p.category, p.vendor
+      `SELECT c.*, p.display_name, p.product_name, p.category
        FROM eol_cycles c
        JOIN eol_products p ON c.product_id = p.id
        WHERE c.eol_date IS NOT NULL
@@ -105,7 +105,6 @@ async function checkEolDatesAndNotify(env: Env): Promise<void> {
           product_name: cycle.product_name,
           display_name: cycle.display_name,
           category: cycle.category,
-          vendor: cycle.vendor,
           cycle: cycle.cycle,
           eol_date: cycle.eol_date,
           days_until_eol: daysUntilEol,
@@ -124,7 +123,6 @@ async function checkEolDatesAndNotify(env: Env): Promise<void> {
         product_name: cycle.product_name,
         display_name: cycle.display_name,
         category: cycle.category,
-        vendor: cycle.vendor,
         cycle: cycle.cycle,
         eol_date: cycle.eol_date,
       });
