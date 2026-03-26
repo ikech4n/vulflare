@@ -12,7 +12,12 @@ export type EolCategory =
   | "container"
   | "ai_model"
   | "security"
-  | "hardware";
+  | "hw_server"
+  | "hw_network"
+  | "hw_storage"
+  | "hw_security_appliance"
+  | "hw_peripheral"
+  | "hw_other";
 
 export type EolSource = "endoflife_date" | "manual";
 
@@ -30,6 +35,10 @@ export interface EolProduct {
   // 一覧表示用の集計フィールド（APIから返される場合のみ）
   latest_version?: string | null;
   next_eol_date?: string | null;
+  next_eol_version?: string | null;
+  // ハードウェア用集計フィールド
+  asset_count?: number;
+  nearest_support_expiry?: string | null;
 }
 
 export interface EolCycle {
@@ -92,6 +101,33 @@ export interface EolStats {
   approaching_eol_30d: number;
   approaching_eol_90d: number;
   supported_count: number;
+}
+
+// ハードウェア資産
+export type HardwareAssetStatus = "active" | "retired" | "spare";
+
+export interface HardwareAsset {
+  id: string;
+  product_id: string;
+  identifier: string | null; // サービスタグ等の汎用識別情報
+  hostname: string | null; // ホスト名
+  device_name: string | null; // 機器名
+  support_expiry: string | null; // サポート期限
+  serial_number: string | null; // シリアル番号
+  asset_number: string | null; // 資産番号
+  ip_address: string | null; // IPアドレス
+  mac_address: string | null; // MACアドレス
+  vendor: string | null; // メーカー/ベンダー
+  model_number: string | null; // モデル番号
+  firmware_version: string | null; // ファームウェアバージョン
+  warranty_expiry: string | null; // 保証期限
+  purchase_date: string | null; // 購入日
+  location: string | null; // 設置場所
+  owner: string | null; // 担当者
+  status: HardwareAssetStatus; // ステータス
+  notes: string | null; // 備考
+  created_at: string;
+  updated_at: string;
 }
 
 // タイムライン情報

@@ -1,6 +1,16 @@
-import type { EolCategory, EolStats, EolTimelineItem } from "@vulflare/shared/types";
+import type {
+  EolCategory,
+  EolStats,
+  EolTimelineItem,
+  HardwareAssetStatus,
+} from "@vulflare/shared/types";
 import { Hono } from "hono";
-import { eolCycleRepo, eolProductRepo, eolSyncLogRepo } from "../db/eol-repository.ts";
+import {
+  eolCycleRepo,
+  eolProductRepo,
+  eolSyncLogRepo,
+  hardwareAssetRepo,
+} from "../db/eol-repository.ts";
 import { authMiddleware, requireRole } from "../middleware/auth.ts";
 import { getAvailableProducts, syncAllProducts, syncProductCycles } from "../services/eol-sync.ts";
 import type { Env, JwtVariables } from "../types.ts";
@@ -65,7 +75,12 @@ eolRoutes.post("/products", requireRole("editor"), async (c) => {
     "container",
     "ai_model",
     "security",
-    "hardware",
+    "hw_server",
+    "hw_network",
+    "hw_storage",
+    "hw_security_appliance",
+    "hw_peripheral",
+    "hw_other",
   ];
 
   if (!validCategories.includes(body.category)) {
@@ -407,4 +422,262 @@ eolRoutes.get("/timeline", async (c) => {
   }));
 
   return c.json(timeline);
+});
+
+// --- ハードウェアプロダクト ---
+
+// GET /api/eol/hardware-products - ハードウェアプロダクト一覧（集計付き）
+eolRoutes.get("/hardware-products", async (c) => {
+  const products = await eolProductRepo.listHardware(c.env.DB);
+  return c.json(products);
+});
+
+// POST /api/eol/hardware-with-asset - プロダクト+資産一括作成（editor以上）
+eolRoutes.post("/hardware-with-asset", requireRole("editor"), async (c) => {
+  const body = await c.req.json<{
+    // Product fields
+    product_name: string;
+    display_name: string;
+    category: EolCategory;
+    link?: string;
+    // Optional asset fields
+    identifier?: string;
+    hostname?: string;
+    device_name?: string;
+    support_expiry?: string;
+    serial_number?: string;
+    asset_number?: string;
+    ip_address?: string;
+    mac_address?: string;
+    vendor?: string;
+    model_number?: string;
+    firmware_version?: string;
+    warranty_expiry?: string;
+    purchase_date?: string;
+    location?: string;
+    owner?: string;
+    notes?: string;
+  }>();
+
+  if (!body.product_name || !body.display_name || !body.category) {
+    return c.json({ error: "product_name, display_name, and category are required" }, 400);
+  }
+
+  if (!body.category.startsWith("hw_")) {
+    return c.json({ error: "category must be a hardware category (hw_*)" }, 400);
+  }
+
+  const hasAssetFields = !!(
+    body.device_name ||
+    body.identifier ||
+    body.hostname ||
+    body.support_expiry ||
+    body.serial_number ||
+    body.vendor ||
+    body.model_number ||
+    body.location
+  );
+
+  // 既存プロダクトチェック
+  let product = await eolProductRepo.findByProductName(c.env.DB, body.product_name);
+  let productCreated = false;
+
+  if (!product) {
+    const productId = crypto.randomUUID();
+    await eolProductRepo.create(c.env.DB, {
+      id: productId,
+      product_name: body.product_name,
+      display_name: body.display_name,
+      category: body.category,
+      eol_api_id: null,
+      link: body.link ?? null,
+    });
+    product = await eolProductRepo.findById(c.env.DB, productId);
+    if (!product) {
+      return c.json({ error: "Failed to create product" }, 500);
+    }
+    productCreated = true;
+  }
+
+  let asset = null;
+  if (hasAssetFields) {
+    const assetId = crypto.randomUUID();
+    await hardwareAssetRepo.create(c.env.DB, {
+      id: assetId,
+      product_id: product.id,
+      identifier: body.identifier ?? null,
+      hostname: body.hostname ?? null,
+      device_name: body.device_name ?? null,
+      support_expiry: body.support_expiry ?? null,
+      serial_number: body.serial_number ?? null,
+      asset_number: body.asset_number ?? null,
+      ip_address: body.ip_address ?? null,
+      mac_address: body.mac_address ?? null,
+      vendor: body.vendor ?? null,
+      model_number: body.model_number ?? null,
+      firmware_version: body.firmware_version ?? null,
+      warranty_expiry: body.warranty_expiry ?? null,
+      purchase_date: body.purchase_date ?? null,
+      location: body.location ?? null,
+      owner: body.owner ?? null,
+      status: "active",
+      notes: body.notes ?? null,
+    });
+    asset = await hardwareAssetRepo.findById(c.env.DB, assetId);
+  }
+
+  return c.json({ product, asset, productCreated }, 201);
+});
+
+// --- ハードウェア資産管理 ---
+
+// GET /api/eol/assets?product_id=xxx - 資産一覧
+eolRoutes.get("/assets", async (c) => {
+  const productId = c.req.query("product_id");
+  if (!productId) {
+    return c.json({ error: "product_id is required" }, 400);
+  }
+  const assets = await hardwareAssetRepo.listByProduct(c.env.DB, productId);
+  return c.json(assets);
+});
+
+// GET /api/eol/assets/:id - 資産詳細
+eolRoutes.get("/assets/:id", async (c) => {
+  const id = c.req.param("id") ?? "";
+  const asset = await hardwareAssetRepo.findById(c.env.DB, id);
+  if (!asset) {
+    return c.json({ error: "Asset not found" }, 404);
+  }
+  return c.json(asset);
+});
+
+// POST /api/eol/assets - 資産追加（editor以上）
+eolRoutes.post("/assets", requireRole("editor"), async (c) => {
+  const body = await c.req.json<{
+    product_id: string;
+    identifier?: string;
+    hostname?: string;
+    device_name?: string;
+    support_expiry?: string;
+    serial_number?: string;
+    asset_number?: string;
+    ip_address?: string;
+    mac_address?: string;
+    vendor?: string;
+    model_number?: string;
+    firmware_version?: string;
+    warranty_expiry?: string;
+    purchase_date?: string;
+    location?: string;
+    owner?: string;
+    status?: HardwareAssetStatus;
+    notes?: string;
+  }>();
+
+  if (!body.product_id) {
+    return c.json({ error: "product_id is required" }, 400);
+  }
+
+  const product = await eolProductRepo.findById(c.env.DB, body.product_id);
+  if (!product) {
+    return c.json({ error: "Product not found" }, 404);
+  }
+  if (!product.category.startsWith("hw_")) {
+    return c.json({ error: "Product is not a hardware product" }, 400);
+  }
+
+  const id = crypto.randomUUID();
+  await hardwareAssetRepo.create(c.env.DB, {
+    id,
+    product_id: body.product_id,
+    identifier: body.identifier ?? null,
+    hostname: body.hostname ?? null,
+    device_name: body.device_name ?? null,
+    support_expiry: body.support_expiry ?? null,
+    serial_number: body.serial_number ?? null,
+    asset_number: body.asset_number ?? null,
+    ip_address: body.ip_address ?? null,
+    mac_address: body.mac_address ?? null,
+    vendor: body.vendor ?? null,
+    model_number: body.model_number ?? null,
+    firmware_version: body.firmware_version ?? null,
+    warranty_expiry: body.warranty_expiry ?? null,
+    purchase_date: body.purchase_date ?? null,
+    location: body.location ?? null,
+    owner: body.owner ?? null,
+    status: body.status ?? "active",
+    notes: body.notes ?? null,
+  });
+
+  const created = await hardwareAssetRepo.findById(c.env.DB, id);
+  return c.json(created, 201);
+});
+
+// PATCH /api/eol/assets/:id - 資産更新（editor以上）
+eolRoutes.patch("/assets/:id", requireRole("editor"), async (c) => {
+  const id = c.req.param("id") ?? "";
+  const asset = await hardwareAssetRepo.findById(c.env.DB, id);
+  if (!asset) {
+    return c.json({ error: "Asset not found" }, 404);
+  }
+
+  const body = await c.req.json<{
+    identifier?: string | null;
+    hostname?: string | null;
+    device_name?: string | null;
+    support_expiry?: string | null;
+    serial_number?: string | null;
+    asset_number?: string | null;
+    ip_address?: string | null;
+    mac_address?: string | null;
+    vendor?: string | null;
+    model_number?: string | null;
+    firmware_version?: string | null;
+    warranty_expiry?: string | null;
+    purchase_date?: string | null;
+    location?: string | null;
+    owner?: string | null;
+    status?: HardwareAssetStatus;
+    notes?: string | null;
+  }>();
+
+  const updates: Record<string, unknown> = {};
+  const fields = [
+    "identifier",
+    "hostname",
+    "device_name",
+    "support_expiry",
+    "serial_number",
+    "asset_number",
+    "ip_address",
+    "mac_address",
+    "vendor",
+    "model_number",
+    "firmware_version",
+    "warranty_expiry",
+    "purchase_date",
+    "location",
+    "owner",
+    "status",
+    "notes",
+  ] as const;
+
+  for (const field of fields) {
+    if (field in body) updates[field] = body[field];
+  }
+
+  await hardwareAssetRepo.update(c.env.DB, id, updates);
+  const updated = await hardwareAssetRepo.findById(c.env.DB, id);
+  return c.json(updated);
+});
+
+// DELETE /api/eol/assets/:id - 資産削除（admin）
+eolRoutes.delete("/assets/:id", requireRole("admin"), async (c) => {
+  const id = c.req.param("id") ?? "";
+  const asset = await hardwareAssetRepo.findById(c.env.DB, id);
+  if (!asset) {
+    return c.json({ error: "Asset not found" }, 404);
+  }
+  await hardwareAssetRepo.delete(c.env.DB, id);
+  return c.json({ message: "Asset deleted" });
 });

@@ -1,4 +1,4 @@
-import type { EolCycle, EolProduct, EolSyncLog } from "@vulflare/shared/types";
+import type { EolCycle, EolProduct, EolSyncLog, HardwareAsset } from "@vulflare/shared/types";
 
 type DB = D1Database;
 
@@ -41,7 +41,11 @@ export const eolProductRepo = {
        ORDER BY c.release_date DESC NULLS LAST, c.cycle DESC LIMIT 1) AS latest_version,
       (SELECT MIN(c.eol_date) FROM eol_cycles c
        WHERE c.product_id = p.id AND c.is_eol = 0 AND c.eol_date IS NOT NULL
-         AND c.eol_date > date('now')) AS next_eol_date
+         AND c.eol_date > date('now')) AS next_eol_date,
+      (SELECT c.cycle FROM eol_cycles c
+       WHERE c.product_id = p.id AND c.is_eol = 0 AND c.eol_date IS NOT NULL
+         AND c.eol_date > date('now')
+       ORDER BY c.eol_date ASC LIMIT 1) AS next_eol_version
     FROM eol_products p`;
     if (conditions.length > 0) {
       sql += ` WHERE ${conditions.join(" AND ")}`;
@@ -114,6 +118,19 @@ export const eolProductRepo = {
     const result = await db
       .prepare("SELECT * FROM eol_products WHERE eol_api_id IS NOT NULL ORDER BY product_name ASC")
       .all();
+    return result.results as unknown as EolProduct[];
+  },
+
+  async listHardware(db: DB): Promise<EolProduct[]> {
+    const sql = `SELECT p.*,
+      (SELECT COUNT(*) FROM hardware_assets a WHERE a.product_id = p.id) AS asset_count,
+      (SELECT MIN(a.support_expiry) FROM hardware_assets a
+       WHERE a.product_id = p.id AND a.support_expiry IS NOT NULL
+         AND a.status != 'retired') AS nearest_support_expiry
+    FROM eol_products p
+    WHERE p.category LIKE 'hw_%'
+    ORDER BY p.display_name ASC`;
+    const result = await db.prepare(sql).all();
     return result.results as unknown as EolProduct[];
   },
 };
@@ -313,5 +330,89 @@ export const eolSyncLogRepo = {
       .prepare(`UPDATE eol_sync_logs SET ${sets.join(", ")} WHERE id = ?`)
       .bind(...params)
       .run();
+  },
+};
+
+// --- Hardware Assets ---
+
+export const hardwareAssetRepo = {
+  async listByProduct(db: DB, productId: string): Promise<HardwareAsset[]> {
+    const result = await db
+      .prepare(
+        "SELECT * FROM hardware_assets WHERE product_id = ? ORDER BY device_name ASC, created_at DESC",
+      )
+      .bind(productId)
+      .all();
+    return result.results as unknown as HardwareAsset[];
+  },
+
+  async findById(db: DB, id: string): Promise<HardwareAsset | null> {
+    const result = await db.prepare("SELECT * FROM hardware_assets WHERE id = ?").bind(id).first();
+    return result as HardwareAsset | null;
+  },
+
+  async create(db: DB, asset: Omit<HardwareAsset, "created_at" | "updated_at">): Promise<void> {
+    await db
+      .prepare(
+        `INSERT INTO hardware_assets
+         (id, product_id, identifier, hostname, device_name, support_expiry, serial_number,
+          asset_number, ip_address, mac_address, vendor, model_number, firmware_version,
+          warranty_expiry, purchase_date, location, owner, status, notes)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .bind(
+        asset.id,
+        asset.product_id,
+        asset.identifier,
+        asset.hostname,
+        asset.device_name,
+        asset.support_expiry,
+        asset.serial_number,
+        asset.asset_number,
+        asset.ip_address,
+        asset.mac_address,
+        asset.vendor,
+        asset.model_number,
+        asset.firmware_version,
+        asset.warranty_expiry,
+        asset.purchase_date,
+        asset.location,
+        asset.owner,
+        asset.status,
+        asset.notes,
+      )
+      .run();
+  },
+
+  async update(
+    db: DB,
+    id: string,
+    fields: Partial<Omit<HardwareAsset, "id" | "product_id" | "created_at" | "updated_at">>,
+  ): Promise<void> {
+    const sets: string[] = ["updated_at = datetime('now')"];
+    const params: unknown[] = [];
+
+    for (const [k, v] of Object.entries(fields)) {
+      sets.push(`${k} = ?`);
+      params.push(v);
+    }
+    params.push(id);
+
+    await db
+      .prepare(`UPDATE hardware_assets SET ${sets.join(", ")} WHERE id = ?`)
+      .bind(...params)
+      .run();
+  },
+
+  async delete(db: DB, id: string): Promise<void> {
+    await db.prepare("DELETE FROM hardware_assets WHERE id = ?").bind(id).run();
+  },
+
+  async countByProduct(db: DB, productId: string): Promise<number> {
+    const result = await db
+      .prepare("SELECT COUNT(*) as count FROM hardware_assets WHERE product_id = ?")
+      .bind(productId)
+      .first<{ count: number }>();
+    return result?.count ?? 0;
   },
 };
