@@ -43,6 +43,7 @@ export function EolPage() {
   const [activeTab, setActiveTab] = useState<"software" | "hardware">("software");
   const [selectedCategory, setSelectedCategory] = useState<EolCategory | "">("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddHardwareModal, setShowAddHardwareModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   const selectedStatus = searchParams.get("status") as EolStatusFilter | null;
@@ -124,16 +125,6 @@ export function EolPage() {
             ソフトウェア・ハードウェアの EOL（サポート終了）を管理します
           </p>
         </div>
-        {!isViewer && (
-          <button
-            type="button"
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 self-start sm:self-auto"
-          >
-            <Plus className="w-4 h-4" />
-            プロダクト追加
-          </button>
-        )}
       </div>
 
       {/* 統計サマリー */}
@@ -229,9 +220,9 @@ export function EolPage() {
         </nav>
       </div>
 
-      {/* カテゴリフィルタ・一括同期（ソフトウェアタブのみ） */}
+      {/* ソフトウェアタブ：フィルタ・ボタン群 */}
       {activeTab === "software" && (
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap justify-between">
           <div className="flex items-center gap-2">
             <label
               htmlFor="category-filter"
@@ -253,19 +244,45 @@ export function EolPage() {
               ))}
             </select>
           </div>
-          {user?.role === "admin" && (
-            <button
-              type="button"
-              onClick={() => bulkSyncMutation.mutate()}
-              disabled={bulkSyncMutation.isPending}
-              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:opacity-50"
-            >
-              <RefreshCw
-                className={`w-3.5 h-3.5 ${bulkSyncMutation.isPending ? "animate-spin" : ""}`}
-              />
-              {bulkSyncMutation.isPending ? "同期中..." : "一括同期"}
-            </button>
+          {!isViewer && (
+            <div className="flex items-center gap-2">
+              {user?.role === "admin" && (
+                <button
+                  type="button"
+                  onClick={() => bulkSyncMutation.mutate()}
+                  disabled={bulkSyncMutation.isPending}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:opacity-50"
+                >
+                  <RefreshCw
+                    className={`w-3.5 h-3.5 ${bulkSyncMutation.isPending ? "animate-spin" : ""}`}
+                  />
+                  {bulkSyncMutation.isPending ? "同期中..." : "一括同期"}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                プロダクト追加
+              </button>
+            </div>
           )}
+        </div>
+      )}
+
+      {/* ハードウェアタブ：ボタン群 */}
+      {activeTab === "hardware" && !isViewer && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setShowAddHardwareModal(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            ハードウェア追加
+          </button>
         </div>
       )}
 
@@ -366,6 +383,7 @@ export function EolPage() {
       </div>
 
       {showAddModal && <AddProductModal onClose={() => setShowAddModal(false)} />}
+      {showAddHardwareModal && <AddHardwareModal onClose={() => setShowAddHardwareModal(false)} />}
     </div>
   );
 }
@@ -560,9 +578,9 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
               }
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
             >
-              {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
+              {SOFTWARE_CATEGORIES.map((key) => (
                 <option key={key} value={key}>
-                  {label}
+                  {CATEGORY_LABELS[key]}
                 </option>
               ))}
             </select>
@@ -606,6 +624,104 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
+        <div className="flex justify-end gap-3 mt-6">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
+          >
+            キャンセル
+          </button>
+          <button
+            type="button"
+            onClick={() => createMutation.mutate()}
+            disabled={!formData.product_name || !formData.display_name || createMutation.isPending}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            {createMutation.isPending ? "作成中..." : "作成"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AddHardwareModal({ onClose }: { onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const [formData, setFormData] = useState({ product_name: "", display_name: "", link: "" });
+
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      await api.post("/eol/products", {
+        ...formData,
+        category: "hardware",
+        link: formData.link || undefined,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["eol"] });
+      onClose();
+    },
+    onError: (error: unknown) => {
+      const msg = (error as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      alert(msg || "作成に失敗しました");
+    },
+  });
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">ハードウェア追加</h2>
+        <div className="space-y-4">
+          <div>
+            <label
+              htmlFor="hw-product-name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              プロダクト名（英語）*
+            </label>
+            <input
+              id="hw-product-name"
+              type="text"
+              value={formData.product_name}
+              onChange={(e) => setFormData({ ...formData, product_name: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+              placeholder="例: cisco-catalyst-9300"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="hw-display-name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              表示名*
+            </label>
+            <input
+              id="hw-display-name"
+              type="text"
+              value={formData.display_name}
+              onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+              placeholder="例: Cisco Catalyst 9300"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="hw-link"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+            >
+              公式URL
+            </label>
+            <input
+              id="hw-link"
+              type="url"
+              value={formData.link}
+              onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+              placeholder="https://..."
+            />
+          </div>
+        </div>
         <div className="flex justify-end gap-3 mt-6">
           <button
             type="button"
