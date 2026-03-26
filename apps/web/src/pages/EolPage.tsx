@@ -258,7 +258,7 @@ export function EolPage() {
               type="button"
               onClick={() => bulkSyncMutation.mutate()}
               disabled={bulkSyncMutation.isPending}
-              className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md text-sm hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50"
+              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:opacity-50"
             >
               <RefreshCw
                 className={`w-3.5 h-3.5 ${bulkSyncMutation.isPending ? "animate-spin" : ""}`}
