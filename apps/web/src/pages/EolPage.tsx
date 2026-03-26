@@ -25,11 +25,22 @@ const STATUS_LABELS: Record<EolStatusFilter, string> = {
   approaching_90d: "90日以内EOL",
 };
 
+const SOFTWARE_CATEGORIES = Object.keys({
+  os: true,
+  programming_language: true,
+  runtime: true,
+  middleware: true,
+  framework: true,
+  library: true,
+  cloud_service: true,
+}) as Exclude<EolCategory, "hardware">[];
+
 export function EolPage() {
   const { user } = useAuthStore();
   const isViewer = user?.role === "viewer";
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<"software" | "hardware">("software");
   const [selectedCategory, setSelectedCategory] = useState<EolCategory | "">("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
@@ -68,18 +79,26 @@ export function EolPage() {
     },
   });
 
-  // プロダクト一覧
-  const { data: products = [], isLoading } = useQuery<EolProduct[]>({
-    queryKey: ["eol", "products", selectedCategory, selectedStatus],
+  // プロダクト一覧（ステータスフィルタのみAPIに渡し、カテゴリはクライアント側で分離）
+  const { data: allProducts = [], isLoading } = useQuery<EolProduct[]>({
+    queryKey: ["eol", "products", selectedStatus],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (selectedCategory) params.set("category", selectedCategory);
       if (selectedStatus) params.set("status", selectedStatus);
       const query = params.toString() ? `?${params.toString()}` : "";
       const res = await api.get(`/eol/products${query}`);
       return res.data;
     },
   });
+
+  const products =
+    activeTab === "hardware"
+      ? allProducts.filter((p) => p.category === "hardware")
+      : allProducts.filter(
+          (p) =>
+            p.category !== "hardware" &&
+            (selectedCategory === "" || p.category === selectedCategory),
+        );
 
   const handleStatusFilter = (status: EolStatusFilter) => {
     if (selectedStatus === status) {
@@ -191,28 +210,64 @@ export function EolPage() {
         </div>
       )}
 
-      {/* カテゴリフィルタ */}
-      <div className="flex items-center gap-2">
-        <label
-          htmlFor="category-filter"
-          className="text-sm font-medium text-gray-700 dark:text-gray-200 whitespace-nowrap"
-        >
-          カテゴリ:
-        </label>
-        <select
-          id="category-filter"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value as EolCategory | "")}
-          className="min-w-0 flex-1 sm:flex-none px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-gray-200"
-        >
-          <option value="">すべて</option>
-          {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-            <option key={key} value={key}>
-              {label}
-            </option>
-          ))}
-        </select>
+      {/* タブ */}
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <nav className="-mb-px flex gap-6">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("software");
+              setSelectedCategory("");
+            }}
+            className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "software"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            }`}
+          >
+            ソフトウェア
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("hardware");
+              setSelectedCategory("");
+            }}
+            className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "hardware"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            }`}
+          >
+            ハードウェア
+          </button>
+        </nav>
       </div>
+
+      {/* カテゴリフィルタ（ソフトウェアタブのみ） */}
+      {activeTab === "software" && (
+        <div className="flex items-center gap-2">
+          <label
+            htmlFor="category-filter"
+            className="text-sm font-medium text-gray-700 dark:text-gray-200 whitespace-nowrap"
+          >
+            カテゴリ:
+          </label>
+          <select
+            id="category-filter"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value as EolCategory | "")}
+            className="min-w-0 flex-1 sm:flex-none px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm dark:bg-gray-700 dark:text-gray-200"
+          >
+            <option value="">すべて</option>
+            {SOFTWARE_CATEGORIES.map((key) => (
+              <option key={key} value={key}>
+                {CATEGORY_LABELS[key]}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* プロダクト一覧 */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
@@ -255,9 +310,6 @@ export function EolPage() {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                       次のEOL日
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                      データソース
-                    </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                       操作
                     </th>
@@ -299,13 +351,6 @@ export function EolPage() {
                           </span>
                         ) : (
                           <span className="text-gray-400">-</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">
-                        {product.eol_api_id ? (
-                          <span className="text-green-600">endoflife.date</span>
-                        ) : (
-                          <span className="text-gray-500">手動</span>
                         )}
                       </td>
                       <td className="px-4 py-4 text-right">
