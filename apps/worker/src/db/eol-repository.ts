@@ -72,18 +72,27 @@ export const eolProductRepo = {
     return result as EolProduct | null;
   },
 
+  async findByDisplayName(db: DB, displayName: string): Promise<EolProduct | null> {
+    const result = await db
+      .prepare("SELECT * FROM eol_products WHERE display_name = ?")
+      .bind(displayName)
+      .first();
+    return result as EolProduct | null;
+  },
+
   async create(db: DB, product: Omit<EolProduct, "created_at" | "updated_at">): Promise<void> {
     await db
       .prepare(
         `INSERT INTO eol_products
-         (id, product_name, display_name, category, eol_api_id, link)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+         (id, product_name, display_name, category, vendor, eol_api_id, link)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         product.id,
         product.product_name,
         product.display_name,
         product.category,
+        product.vendor,
         product.eol_api_id,
         product.link,
       )
@@ -93,7 +102,9 @@ export const eolProductRepo = {
   async update(
     db: DB,
     id: string,
-    fields: Partial<Pick<EolProduct, "display_name" | "category" | "link" | "eol_api_id">>,
+    fields: Partial<
+      Pick<EolProduct, "display_name" | "category" | "vendor" | "link" | "eol_api_id">
+    >,
   ): Promise<void> {
     const sets: string[] = ["updated_at = datetime('now')"];
     const params: unknown[] = [];
@@ -126,7 +137,7 @@ export const eolProductRepo = {
       (SELECT COUNT(*) FROM hardware_assets a WHERE a.product_id = p.id) AS asset_count,
       (SELECT MIN(a.support_expiry) FROM hardware_assets a
        WHERE a.product_id = p.id AND a.support_expiry IS NOT NULL
-         AND a.status != 'retired') AS nearest_support_expiry
+         AND a.status != 'decommissioned') AS nearest_support_expiry
     FROM eol_products p
     WHERE p.category LIKE 'hw_%'
     ORDER BY p.display_name ASC`;
@@ -356,9 +367,9 @@ export const hardwareAssetRepo = {
       .prepare(
         `INSERT INTO hardware_assets
          (id, product_id, identifier, hostname, device_name, support_expiry, serial_number,
-          asset_number, ip_address, mac_address, vendor, model_number, firmware_version,
-          warranty_expiry, purchase_date, location, owner, status, notes)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          asset_number, ip_address, mac_address, firmware_version,
+          purchase_date, location, owner, status, notes)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         asset.id,
@@ -371,10 +382,7 @@ export const hardwareAssetRepo = {
         asset.asset_number,
         asset.ip_address,
         asset.mac_address,
-        asset.vendor,
-        asset.model_number,
         asset.firmware_version,
-        asset.warranty_expiry,
         asset.purchase_date,
         asset.location,
         asset.owner,

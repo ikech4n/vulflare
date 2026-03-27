@@ -125,6 +125,8 @@ notificationRoutes.post("/rules", requireRole("editor"), async (c) => {
     "vulnerability_critical",
     "eol_approaching",
     "eol_expired",
+    "hw_support_approaching",
+    "hw_support_expired",
   ];
 
   if (!validEvents.includes(body.eventType)) {

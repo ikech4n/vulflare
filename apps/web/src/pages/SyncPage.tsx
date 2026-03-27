@@ -336,7 +336,7 @@ export function SyncPage() {
                   triggerFullSyncMutation.isPending ||
                   latestLog?.status === "running"
                 }
-                className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium bg-gray-600 text-white rounded-full hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <RefreshCw
                   size={16}
@@ -352,7 +352,7 @@ export function SyncPage() {
                   triggerFullSyncMutation.isPending ||
                   latestLog?.status === "running"
                 }
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <RefreshCw
                   size={16}
@@ -594,7 +594,7 @@ export function SyncPage() {
                   <button
                     type="button"
                     onClick={addKeyword}
-                    className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600"
+                    className="px-4 py-1.5 text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >
                     追加
                   </button>
@@ -640,7 +640,7 @@ export function SyncPage() {
                   <button
                     type="button"
                     onClick={addExcludeKeyword}
-                    className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600"
+                    className="px-4 py-1.5 text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                   >
                     追加
                   </button>
@@ -756,7 +756,7 @@ export function SyncPage() {
                   type="button"
                   onClick={handleSaveSettings}
                   disabled={updateSyncSettingsMut.isPending}
-                  className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                  className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
                   <Save size={16} />
                   {updateSyncSettingsMut.isPending ? "保存中..." : "設定を保存"}

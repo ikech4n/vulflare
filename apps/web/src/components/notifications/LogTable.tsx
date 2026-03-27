@@ -11,6 +11,8 @@ const EVENT_LABELS: Partial<Record<EventType, string>> = {
   vulnerability_critical: "クリティカル脆弱性",
   eol_approaching: "EOL期限接近",
   eol_expired: "EOL期限切れ",
+  hw_support_approaching: "ハードウェア保守期限接近",
+  hw_support_expired: "ハードウェア保守期限切れ",
 };
 
 interface LogTableProps {

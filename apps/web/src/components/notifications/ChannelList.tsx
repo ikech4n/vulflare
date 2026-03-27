@@ -1,4 +1,4 @@
-import type { NotificationChannel } from "@vulflare/shared/types";
+import type { NotificationChannel, NotificationRule } from "@vulflare/shared/types";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import {
@@ -12,9 +12,10 @@ import { ChannelForm } from "./ChannelForm.tsx";
 
 interface ChannelListProps {
   channels: NotificationChannel[];
+  rules: NotificationRule[];
 }
 
-export function ChannelList({ channels }: ChannelListProps) {
+export function ChannelList({ channels, rules }: ChannelListProps) {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingChannel, setEditingChannel] = useState<NotificationChannel | null>(null);
 
@@ -32,10 +33,10 @@ export function ChannelList({ channels }: ChannelListProps) {
             setShowCreateForm(!showCreateForm);
             setEditingChannel(null);
           }}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
         >
-          <Plus className="w-4 h-4 mr-2" />
-          通知先追加
+          <Plus className="w-4 h-4" />
+          通知先を追加
         </button>
       </div>
 
@@ -72,8 +73,8 @@ export function ChannelList({ channels }: ChannelListProps) {
       )}
 
       {channels.length === 0 && !showCreateForm ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-          通知先がありません。「通知先追加」から作成してください。
+        <div className="text-center py-16 text-sm text-gray-400 dark:text-gray-500">
+          通知先がありません。「通知先を追加」から作成してください。
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -81,6 +82,7 @@ export function ChannelList({ channels }: ChannelListProps) {
             <ChannelCard
               key={channel.id}
               channel={channel}
+              rules={rules.filter((r) => r.channel_id === channel.id)}
               onEdit={(channel) => {
                 setEditingChannel(channel);
                 setShowCreateForm(false);

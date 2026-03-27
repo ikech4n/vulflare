@@ -130,7 +130,7 @@ export function ProfilePage() {
           <button
             type="submit"
             disabled={updateDisplayNameMutation.isPending}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
+            className="px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 transition-colors whitespace-nowrap"
           >
             {updateDisplayNameMutation.isPending ? "保存中..." : "保存"}
           </button>
@@ -150,7 +150,7 @@ export function ProfilePage() {
               key={value}
               type="button"
               onClick={() => setTheme(value)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+              className={`flex items-center gap-2 px-4 py-1.5 text-sm font-medium rounded-full border transition-colors ${
                 theme === value
                   ? "bg-blue-600 text-white border-blue-600"
                   : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600"
@@ -223,7 +223,7 @@ export function ProfilePage() {
           <button
             type="submit"
             disabled={changePwMutation.isPending}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 transition-colors"
           >
             {changePwMutation.isPending ? "保存中..." : "パスワードを変更"}
           </button>

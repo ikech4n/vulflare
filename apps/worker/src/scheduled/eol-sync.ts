@@ -28,6 +28,9 @@ export async function handleEolSync(env: Env): Promise<void> {
 
     // 2. EOL期限の確認と通知
     await checkEolDatesAndNotify(env);
+
+    // 3. ハードウェア保守期限の確認と通知
+    await checkHwSupportDatesAndNotify(env);
   } catch (err) {
     console.error("[EOL Sync] Fatal error:", err);
   }
@@ -136,5 +139,111 @@ async function checkEolDatesAndNotify(env: Env): Promise<void> {
     );
   } catch (err) {
     console.error("[EOL Check] Error checking EOL dates:", err);
+  }
+}
+
+/**
+ * ハードウェア保守期限が近づいている機器をチェックして通知
+ */
+async function checkHwSupportDatesAndNotify(env: Env): Promise<void> {
+  console.log("[HW Support Check] Checking hardware support expiry dates...");
+
+  try {
+    const now = new Date();
+
+    // 180日以内に保守期限を迎える稼働中・予備の機器
+    const approachingAssets = await env.DB.prepare(
+      `SELECT a.*, p.display_name as product_display_name, p.category
+       FROM hardware_assets a
+       JOIN eol_products p ON a.product_id = p.id
+       WHERE a.support_expiry IS NOT NULL
+         AND a.status != 'decommissioned'
+         AND a.support_expiry > date('now')
+         AND a.support_expiry <= date('now', '+180 days')
+       ORDER BY a.support_expiry ASC`,
+    ).all();
+
+    // 期限切れ（まだ通知していない）
+    const expiredAssets = await env.DB.prepare(
+      `SELECT a.*, p.display_name as product_display_name, p.category
+       FROM hardware_assets a
+       JOIN eol_products p ON a.product_id = p.id
+       WHERE a.support_expiry IS NOT NULL
+         AND a.status != 'decommissioned'
+         AND a.support_expiry < date('now')`,
+    ).all();
+
+    let notifiedCount = 0;
+    for (const asset of approachingAssets.results) {
+      const expiryDate = new Date(asset.support_expiry as string);
+      const daysUntilExpiry = Math.ceil(
+        (expiryDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000),
+      );
+
+      for (const milestone of EOL_MILESTONES) {
+        if (!isAtMilestone(daysUntilExpiry, milestone)) continue;
+
+        const dedupResult = await env.DB.prepare(
+          `SELECT COUNT(*) as cnt FROM notification_logs
+           WHERE event_type = 'hw_support_approaching'
+             AND json_extract(payload, '$.data.asset_id') = ?
+             AND json_extract(payload, '$.data.milestone_days') = ?
+             AND status = 'sent'
+             AND sent_at >= date('now', '-${DEDUP_WINDOW_DAYS} days')`,
+        )
+          .bind(asset.id, milestone)
+          .first<{ cnt: number }>();
+
+        if (dedupResult && dedupResult.cnt > 0) break;
+
+        const severity = milestone === 30 ? "high" : milestone === 90 ? "medium" : "low";
+
+        await dispatchNotification(env, "hw_support_approaching", {
+          asset_id: asset.id,
+          product_display_name: asset.product_display_name,
+          category: asset.category,
+          device_name: asset.device_name,
+          identifier: asset.identifier,
+          support_expiry: asset.support_expiry,
+          days_until_expiry: daysUntilExpiry,
+          milestone_days: milestone,
+          severity,
+        });
+        notifiedCount++;
+        break;
+      }
+    }
+
+    // 期限切れ通知（重複チェックあり）
+    let expiredCount = 0;
+    for (const asset of expiredAssets.results) {
+      const dedupResult = await env.DB.prepare(
+        `SELECT COUNT(*) as cnt FROM notification_logs
+         WHERE event_type = 'hw_support_expired'
+           AND json_extract(payload, '$.data.asset_id') = ?
+           AND status = 'sent'
+           AND sent_at >= date('now', '-${DEDUP_WINDOW_DAYS} days')`,
+      )
+        .bind(asset.id)
+        .first<{ cnt: number }>();
+
+      if (dedupResult && dedupResult.cnt > 0) continue;
+
+      await dispatchNotification(env, "hw_support_expired", {
+        asset_id: asset.id,
+        product_display_name: asset.product_display_name,
+        category: asset.category,
+        device_name: asset.device_name,
+        identifier: asset.identifier,
+        support_expiry: asset.support_expiry,
+      });
+      expiredCount++;
+    }
+
+    console.log(
+      `[HW Support Check] Notified ${notifiedCount} milestone(s), ${expiredCount} expired`,
+    );
+  } catch (err) {
+    console.error("[HW Support Check] Error:", err);
   }
 }

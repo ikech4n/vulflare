@@ -52,15 +52,16 @@ eolRoutes.get("/products/:id", async (c) => {
 // POST /api/eol/products - プロダクト追加（admin/editor）
 eolRoutes.post("/products", requireRole("editor"), async (c) => {
   const body = await c.req.json<{
-    product_name: string;
+    product_name?: string;
     display_name: string;
     category: EolCategory;
+    vendor?: string;
     eol_api_id?: string;
     link?: string;
   }>();
 
-  if (!body.product_name || !body.display_name || !body.category) {
-    return c.json({ error: "product_name, display_name, and category are required" }, 400);
+  if (!body.display_name || !body.category) {
+    return c.json({ error: "display_name and category are required" }, 400);
   }
 
   const validCategories: EolCategory[] = [
@@ -87,18 +88,44 @@ eolRoutes.post("/products", requireRole("editor"), async (c) => {
     return c.json({ error: "Invalid category" }, 400);
   }
 
-  // 重複チェック
-  const existing = await eolProductRepo.findByProductName(c.env.DB, body.product_name);
-  if (existing) {
-    return c.json({ error: "Product already exists" }, 409);
+  // 表示名の重複チェック
+  const existingByName = await eolProductRepo.findByDisplayName(c.env.DB, body.display_name);
+  if (existingByName) {
+    return c.json({ error: "同じ表示名の製品がすでに存在します" }, 409);
+  }
+
+  // product_name の解決（省略時はdisplay_nameからスラッグを自動生成）
+  let productName = body.product_name;
+  if (!productName) {
+    const baseSlug =
+      body.display_name
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^\x00-\x7F]/g, "")
+        .replace(/[^a-z0-9-]/g, "")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "") || "product";
+    let slug = baseSlug;
+    let counter = 2;
+    while (await eolProductRepo.findByProductName(c.env.DB, slug)) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+    productName = slug;
+  } else {
+    const existing = await eolProductRepo.findByProductName(c.env.DB, productName);
+    if (existing) {
+      return c.json({ error: "Product already exists" }, 409);
+    }
   }
 
   const id = crypto.randomUUID();
   await eolProductRepo.create(c.env.DB, {
     id,
-    product_name: body.product_name,
+    product_name: productName,
     display_name: body.display_name,
     category: body.category,
+    vendor: body.vendor ?? null,
     eol_api_id: body.eol_api_id ?? null,
     link: body.link ?? null,
   });
@@ -123,6 +150,7 @@ eolRoutes.patch("/products/:id", requireRole("editor"), async (c) => {
   const body = await c.req.json<{
     display_name?: string;
     category?: EolCategory;
+    vendor?: string;
     link?: string;
     eol_api_id?: string;
   }>();
@@ -436,9 +464,10 @@ eolRoutes.get("/hardware-products", async (c) => {
 eolRoutes.post("/hardware-with-asset", requireRole("editor"), async (c) => {
   const body = await c.req.json<{
     // Product fields
-    product_name: string;
+    product_name?: string;
     display_name: string;
     category: EolCategory;
+    vendor?: string;
     link?: string;
     // Optional asset fields
     identifier?: string;
@@ -449,22 +478,40 @@ eolRoutes.post("/hardware-with-asset", requireRole("editor"), async (c) => {
     asset_number?: string;
     ip_address?: string;
     mac_address?: string;
-    vendor?: string;
-    model_number?: string;
     firmware_version?: string;
-    warranty_expiry?: string;
     purchase_date?: string;
     location?: string;
     owner?: string;
     notes?: string;
   }>();
 
-  if (!body.product_name || !body.display_name || !body.category) {
-    return c.json({ error: "product_name, display_name, and category are required" }, 400);
+  if (!body.display_name || !body.category) {
+    return c.json({ error: "display_name and category are required" }, 400);
   }
 
   if (!body.category.startsWith("hw_")) {
     return c.json({ error: "category must be a hardware category (hw_*)" }, 400);
+  }
+
+  // product_name未指定時はdisplay_nameからslugを自動生成
+  let productName = body.product_name;
+  if (!productName) {
+    const baseSlug =
+      body.display_name
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^\x00-\x7F]/g, "")
+        .replace(/[^a-z0-9-]/g, "")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "") || "hardware";
+
+    let slug = baseSlug;
+    let counter = 2;
+    while (await eolProductRepo.findByProductName(c.env.DB, slug)) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+    productName = slug;
   }
 
   const hasAssetFields = !!(
@@ -473,22 +520,26 @@ eolRoutes.post("/hardware-with-asset", requireRole("editor"), async (c) => {
     body.hostname ||
     body.support_expiry ||
     body.serial_number ||
-    body.vendor ||
-    body.model_number ||
     body.location
   );
 
   // 既存プロダクトチェック
-  let product = await eolProductRepo.findByProductName(c.env.DB, body.product_name);
+  let product = await eolProductRepo.findByProductName(c.env.DB, productName);
   let productCreated = false;
 
   if (!product) {
+    const existingByName = await eolProductRepo.findByDisplayName(c.env.DB, body.display_name);
+    if (existingByName) {
+      return c.json({ error: "同じ表示名の製品がすでに存在します" }, 409);
+    }
+
     const productId = crypto.randomUUID();
     await eolProductRepo.create(c.env.DB, {
       id: productId,
-      product_name: body.product_name,
+      product_name: productName,
       display_name: body.display_name,
       category: body.category,
+      vendor: body.vendor ?? null,
       eol_api_id: null,
       link: body.link ?? null,
     });
@@ -513,10 +564,7 @@ eolRoutes.post("/hardware-with-asset", requireRole("editor"), async (c) => {
       asset_number: body.asset_number ?? null,
       ip_address: body.ip_address ?? null,
       mac_address: body.mac_address ?? null,
-      vendor: body.vendor ?? null,
-      model_number: body.model_number ?? null,
       firmware_version: body.firmware_version ?? null,
-      warranty_expiry: body.warranty_expiry ?? null,
       purchase_date: body.purchase_date ?? null,
       location: body.location ?? null,
       owner: body.owner ?? null,
@@ -563,10 +611,7 @@ eolRoutes.post("/assets", requireRole("editor"), async (c) => {
     asset_number?: string;
     ip_address?: string;
     mac_address?: string;
-    vendor?: string;
-    model_number?: string;
     firmware_version?: string;
-    warranty_expiry?: string;
     purchase_date?: string;
     location?: string;
     owner?: string;
@@ -598,10 +643,7 @@ eolRoutes.post("/assets", requireRole("editor"), async (c) => {
     asset_number: body.asset_number ?? null,
     ip_address: body.ip_address ?? null,
     mac_address: body.mac_address ?? null,
-    vendor: body.vendor ?? null,
-    model_number: body.model_number ?? null,
     firmware_version: body.firmware_version ?? null,
-    warranty_expiry: body.warranty_expiry ?? null,
     purchase_date: body.purchase_date ?? null,
     location: body.location ?? null,
     owner: body.owner ?? null,
@@ -630,10 +672,7 @@ eolRoutes.patch("/assets/:id", requireRole("editor"), async (c) => {
     asset_number?: string | null;
     ip_address?: string | null;
     mac_address?: string | null;
-    vendor?: string | null;
-    model_number?: string | null;
     firmware_version?: string | null;
-    warranty_expiry?: string | null;
     purchase_date?: string | null;
     location?: string | null;
     owner?: string | null;
@@ -651,10 +690,7 @@ eolRoutes.patch("/assets/:id", requireRole("editor"), async (c) => {
     "asset_number",
     "ip_address",
     "mac_address",
-    "vendor",
-    "model_number",
     "firmware_version",
-    "warranty_expiry",
     "purchase_date",
     "location",
     "owner",

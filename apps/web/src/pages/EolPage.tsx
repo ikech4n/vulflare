@@ -6,16 +6,7 @@ import type {
   HardwareAsset,
   HardwareAssetStatus,
 } from "@vulflare/shared/types";
-import {
-  Calendar,
-  ChevronDown,
-  ChevronUp,
-  Edit,
-  Package,
-  Plus,
-  RefreshCw,
-  Trash2,
-} from "lucide-react";
+import { Calendar, Edit, Package, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "@/lib/api.ts";
@@ -90,6 +81,7 @@ export function EolPage() {
   const [selectedHardwareProductId, setSelectedHardwareProductId] = useState<string | null>(null);
   const [showAddAssetModal, setShowAddAssetModal] = useState(false);
   const [editingAsset, setEditingAsset] = useState<HardwareAsset | null>(null);
+  const [selectedAssetForDetail, setSelectedAssetForDetail] = useState<HardwareAsset | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddHardwareModal, setShowAddHardwareModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
@@ -325,7 +317,7 @@ export function EolPage() {
                 type="button"
                 onClick={() => bulkSyncMutation.mutate()}
                 disabled={bulkSyncMutation.isPending}
-                className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 transition-colors"
               >
                 <RefreshCw
                   className={`w-3.5 h-3.5 ${bulkSyncMutation.isPending ? "animate-spin" : ""}`}
@@ -338,10 +330,10 @@ export function EolPage() {
               onClick={() =>
                 activeTab === "software" ? setShowAddModal(true) : setShowAddHardwareModal(true)
               }
-              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
+              className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
-              プロダクト追加
+              製品追加
             </button>
           </div>
         )}
@@ -350,7 +342,7 @@ export function EolPage() {
       {/* プロダクト一覧 */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">プロダクト一覧</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">製品一覧</h2>
           {selectedStatus && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
               {STATUS_LABELS[selectedStatus]}
@@ -370,13 +362,15 @@ export function EolPage() {
           {(activeTab === "hardware" ? isHardwareLoading : isLoading) ? (
             <p className="text-center text-gray-500 dark:text-gray-400">読み込み中...</p>
           ) : products.length === 0 ? (
-            <p className="text-center text-gray-500 dark:text-gray-400">プロダクトがありません</p>
+            <p className="text-center text-gray-500 dark:text-gray-400">
+              {activeTab === "hardware" ? "製品モデルがありません" : "プロダクトがありません"}
+            </p>
           ) : activeTab === "hardware" ? (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead>
                   <tr>
-                    {["プロダクト名", "カテゴリ", "資産数", "最寄りサポート期限", "操作"].map(
+                    {["製品モデル", "メーカー", "カテゴリ", "機器数", "直近の期限", "操作"].map(
                       (h) => (
                         <th
                           key={h}
@@ -403,6 +397,9 @@ export function EolPage() {
                         <span className="font-medium text-gray-900 dark:text-gray-100">
                           {product.display_name}
                         </span>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
+                        {product.vendor ?? <span className="text-gray-400">-</span>}
                       </td>
                       <td className="px-4 py-4">
                         <span className="px-2 py-1 text-xs font-semibold rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 whitespace-nowrap">
@@ -523,7 +520,7 @@ export function EolPage() {
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {selectedHardwareProduct.display_name} の資産一覧
+                {selectedHardwareProduct.display_name} の機器一覧
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                 {hardwareAssets.length} 台登録済み
@@ -533,10 +530,10 @@ export function EolPage() {
               <button
                 type="button"
                 onClick={() => setShowAddAssetModal(true)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
+                className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
-                資産追加
+                機器追加
               </button>
             )}
           </div>
@@ -545,7 +542,7 @@ export function EolPage() {
               <p className="text-center text-gray-500 dark:text-gray-400">読み込み中...</p>
             ) : hardwareAssets.length === 0 ? (
               <p className="text-center text-gray-500 dark:text-gray-400">
-                資産が登録されていません
+                機器が登録されていません
               </p>
             ) : (
               <div className="overflow-x-auto">
@@ -553,19 +550,16 @@ export function EolPage() {
                   <thead>
                     <tr>
                       {[
-                        "識別情報",
-                        "ホスト名",
-                        "機器名",
+                        "管理名",
+                        "サービスタグ / シリアル",
                         "ステータス",
                         "サポート期限",
-                        "保証期限",
                         "設置場所",
-                        "担当者",
                         "操作",
                       ].map((h) => (
                         <th
                           key={h}
-                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase whitespace-nowrap"
+                          className={`px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase whitespace-nowrap ${h === "操作" ? "text-right" : "text-left"}`}
                         >
                           {h}
                         </th>
@@ -574,15 +568,30 @@ export function EolPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {hardwareAssets.map((asset) => (
-                      <tr key={asset.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
-                          {asset.identifier ?? "-"}
+                      <tr
+                        key={asset.id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                        onClick={() => setSelectedAssetForDetail(asset)}
+                      >
+                        <td className="px-4 py-3 text-sm">
+                          <div className="font-medium text-gray-900 dark:text-gray-100">
+                            {asset.device_name ?? "-"}
+                          </div>
+                          {asset.hostname && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                              {asset.hostname}
+                            </div>
+                          )}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
-                          {asset.hostname ?? "-"}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
-                          {asset.device_name ?? "-"}
+                        <td className="px-4 py-3 text-sm">
+                          <div className="text-gray-900 dark:text-gray-100">
+                            {asset.identifier ?? "-"}
+                          </div>
+                          {asset.serial_number && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                              {asset.serial_number}
+                            </div>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-sm">
                           <HardwareAssetStatusBadge status={asset.status} />
@@ -605,33 +614,18 @@ export function EolPage() {
                             <span className="text-gray-400">-</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-sm">
-                          {asset.warranty_expiry ? (
-                            <span
-                              className={
-                                new Date(asset.warranty_expiry) <= new Date()
-                                  ? "text-red-600 font-medium"
-                                  : "text-gray-900 dark:text-gray-100"
-                              }
-                            >
-                              {asset.warranty_expiry}
-                            </span>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </td>
                         <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
                           {asset.location ?? "-"}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
-                          {asset.owner ?? "-"}
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-2">
                             {!isViewer && (
                               <button
                                 type="button"
-                                onClick={() => setEditingAsset(asset)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingAsset(asset);
+                                }}
                                 className="p-1 text-gray-600 hover:text-gray-800"
                                 title="編集"
                               >
@@ -639,11 +633,13 @@ export function EolPage() {
                               </button>
                             )}
                             {user?.role === "admin" && (
-                              <AssetDeleteButton
-                                assetId={asset.id}
-                                productId={asset.product_id}
-                                onToast={showToast}
-                              />
+                              <div onClick={(e) => e.stopPropagation()}>
+                                <AssetDeleteButton
+                                  assetId={asset.id}
+                                  productId={asset.product_id}
+                                  onToast={showToast}
+                                />
+                              </div>
                             )}
                           </div>
                         </td>
@@ -672,6 +668,17 @@ export function EolPage() {
           asset={editingAsset}
           onClose={() => setEditingAsset(null)}
           onToast={showToast}
+        />
+      )}
+      {selectedAssetForDetail && (
+        <HardwareAssetDetailModal
+          asset={selectedAssetForDetail}
+          onClose={() => setSelectedAssetForDetail(null)}
+          onEdit={(asset) => {
+            setSelectedAssetForDetail(null);
+            setEditingAsset(asset);
+          }}
+          isViewer={isViewer}
         />
       )}
     </div>
@@ -797,7 +804,7 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">プロダクト追加</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">製品追加</h2>
 
         <div className="space-y-4">
           <div>
@@ -918,7 +925,7 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
+            className="px-4 py-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
           >
             キャンセル
           </button>
@@ -926,7 +933,7 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
             type="button"
             onClick={() => createMutation.mutate()}
             disabled={!formData.product_name || !formData.display_name || createMutation.isPending}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 transition-colors"
           >
             {createMutation.isPending ? "作成中..." : "作成"}
           </button>
@@ -938,36 +945,20 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
 
 function AddHardwareModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
-  const [showAssetFields, setShowAssetFields] = useState(false);
   const [formData, setFormData] = useState({
-    product_name: "",
     display_name: "",
-    category: "hw_other" as HardwareCategory,
-    link: "",
-    // Asset fields
-    device_name: "",
-    identifier: "",
-    support_expiry: "",
+    category: "hw_server" as HardwareCategory,
     vendor: "",
-    model_number: "",
-    serial_number: "",
-    location: "",
+    link: "",
   });
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      await api.post("/eol/hardware-with-asset", {
-        product_name: formData.product_name,
+      await api.post("/eol/products", {
         display_name: formData.display_name,
         category: formData.category,
-        link: formData.link || undefined,
-        device_name: formData.device_name || undefined,
-        identifier: formData.identifier || undefined,
-        support_expiry: formData.support_expiry || undefined,
         vendor: formData.vendor || undefined,
-        model_number: formData.model_number || undefined,
-        serial_number: formData.serial_number || undefined,
-        location: formData.location || undefined,
+        link: formData.link || undefined,
       });
     },
     onSuccess: () => {
@@ -981,14 +972,11 @@ function AddHardwareModal({ onClose }: { onClose: () => void }) {
   });
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto py-8">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg mx-4 p-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">ハードウェア登録</h2>
-        <div className="space-y-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400 -mt-2">
-            プロダクトと資産を同時に登録できます
-          </p>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">製品追加</h2>
 
+        <div className="space-y-4">
           <div>
             <label
               htmlFor="hw-category"
@@ -1017,7 +1005,7 @@ function AddHardwareModal({ onClose }: { onClose: () => void }) {
               htmlFor="hw-display-name"
               className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
             >
-              プロダクト表示名*
+              製品モデル名*
             </label>
             <input
               id="hw-display-name"
@@ -1031,169 +1019,52 @@ function AddHardwareModal({ onClose }: { onClose: () => void }) {
 
           <div>
             <label
-              htmlFor="hw-product-name"
+              htmlFor="hw-vendor"
               className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
             >
-              プロダクト識別子（英語）*
+              メーカー
             </label>
             <input
-              id="hw-product-name"
+              id="hw-vendor"
               type="text"
-              value={formData.product_name}
-              onChange={(e) => setFormData({ ...formData, product_name: e.target.value })}
+              value={formData.vendor}
+              onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-              placeholder="例: cisco-catalyst-9300"
+              placeholder="例: Cisco, Dell, HPE"
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              同一機種の資産をまとめる識別子です
-            </p>
           </div>
 
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-            <button
-              type="button"
-              onClick={() => setShowAssetFields(!showAssetFields)}
-              className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+          <div>
+            <label
+              htmlFor="hw-link"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
             >
-              {showAssetFields ? (
-                <ChevronUp className="w-4 h-4" />
-              ) : (
-                <ChevronDown className="w-4 h-4" />
-              )}
-              {showAssetFields ? "資産情報を閉じる" : "資産情報を入力する（任意）"}
-            </button>
+              公式URL
+            </label>
+            <input
+              id="hw-link"
+              type="url"
+              value={formData.link}
+              onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+              placeholder="https://..."
+            />
           </div>
-
-          {showAssetFields && (
-            <div className="space-y-4">
-              <div>
-                <label
-                  htmlFor="hw-device-name"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-                >
-                  機器名
-                </label>
-                <input
-                  id="hw-device-name"
-                  type="text"
-                  value={formData.device_name}
-                  onChange={(e) => setFormData({ ...formData, device_name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-                  placeholder="例: Dell PowerEdge R740 #1"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="hw-identifier"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-                >
-                  識別情報
-                </label>
-                <input
-                  id="hw-identifier"
-                  type="text"
-                  value={formData.identifier}
-                  onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-                  placeholder="例: SVC-001234 (サービスタグ等)"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="hw-vendor"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-                >
-                  メーカー/ベンダー
-                </label>
-                <input
-                  id="hw-vendor"
-                  type="text"
-                  value={formData.vendor}
-                  onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-                  placeholder="例: Dell, Cisco"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="hw-model-number"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-                >
-                  モデル番号
-                </label>
-                <input
-                  id="hw-model-number"
-                  type="text"
-                  value={formData.model_number}
-                  onChange={(e) => setFormData({ ...formData, model_number: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-                  placeholder="例: PowerEdge R740"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="hw-serial-number"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-                >
-                  シリアル番号
-                </label>
-                <input
-                  id="hw-serial-number"
-                  type="text"
-                  value={formData.serial_number}
-                  onChange={(e) => setFormData({ ...formData, serial_number: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-                  placeholder="例: ABC1234567"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="hw-support-expiry"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-                >
-                  サポート期限
-                </label>
-                <input
-                  id="hw-support-expiry"
-                  type="date"
-                  value={formData.support_expiry}
-                  onChange={(e) => setFormData({ ...formData, support_expiry: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="hw-location"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-                >
-                  設置場所
-                </label>
-                <input
-                  id="hw-location"
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-                  placeholder="例: 東京DC / ラック A-01"
-                />
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="flex justify-end gap-3 mt-6">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
+            className="px-4 py-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
           >
             キャンセル
           </button>
           <button
             type="button"
             onClick={() => createMutation.mutate()}
-            disabled={!formData.product_name || !formData.display_name || createMutation.isPending}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            disabled={!formData.display_name || createMutation.isPending}
+            className="px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 transition-colors"
           >
             {createMutation.isPending ? "登録中..." : "登録"}
           </button>
@@ -1208,6 +1079,7 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
   const [formData, setFormData] = useState({
     display_name: product.display_name,
     category: product.category,
+    vendor: product.vendor || "",
     eol_api_id: product.eol_api_id || "",
     link: product.link || "",
   });
@@ -1217,6 +1089,7 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
       await api.patch(`/eol/products/${product.id}`, {
         display_name: formData.display_name,
         category: formData.category,
+        ...(product.category.startsWith("hw_") && { vendor: formData.vendor || undefined }),
         eol_api_id: formData.eol_api_id || undefined,
         link: formData.link || undefined,
       });
@@ -1298,25 +1171,46 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
             </select>
           </div>
 
-          <div>
-            <label
-              htmlFor="edit-eol-api-id"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-            >
-              endoflife.date API ID
-            </label>
-            <input
-              id="edit-eol-api-id"
-              type="text"
-              value={formData.eol_api_id}
-              onChange={(e) => setFormData({ ...formData, eol_api_id: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-              placeholder="例: ubuntu"
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              設定すると自動同期されます（任意）
-            </p>
-          </div>
+          {product.category.startsWith("hw_") && (
+            <div>
+              <label
+                htmlFor="edit-vendor"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+              >
+                メーカー
+              </label>
+              <input
+                id="edit-vendor"
+                type="text"
+                value={formData.vendor}
+                onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                placeholder="例: Cisco, Dell, HPE"
+              />
+            </div>
+          )}
+
+          {!product.category.startsWith("hw_") && (
+            <div>
+              <label
+                htmlFor="edit-eol-api-id"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+              >
+                endoflife.date API ID
+              </label>
+              <input
+                id="edit-eol-api-id"
+                type="text"
+                value={formData.eol_api_id}
+                onChange={(e) => setFormData({ ...formData, eol_api_id: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                placeholder="例: ubuntu"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                設定すると自動同期されます（任意）
+              </p>
+            </div>
+          )}
 
           <div>
             <label
@@ -1340,7 +1234,7 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
+            className="px-4 py-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
           >
             キャンセル
           </button>
@@ -1348,7 +1242,7 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
             type="button"
             onClick={() => updateMutation.mutate()}
             disabled={!formData.display_name || updateMutation.isPending}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 transition-colors"
           >
             {updateMutation.isPending ? "更新中..." : "更新"}
           </button>
@@ -1365,8 +1259,8 @@ const STATUS_BADGE: Record<HardwareAssetStatus, { label: string; className: stri
     label: "稼働中",
     className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   },
-  retired: {
-    label: "退役済み",
+  decommissioned: {
+    label: "運用終了",
     className: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400",
   },
   spare: {
@@ -1400,7 +1294,7 @@ function AssetDeleteButton({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["eol", "assets", productId] });
-      onToast("資産を削除しました", "success");
+      onToast("機器を削除しました", "success");
     },
     onError: () => {
       onToast("削除に失敗しました", "error");
@@ -1423,27 +1317,151 @@ function AssetDeleteButton({
   );
 }
 
-const ASSET_FIELDS: {
+function HardwareAssetDetailModal({
+  asset,
+  onClose,
+  onEdit,
+  isViewer,
+}: {
+  asset: HardwareAsset;
+  onClose: () => void;
+  onEdit: (asset: HardwareAsset) => void;
+  isViewer: boolean;
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh]">
+        <div className="px-6 pt-6 pb-4 flex-shrink-0">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+            {asset.device_name ?? "機器詳細"}
+          </h2>
+        </div>
+
+        <div className="px-6 overflow-y-auto flex-1">
+          <div className="space-y-6 pb-4">
+            {/* 基本情報 */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+                基本情報
+              </h3>
+              <dl className="space-y-3">
+                {ASSET_FIELD_GROUPS[0]?.fields.map((field) => (
+                  <div key={field.key} className="flex gap-3">
+                    <dt className="text-sm text-gray-500 dark:text-gray-400 w-36 flex-shrink-0">
+                      {field.label}
+                    </dt>
+                    <dd className="text-sm text-gray-900 dark:text-gray-100 break-all">
+                      {(asset[field.key] as string | null | undefined) ?? (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </dd>
+                  </div>
+                ))}
+                <div className="flex gap-3">
+                  <dt className="text-sm text-gray-500 dark:text-gray-400 w-36 flex-shrink-0">
+                    ステータス
+                  </dt>
+                  <dd>
+                    <HardwareAssetStatusBadge status={asset.status} />
+                  </dd>
+                </div>
+              </dl>
+            </div>
+
+            {ASSET_FIELD_GROUPS.slice(1).map((group) => (
+              <div key={group.title}>
+                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3 border-t border-gray-200 dark:border-gray-700 pt-4">
+                  {group.title}
+                </h3>
+                <dl className="space-y-3">
+                  {group.fields.map((field) => (
+                    <div key={field.key} className="flex gap-3">
+                      <dt className="text-sm text-gray-500 dark:text-gray-400 w-36 flex-shrink-0">
+                        {field.label}
+                      </dt>
+                      <dd className="text-sm text-gray-900 dark:text-gray-100 break-all whitespace-pre-wrap">
+                        {(asset[field.key] as string | null | undefined) ?? (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+          >
+            閉じる
+          </button>
+          {!isViewer && (
+            <button
+              type="button"
+              onClick={() => onEdit(asset)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              編集
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type AssetFieldDef = {
   key: keyof HardwareAsset;
   label: string;
   type?: string;
   placeholder?: string;
-}[] = [
-  { key: "identifier", label: "識別情報", placeholder: "例: SVC-001234 (サービスタグ等)" },
-  { key: "hostname", label: "ホスト名", placeholder: "例: web-server-01" },
-  { key: "device_name", label: "機器名", placeholder: "例: Dell PowerEdge R740" },
-  { key: "serial_number", label: "シリアル番号", placeholder: "例: ABC1234567" },
-  { key: "asset_number", label: "資産番号", placeholder: "例: IT-2024-0001" },
-  { key: "vendor", label: "メーカー/ベンダー", placeholder: "例: Dell, Cisco" },
-  { key: "model_number", label: "モデル番号", placeholder: "例: PowerEdge R740" },
-  { key: "firmware_version", label: "ファームウェアバージョン", placeholder: "例: 2.8.1" },
-  { key: "ip_address", label: "IPアドレス", placeholder: "例: 192.168.1.100" },
-  { key: "mac_address", label: "MACアドレス", placeholder: "例: AA:BB:CC:DD:EE:FF" },
-  { key: "location", label: "設置場所", placeholder: "例: 東京DC / ラック A-01" },
-  { key: "owner", label: "担当者", placeholder: "例: 山田 太郎" },
-  { key: "support_expiry", label: "サポート期限", type: "date" },
-  { key: "warranty_expiry", label: "保証期限", type: "date" },
-  { key: "purchase_date", label: "購入日", type: "date" },
+  isTextarea?: boolean;
+};
+
+type AssetFieldGroup = {
+  title: string;
+  fields: AssetFieldDef[];
+};
+
+const ASSET_FIELD_GROUPS: AssetFieldGroup[] = [
+  {
+    title: "基本情報",
+    fields: [
+      { key: "device_name", label: "管理名", placeholder: "例: 本社-SW-01" },
+      { key: "hostname", label: "ホスト名", placeholder: "例: sw-core-01.example.com" },
+    ],
+  },
+  {
+    title: "管理・識別情報",
+    fields: [
+      { key: "identifier", label: "サービスタグ", placeholder: "例: SVC-001234" },
+      { key: "serial_number", label: "シリアル番号", placeholder: "例: ABC1234567" },
+      { key: "asset_number", label: "資産管理番号", placeholder: "例: IT-2024-0001" },
+    ],
+  },
+  {
+    title: "ネットワーク情報",
+    fields: [
+      { key: "ip_address", label: "IPアドレス", placeholder: "例: 192.168.1.100" },
+      { key: "mac_address", label: "MACアドレス", placeholder: "例: AA:BB:CC:DD:EE:FF" },
+      { key: "firmware_version", label: "ファームウェア", placeholder: "例: 17.06.05" },
+    ],
+  },
+  {
+    title: "契約・設置情報",
+    fields: [
+      { key: "support_expiry", label: "保守期限", type: "date" },
+      { key: "purchase_date", label: "購入日", type: "date" },
+      { key: "location", label: "設置場所", placeholder: "例: 東京DC / ラックA-01" },
+      { key: "owner", label: "担当者", placeholder: "例: 山田太郎" },
+      { key: "notes", label: "備考", isTextarea: true },
+    ],
+  },
 ];
 
 function HardwareAssetModal({
@@ -1459,7 +1477,6 @@ function HardwareAssetModal({
 }) {
   const queryClient = useQueryClient();
   const isEdit = !!asset;
-  const [showOptional, setShowOptional] = useState(false);
 
   const initialForm = {
     identifier: asset?.identifier ?? "",
@@ -1470,10 +1487,7 @@ function HardwareAssetModal({
     asset_number: asset?.asset_number ?? "",
     ip_address: asset?.ip_address ?? "",
     mac_address: asset?.mac_address ?? "",
-    vendor: asset?.vendor ?? "",
-    model_number: asset?.model_number ?? "",
     firmware_version: asset?.firmware_version ?? "",
-    warranty_expiry: asset?.warranty_expiry ?? "",
     purchase_date: asset?.purchase_date ?? "",
     location: asset?.location ?? "",
     owner: asset?.owner ?? "",
@@ -1496,7 +1510,7 @@ function HardwareAssetModal({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["eol", "assets", productId] });
-      onToast(isEdit ? "資産を更新しました" : "資産を登録しました", "success");
+      onToast(isEdit ? "機器を更新しました" : "機器を登録しました", "success");
       onClose();
     },
     onError: (error: unknown) => {
@@ -1505,10 +1519,7 @@ function HardwareAssetModal({
     },
   });
 
-  const primaryFields = ASSET_FIELDS.slice(0, 7);
-  const optionalFields = ASSET_FIELDS.slice(7);
-
-  const renderField = (field: (typeof ASSET_FIELDS)[number]) => (
+  const renderField = (field: AssetFieldDef) => (
     <div key={field.key}>
       <label
         htmlFor={`asset-${field.key}`}
@@ -1516,97 +1527,87 @@ function HardwareAssetModal({
       >
         {field.label}
       </label>
-      <input
-        id={`asset-${field.key}`}
-        type={field.type ?? "text"}
-        value={formData[field.key as keyof typeof formData] as string}
-        onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
-        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-        placeholder={field.placeholder}
-      />
+      {field.isTextarea ? (
+        <textarea
+          id={`asset-${field.key}`}
+          value={formData[field.key as keyof typeof formData] as string}
+          onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+          rows={3}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+          placeholder={field.placeholder}
+        />
+      ) : (
+        <input
+          id={`asset-${field.key}`}
+          type={field.type ?? "text"}
+          value={formData[field.key as keyof typeof formData] as string}
+          onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+          placeholder={field.placeholder}
+        />
+      )}
     </div>
   );
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto py-8">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg mx-4 p-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-          {isEdit ? "資産編集" : "資産追加"}
-        </h2>
-
-        <div className="space-y-4">
-          {primaryFields.map(renderField)}
-
-          {/* ステータス */}
-          <div>
-            <label
-              htmlFor="asset-status"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-            >
-              ステータス
-            </label>
-            <select
-              id="asset-status"
-              value={formData.status}
-              onChange={(e) =>
-                setFormData({ ...formData, status: e.target.value as HardwareAssetStatus })
-              }
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-            >
-              {Object.entries(STATUS_BADGE).map(([value, { label }]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* 任意項目（折りたたみ） */}
-          <div>
-            <button
-              type="button"
-              onClick={() => setShowOptional(!showOptional)}
-              className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-            >
-              {showOptional ? (
-                <ChevronUp className="w-4 h-4" />
-              ) : (
-                <ChevronDown className="w-4 h-4" />
-              )}
-              {showOptional ? "詳細項目を閉じる" : "詳細項目を入力する"}
-            </button>
-          </div>
-
-          {showOptional && (
-            <div className="space-y-4 pt-2 border-t border-gray-200 dark:border-gray-700">
-              {optionalFields.map(renderField)}
-
-              {/* 備考 */}
-              <div>
-                <label
-                  htmlFor="asset-notes"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-                >
-                  備考
-                </label>
-                <textarea
-                  id="asset-notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-                  placeholder="自由記述"
-                />
-              </div>
-            </div>
-          )}
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh]">
+        <div className="px-6 pt-6 pb-4 flex-shrink-0">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+            {isEdit ? "機器編集" : "機器追加"}
+          </h2>
         </div>
 
-        <div className="flex justify-end gap-3 mt-6">
+        <div className="px-6 overflow-y-auto flex-1">
+          <div className="space-y-6 pb-4">
+            {/* ステータス（基本情報グループの先頭） */}
+            <div>
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+                基本情報
+              </h3>
+              <div className="space-y-4">
+                {ASSET_FIELD_GROUPS[0]?.fields.map(renderField)}
+                <div>
+                  <label
+                    htmlFor="asset-status"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                  >
+                    ステータス
+                  </label>
+                  <select
+                    id="asset-status"
+                    value={formData.status}
+                    onChange={(e) =>
+                      setFormData({ ...formData, status: e.target.value as HardwareAssetStatus })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+                  >
+                    {Object.entries(STATUS_BADGE).map(([value, { label }]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {ASSET_FIELD_GROUPS.slice(1).map((group) => (
+              <div key={group.title}>
+                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3 border-t border-gray-200 dark:border-gray-700 pt-4">
+                  {group.title}
+                </h3>
+                <div className="space-y-4">{group.fields.map(renderField)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 flex justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
+            className="px-4 py-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
           >
             キャンセル
           </button>
@@ -1614,7 +1615,7 @@ function HardwareAssetModal({
             type="button"
             onClick={() => mutation.mutate()}
             disabled={mutation.isPending}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 transition-colors"
           >
             {mutation.isPending ? (isEdit ? "更新中..." : "登録中...") : isEdit ? "更新" : "登録"}
           </button>

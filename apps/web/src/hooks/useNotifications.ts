@@ -172,14 +172,21 @@ export function useDeleteRule() {
   });
 }
 
-export function useToggleRule() {
+export function useUpdateRule() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
-      await api.patch(`/notifications/rules/${id}`, { isActive });
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: { filterConfig?: Record<string, unknown> | null; isActive?: boolean };
+    }) => {
+      await api.patch(`/notifications/rules/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications", "rules"] });
+      toast.success("ルールを更新しました");
     },
     onError: () => {
       toast.error("ルールの更新に失敗しました");

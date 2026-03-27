@@ -6,7 +6,9 @@ export type EventType =
   | "vulnerability_updated"
   | "vulnerability_critical"
   | "eol_approaching"
-  | "eol_expired";
+  | "eol_expired"
+  | "hw_support_approaching"
+  | "hw_support_expired";
 
 export interface NotificationPayload {
   eventType: EventType;
@@ -144,6 +146,8 @@ async function sendSlack(
     vulnerability_updated: "#0284c7",
     eol_approaching: "#f59e0b",
     eol_expired: "#dc2626",
+    hw_support_approaching: "#f59e0b",
+    hw_support_expired: "#dc2626",
   };
   const color = colorMap[eventType] ?? "#6b7280";
 
@@ -158,7 +162,11 @@ async function sendSlack(
             ? "EOL期限が近づいています"
             : eventType === "eol_expired"
               ? "サポート終了（EOL）"
-              : `Vulflare: ${eventType}`;
+              : eventType === "hw_support_approaching"
+                ? "ハードウェア保守期限が近づいています"
+                : eventType === "hw_support_expired"
+                  ? "ハードウェア保守期限切れ"
+                  : `Vulflare: ${eventType}`;
 
   const fields: { type: "mrkdwn"; text: string }[] = [];
 
@@ -171,6 +179,18 @@ async function sendSlack(
     if (data.eol_date) fields.push({ type: "mrkdwn", text: `*EOL日*\n${data.eol_date}` });
     if (data.days_until_eol != null)
       fields.push({ type: "mrkdwn", text: `*残り日数*\n${data.days_until_eol}日` });
+  } else if (eventType === "hw_support_approaching" || eventType === "hw_support_expired") {
+    if (data.product_display_name)
+      fields.push({ type: "mrkdwn", text: `*製品モデル*\n${data.product_display_name}` });
+    if (data.device_name || data.identifier)
+      fields.push({
+        type: "mrkdwn",
+        text: `*機器*\n${data.device_name ?? data.identifier ?? "-"}`,
+      });
+    if (data.support_expiry)
+      fields.push({ type: "mrkdwn", text: `*保守期限*\n${data.support_expiry}` });
+    if (data.days_until_expiry != null)
+      fields.push({ type: "mrkdwn", text: `*残り日数*\n${data.days_until_expiry}日` });
   } else {
     if (data.vuln_id) fields.push({ type: "mrkdwn", text: `*CVE ID*\n${data.vuln_id}` });
     if (data.title) fields.push({ type: "mrkdwn", text: `*タイトル*\n${data.title}` });
@@ -180,9 +200,17 @@ async function sendSlack(
   }
 
   const listPath =
-    eventType === "eol_approaching" || eventType === "eol_expired" ? "/eol" : "/vulnerabilities";
+    eventType === "eol_approaching" ||
+    eventType === "eol_expired" ||
+    eventType === "hw_support_approaching" ||
+    eventType === "hw_support_expired"
+      ? "/eol"
+      : "/vulnerabilities";
   const listLabel =
-    eventType === "eol_approaching" || eventType === "eol_expired"
+    eventType === "eol_approaching" ||
+    eventType === "eol_expired" ||
+    eventType === "hw_support_approaching" ||
+    eventType === "hw_support_expired"
       ? "EOL一覧を確認する"
       : "脆弱性一覧を確認する";
   const linkBlock = appUrl
@@ -238,6 +266,8 @@ async function sendEmail(
     vulnerability_critical: "クリティカル脆弱性が検出されました",
     eol_approaching: "EOL期限が近づいています",
     eol_expired: "サポートが終了しました",
+    hw_support_approaching: "ハードウェア保守期限が近づいています",
+    hw_support_expired: "ハードウェア保守期限が切れました",
   };
   const subjectTemplate = (config.subject as string) || "Vulflare: {eventType}";
   const subject = subjectTemplate.replace(
@@ -304,6 +334,36 @@ async function sendEmail(
  */
 function generateEmailBodyText(payload: NotificationPayload, appUrl: string): string {
   const { eventType, data, timestamp } = payload;
+
+  if (eventType === "hw_support_approaching") {
+    return [
+      "ハードウェア保守期限が近づいています - Vulflare",
+      "",
+      `${data.product_display_name} の機器「${data.device_name ?? data.identifier ?? "-"}」の保守期限が ${data.days_until_expiry}日後 に迫っています。`,
+      "",
+      `製品モデル: ${data.product_display_name}`,
+      `機器: ${data.device_name ?? data.identifier ?? "-"}`,
+      `カテゴリ: ${data.category}`,
+      `保守期限: ${data.support_expiry}`,
+      "",
+      `通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}`,
+    ].join("\n");
+  }
+
+  if (eventType === "hw_support_expired") {
+    return [
+      "ハードウェア保守期限切れ - Vulflare",
+      "",
+      `${data.product_display_name} の機器「${data.device_name ?? data.identifier ?? "-"}」の保守期限が切れました。早急な対応が必要です。`,
+      "",
+      `製品モデル: ${data.product_display_name}`,
+      `機器: ${data.device_name ?? data.identifier ?? "-"}`,
+      `カテゴリ: ${data.category}`,
+      `保守期限: ${data.support_expiry}`,
+      "",
+      `通知日時: ${new Date(timestamp).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}`,
+    ].join("\n");
+  }
 
   if (eventType === "eol_approaching") {
     return [
@@ -531,6 +591,12 @@ function generateEmailBody(payload: NotificationPayload, appUrl: string): string
   if (eventType === "eol_expired") {
     return generateEolExpiredEmail(data, timestamp, appUrl);
   }
+  if (eventType === "hw_support_approaching") {
+    return generateHwSupportApproachingEmail(data, timestamp, appUrl);
+  }
+  if (eventType === "hw_support_expired") {
+    return generateHwSupportExpiredEmail(data, timestamp, appUrl);
+  }
 
   // デフォルト
   return buildEmailTemplate({
@@ -727,6 +793,75 @@ function generateEolExpiredEmail(
     infoItems,
     ctaUrl: appUrl ? `${appUrl}/eol` : undefined,
     ctaText: "EOL一覧を確認する",
+    timestamp,
+    appUrl,
+  });
+}
+
+/**
+ * ハードウェア保守期限が近づいている場合のメール本文
+ */
+function generateHwSupportApproachingEmail(
+  data: Record<string, unknown>,
+  timestamp: string,
+  appUrl: string,
+): string {
+  const severity = data.severity as string | undefined;
+  const accentColor = severity === "high" ? "#ea580c" : "#f59e0b";
+  const daysUntilExpiry = data.days_until_expiry as number | undefined;
+  const deviceLabel = (data.device_name ?? data.identifier ?? "-") as string;
+
+  const alertHtml = `<strong>${escapeHtml(data.product_display_name)}</strong> の機器「<strong>${escapeHtml(deviceLabel)}</strong>」の保守期限が <strong>${escapeHtml(data.days_until_expiry)}日後</strong> に迫っています。`;
+
+  const infoItems: { label: string; value: string }[] = [
+    { label: "製品モデル", value: escapeHtml(data.product_display_name) },
+    { label: "機器", value: escapeHtml(deviceLabel) },
+    { label: "カテゴリ", value: escapeHtml(data.category) },
+    { label: "保守期限", value: `<strong>${escapeHtml(data.support_expiry)}</strong>` },
+  ];
+
+  const badgeText = daysUntilExpiry != null ? `残り ${daysUntilExpiry}日` : undefined;
+
+  return buildEmailTemplate({
+    accentColor,
+    title: "ハードウェア保守期限が近づいています",
+    badge: badgeText ? { text: badgeText, color: accentColor } : undefined,
+    alertHtml,
+    infoItems,
+    ctaUrl: appUrl ? `${appUrl}/eol` : undefined,
+    ctaText: "ハードウェア一覧を確認する",
+    timestamp,
+    appUrl,
+  });
+}
+
+/**
+ * ハードウェア保守期限切れのメール本文
+ */
+function generateHwSupportExpiredEmail(
+  data: Record<string, unknown>,
+  timestamp: string,
+  appUrl: string,
+): string {
+  const deviceLabel = (data.device_name ?? data.identifier ?? "-") as string;
+
+  const alertHtml = `<strong>${escapeHtml(data.product_display_name)}</strong> の機器「<strong>${escapeHtml(deviceLabel)}</strong>」の保守期限が切れました。早急な対応が必要です。`;
+
+  const infoItems: { label: string; value: string }[] = [
+    { label: "製品モデル", value: escapeHtml(data.product_display_name) },
+    { label: "機器", value: escapeHtml(deviceLabel) },
+    { label: "カテゴリ", value: escapeHtml(data.category) },
+    { label: "保守期限", value: `<strong>${escapeHtml(data.support_expiry)}</strong>` },
+  ];
+
+  return buildEmailTemplate({
+    accentColor: "#dc2626",
+    title: "ハードウェア保守期限が切れました",
+    badge: { text: "期限切れ", color: "#dc2626" },
+    alertHtml,
+    infoItems,
+    ctaUrl: appUrl ? `${appUrl}/eol` : undefined,
+    ctaText: "ハードウェア一覧を確認する",
     timestamp,
     appUrl,
   });

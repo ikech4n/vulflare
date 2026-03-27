@@ -28,6 +28,7 @@ export interface EolProduct {
   product_name: string; // endoflife.date slug
   display_name: string;
   category: EolCategory;
+  vendor: string | null; // メーカー（ハードウェア用）
   eol_api_id: string | null;
   link: string | null;
   created_at: string;
@@ -104,7 +105,7 @@ export interface EolStats {
 }
 
 // ハードウェア資産
-export type HardwareAssetStatus = "active" | "retired" | "spare";
+export type HardwareAssetStatus = "active" | "decommissioned" | "spare";
 
 export interface HardwareAsset {
   id: string;
@@ -117,10 +118,7 @@ export interface HardwareAsset {
   asset_number: string | null; // 資産番号
   ip_address: string | null; // IPアドレス
   mac_address: string | null; // MACアドレス
-  vendor: string | null; // メーカー/ベンダー
-  model_number: string | null; // モデル番号
   firmware_version: string | null; // ファームウェアバージョン
-  warranty_expiry: string | null; // 保証期限
   purchase_date: string | null; // 購入日
   location: string | null; // 設置場所
   owner: string | null; // 担当者

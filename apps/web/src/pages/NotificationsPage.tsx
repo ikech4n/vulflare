@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { ChannelList } from "@/components/notifications/ChannelList.tsx";
 import { LogTable } from "@/components/notifications/LogTable.tsx";
-import { RuleList } from "@/components/notifications/RuleList.tsx";
 import { useChannels, useRules } from "@/hooks/useNotifications.ts";
 import { useAuthStore } from "@/store/authStore.ts";
 
 export function NotificationsPage() {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<"channels" | "rules" | "logs">("channels");
+  const [activeTab, setActiveTab] = useState<"channels" | "logs">("channels");
 
   const { data: channels = [] } = useChannels();
   const { data: rules = [] } = useRules();
@@ -25,7 +24,6 @@ export function NotificationsPage() {
 
   const tabs = [
     { id: "channels" as const, label: "通知先" },
-    { id: "rules" as const, label: "ルール" },
     { id: "logs" as const, label: "ログ" },
   ];
 
@@ -55,8 +53,7 @@ export function NotificationsPage() {
         </nav>
       </div>
 
-      {activeTab === "channels" && <ChannelList channels={channels} />}
-      {activeTab === "rules" && <RuleList rules={rules} channels={channels} />}
+      {activeTab === "channels" && <ChannelList channels={channels} rules={rules} />}
       {activeTab === "logs" && <LogTable channels={channels} />}
     </div>
   );

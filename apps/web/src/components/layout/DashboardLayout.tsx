@@ -25,7 +25,7 @@ export function DashboardLayout() {
       </header>
 
       <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <main className="flex-1 overflow-auto dark:bg-gray-950 pt-14 md:pt-0">
+      <main className="flex-1 overflow-auto dark:bg-gray-950 pt-14 md:pt-0 [scrollbar-gutter:stable]">
         <div className="p-4 md:p-6 max-w-7xl mx-auto">
           <Outlet />
         </div>

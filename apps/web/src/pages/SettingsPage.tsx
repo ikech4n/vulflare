@@ -183,14 +183,14 @@ export function SettingsPage() {
                     updateAppSettingsMutation.mutate({ noreplyEmail: noreplyEmailInput })
                   }
                   disabled={!noreplyEmailInput || updateAppSettingsMutation.isPending}
-                  className="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 shrink-0"
+                  className="px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 transition-colors shrink-0"
                 >
                   {updateAppSettingsMutation.isPending ? "保存中..." : "保存"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setEditingEmail(false)}
-                  className="px-3 py-2 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0"
+                  className="px-4 py-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors shrink-0"
                 >
                   キャンセル
                 </button>
@@ -302,7 +302,7 @@ export function SettingsPage() {
           <button
             type="submit"
             disabled={addUserMutation.isPending}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 transition-colors"
           >
             {addUserMutation.isPending ? "追加中..." : "ユーザーを追加"}
           </button>
@@ -432,7 +432,7 @@ export function SettingsPage() {
                         })
                       }
                       disabled={!editUsername || updateProfileMutation.isPending}
-                      className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 shrink-0"
+                      className="px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 transition-colors shrink-0"
                     >
                       {updateProfileMutation.isPending ? "保存中..." : "保存"}
                     </button>
@@ -444,7 +444,7 @@ export function SettingsPage() {
                         setEditEmail("");
                         setEditError("");
                       }}
-                      className="px-3 py-1.5 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0"
+                      className="px-4 py-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors shrink-0"
                     >
                       キャンセル
                     </button>
@@ -470,7 +470,7 @@ export function SettingsPage() {
                         resetPasswordMutation.mutate({ id: u.id, password: resetPwValue })
                       }
                       disabled={resetPwValue.length < 8 || resetPasswordMutation.isPending}
-                      className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 shrink-0"
+                      className="px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 transition-colors shrink-0"
                     >
                       {resetPasswordMutation.isPending ? "リセット中..." : "リセット"}
                     </button>
@@ -481,7 +481,7 @@ export function SettingsPage() {
                         setResetPwValue("");
                         setResetPwError("");
                       }}
-                      className="px-3 py-1.5 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0"
+                      className="px-4 py-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors shrink-0"
                     >
                       キャンセル
                     </button>
