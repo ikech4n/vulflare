@@ -101,7 +101,7 @@ eolRoutes.post("/products", requireRole("editor"), async (c) => {
       body.display_name
         .toLowerCase()
         .replace(/\s+/g, "-")
-        .replace(/[^\x00-\x7F]/g, "")
+        .replace(/[^\u0020-\u007E]/g, "")
         .replace(/[^a-z0-9-]/g, "")
         .replace(/-+/g, "-")
         .replace(/^-|-$/g, "") || "product";
@@ -500,7 +500,7 @@ eolRoutes.post("/hardware-with-asset", requireRole("editor"), async (c) => {
       body.display_name
         .toLowerCase()
         .replace(/\s+/g, "-")
-        .replace(/[^\x00-\x7F]/g, "")
+        .replace(/[^\u0020-\u007E]/g, "")
         .replace(/[^a-z0-9-]/g, "")
         .replace(/-+/g, "-")
         .replace(/^-|-$/g, "") || "hardware";

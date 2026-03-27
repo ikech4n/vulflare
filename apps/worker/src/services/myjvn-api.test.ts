@@ -10,7 +10,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchProductList, fetchVendorList } from "./myjvn-api.ts";
 
-const MYJVN_HOST = "https://jvndb.jvn.jp";
+const _MYJVN_HOST = "https://jvndb.jvn.jp";
 
 /** fetchVendorList 用 XML を生成（<Vendor ... /> 自己終了タグ形式） */
 function makeVendorListXml(vendors: Array<{ vid: string; vname: string }>): string {

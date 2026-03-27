@@ -29,7 +29,8 @@
     "overrides": {
       "rollup": ">=4.59.0",
       "esbuild": ">=0.25.0",
-      "undici": ">=7.24.0"
+      "undici": ">=7.24.0",
+      "picomatch": ">=4.0.4"
     }
   }
 }

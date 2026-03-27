@@ -10,10 +10,6 @@ const AVAILABLE_EVENTS: { type: EventType; label: string; category: "vulnerabili
   { type: "hw_support_approaching", label: "ハードウェア保守期限接近", category: "eol" },
 ];
 
-const EVENT_LABELS: Record<string, string> = Object.fromEntries(
-  AVAILABLE_EVENTS.map(({ type, label }) => [type, label]),
-);
-
 const TYPE_LABELS: Record<string, string> = {
   slack: "Slack",
   email: "Email",
