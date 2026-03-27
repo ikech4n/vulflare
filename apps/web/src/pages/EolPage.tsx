@@ -99,7 +99,7 @@ export function EolPage() {
       return res.data as { total: number; synced: number; failed: string[] };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["eol"] });
+      void queryClient.invalidateQueries({ queryKey: ["eol"] });
       const msg =
         data.failed.length > 0
           ? `同期完了 (${data.total}件中 ${data.failed.length}件失敗)`
@@ -701,7 +701,7 @@ function ProductActions({
       await api.delete(`/eol/products/${product.id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["eol"] });
+      void queryClient.invalidateQueries({ queryKey: ["eol"] });
     },
     onError: () => {
       onToast("削除に失敗しました", "error");
@@ -792,7 +792,7 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["eol"] });
+      void queryClient.invalidateQueries({ queryKey: ["eol"] });
       onClose();
     },
     onError: (error: unknown) => {
@@ -831,7 +831,7 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
                 }
               }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-              placeholder="例: ubuntu, nodejs, python"
+              placeholder=""
             />
             <datalist id="available-products">
               {availableProducts.map((product) => (
@@ -856,7 +856,7 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
               value={formData.display_name}
               onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-              placeholder="例: Ubuntu"
+              placeholder=""
             />
           </div>
 
@@ -896,28 +896,11 @@ function AddProductModal({ onClose }: { onClose: () => void }) {
               value={formData.eol_api_id}
               onChange={(e) => setFormData({ ...formData, eol_api_id: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-              placeholder="例: ubuntu"
+              placeholder=""
             />
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               設定すると自動同期されます（任意）
             </p>
-          </div>
-
-          <div>
-            <label
-              htmlFor="create-link"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-            >
-              公式URL
-            </label>
-            <input
-              id="create-link"
-              type="url"
-              value={formData.link}
-              onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-              placeholder="https://..."
-            />
           </div>
         </div>
 
@@ -962,7 +945,7 @@ function AddHardwareModal({ onClose }: { onClose: () => void }) {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["eol"] });
+      void queryClient.invalidateQueries({ queryKey: ["eol"] });
       onClose();
     },
     onError: (error: unknown) => {
@@ -1013,7 +996,7 @@ function AddHardwareModal({ onClose }: { onClose: () => void }) {
               value={formData.display_name}
               onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-              placeholder="例: Cisco Catalyst 9300"
+              placeholder=""
             />
           </div>
 
@@ -1030,24 +1013,7 @@ function AddHardwareModal({ onClose }: { onClose: () => void }) {
               value={formData.vendor}
               onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-              placeholder="例: Cisco, Dell, HPE"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="hw-link"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-            >
-              公式URL
-            </label>
-            <input
-              id="hw-link"
-              type="url"
-              value={formData.link}
-              onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-              placeholder="https://..."
+              placeholder=""
             />
           </div>
         </div>
@@ -1095,7 +1061,7 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["eol"] });
+      void queryClient.invalidateQueries({ queryKey: ["eol"] });
       onClose();
     },
     onError: (error: unknown) => {
@@ -1142,7 +1108,7 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
               value={formData.display_name}
               onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-              placeholder="例: Ubuntu"
+              placeholder=""
             />
           </div>
 
@@ -1185,7 +1151,7 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
                 value={formData.vendor}
                 onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-                placeholder="例: Cisco, Dell, HPE"
+                placeholder=""
               />
             </div>
           )}
@@ -1204,30 +1170,13 @@ function EditProductModal({ product, onClose }: { product: EolProduct; onClose: 
                 value={formData.eol_api_id}
                 onChange={(e) => setFormData({ ...formData, eol_api_id: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-                placeholder="例: ubuntu"
+                placeholder=""
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 設定すると自動同期されます（任意）
               </p>
             </div>
           )}
-
-          <div>
-            <label
-              htmlFor="edit-link"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
-            >
-              公式URL
-            </label>
-            <input
-              id="edit-link"
-              type="url"
-              value={formData.link}
-              onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-              placeholder="https://..."
-            />
-          </div>
         </div>
 
         <div className="flex justify-end gap-3 mt-6">
@@ -1293,7 +1242,8 @@ function AssetDeleteButton({
       await api.delete(`/eol/assets/${assetId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["eol", "assets", productId] });
+      void queryClient.invalidateQueries({ queryKey: ["eol", "assets", productId] });
+      void queryClient.invalidateQueries({ queryKey: ["eol"] });
       onToast("機器を削除しました", "success");
     },
     onError: () => {
@@ -1374,18 +1324,34 @@ function HardwareAssetDetailModal({
                   {group.title}
                 </h3>
                 <dl className="space-y-3">
-                  {group.fields.map((field) => (
-                    <div key={field.key} className="flex gap-3">
-                      <dt className="text-sm text-gray-500 dark:text-gray-400 w-36 flex-shrink-0">
-                        {field.label}
-                      </dt>
-                      <dd className="text-sm text-gray-900 dark:text-gray-100 break-all whitespace-pre-wrap">
-                        {(asset[field.key] as string | null | undefined) ?? (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </dd>
-                    </div>
-                  ))}
+                  {group.fields.map((field) => {
+                    const value = asset[field.key] as string | null | undefined;
+                    return (
+                      <div key={field.key} className="flex gap-3">
+                        <dt className="text-sm text-gray-500 dark:text-gray-400 w-36 flex-shrink-0">
+                          {field.label}
+                        </dt>
+                        <dd className="text-sm text-gray-900 dark:text-gray-100 break-all whitespace-pre-wrap">
+                          {value ? (
+                            field.type === "url" ? (
+                              <a
+                                href={value}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 dark:text-blue-400 hover:underline"
+                              >
+                                {value}
+                              </a>
+                            ) : (
+                              value
+                            )
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </dd>
+                      </div>
+                    );
+                  })}
                 </dl>
               </div>
             ))}
@@ -1432,24 +1398,25 @@ const ASSET_FIELD_GROUPS: AssetFieldGroup[] = [
   {
     title: "基本情報",
     fields: [
-      { key: "device_name", label: "管理名", placeholder: "例: 本社-SW-01" },
-      { key: "hostname", label: "ホスト名", placeholder: "例: sw-core-01.example.com" },
+      { key: "device_name", label: "管理名", placeholder: "" },
+      { key: "hostname", label: "ホスト名", placeholder: "" },
     ],
   },
   {
     title: "管理・識別情報",
     fields: [
-      { key: "identifier", label: "サービスタグ", placeholder: "例: SVC-001234" },
-      { key: "serial_number", label: "シリアル番号", placeholder: "例: ABC1234567" },
-      { key: "asset_number", label: "資産管理番号", placeholder: "例: IT-2024-0001" },
+      { key: "identifier", label: "サービスタグ", placeholder: "" },
+      { key: "serial_number", label: "シリアル番号", placeholder: "" },
+      { key: "asset_number", label: "資産管理番号", placeholder: "" },
     ],
   },
   {
     title: "ネットワーク情報",
     fields: [
-      { key: "ip_address", label: "IPアドレス", placeholder: "例: 192.168.1.100" },
-      { key: "mac_address", label: "MACアドレス", placeholder: "例: AA:BB:CC:DD:EE:FF" },
-      { key: "firmware_version", label: "ファームウェア", placeholder: "例: 17.06.05" },
+      { key: "ip_address", label: "IPアドレス", placeholder: "" },
+      { key: "mac_address", label: "MACアドレス", placeholder: "" },
+      { key: "firmware_version", label: "ファームウェア", placeholder: "" },
+      { key: "mgmt_url", label: "管理UI URL", type: "url", placeholder: "" },
     ],
   },
   {
@@ -1457,8 +1424,8 @@ const ASSET_FIELD_GROUPS: AssetFieldGroup[] = [
     fields: [
       { key: "support_expiry", label: "保守期限", type: "date" },
       { key: "purchase_date", label: "購入日", type: "date" },
-      { key: "location", label: "設置場所", placeholder: "例: 東京DC / ラックA-01" },
-      { key: "owner", label: "担当者", placeholder: "例: 山田太郎" },
+      { key: "location", label: "設置場所", placeholder: "" },
+      { key: "owner", label: "担当者", placeholder: "" },
       { key: "notes", label: "備考", isTextarea: true },
     ],
   },
@@ -1491,6 +1458,7 @@ function HardwareAssetModal({
     purchase_date: asset?.purchase_date ?? "",
     location: asset?.location ?? "",
     owner: asset?.owner ?? "",
+    mgmt_url: asset?.mgmt_url ?? "",
     status: asset?.status ?? ("active" as HardwareAssetStatus),
     notes: asset?.notes ?? "",
   };
@@ -1509,7 +1477,8 @@ function HardwareAssetModal({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["eol", "assets", productId] });
+      void queryClient.invalidateQueries({ queryKey: ["eol", "assets", productId] });
+      void queryClient.invalidateQueries({ queryKey: ["eol"] });
       onToast(isEdit ? "機器を更新しました" : "機器を登録しました", "success");
       onClose();
     },

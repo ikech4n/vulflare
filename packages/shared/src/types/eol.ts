@@ -123,6 +123,7 @@ export interface HardwareAsset {
   location: string | null; // 設置場所
   owner: string | null; // 担当者
   status: HardwareAssetStatus; // ステータス
+  mgmt_url: string | null; // 管理UI URL (IPMI/iDRAC/iLO等)
   notes: string | null; // 備考
   created_at: string;
   updated_at: string;

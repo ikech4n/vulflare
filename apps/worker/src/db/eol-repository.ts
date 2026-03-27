@@ -36,8 +36,8 @@ export const eolProductRepo = {
     }
 
     let sql = `SELECT p.*,
-      (SELECT c.latest_version FROM eol_cycles c
-       WHERE c.product_id = p.id AND c.latest_version IS NOT NULL
+      (SELECT COALESCE(c.latest_version, c.cycle) FROM eol_cycles c
+       WHERE c.product_id = p.id
        ORDER BY c.release_date DESC NULLS LAST, c.cycle DESC LIMIT 1) AS latest_version,
       (SELECT MIN(c.eol_date) FROM eol_cycles c
        WHERE c.product_id = p.id AND c.is_eol = 0 AND c.eol_date IS NOT NULL

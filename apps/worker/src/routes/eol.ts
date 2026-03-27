@@ -482,6 +482,7 @@ eolRoutes.post("/hardware-with-asset", requireRole("editor"), async (c) => {
     purchase_date?: string;
     location?: string;
     owner?: string;
+    mgmt_url?: string;
     notes?: string;
   }>();
 
@@ -568,6 +569,7 @@ eolRoutes.post("/hardware-with-asset", requireRole("editor"), async (c) => {
       purchase_date: body.purchase_date ?? null,
       location: body.location ?? null,
       owner: body.owner ?? null,
+      mgmt_url: body.mgmt_url ?? null,
       status: "active",
       notes: body.notes ?? null,
     });
@@ -615,6 +617,7 @@ eolRoutes.post("/assets", requireRole("editor"), async (c) => {
     purchase_date?: string;
     location?: string;
     owner?: string;
+    mgmt_url?: string;
     status?: HardwareAssetStatus;
     notes?: string;
   }>();
@@ -647,6 +650,7 @@ eolRoutes.post("/assets", requireRole("editor"), async (c) => {
     purchase_date: body.purchase_date ?? null,
     location: body.location ?? null,
     owner: body.owner ?? null,
+    mgmt_url: body.mgmt_url ?? null,
     status: body.status ?? "active",
     notes: body.notes ?? null,
   });
@@ -676,6 +680,7 @@ eolRoutes.patch("/assets/:id", requireRole("editor"), async (c) => {
     purchase_date?: string | null;
     location?: string | null;
     owner?: string | null;
+    mgmt_url?: string | null;
     status?: HardwareAssetStatus;
     notes?: string | null;
   }>();
@@ -694,6 +699,7 @@ eolRoutes.patch("/assets/:id", requireRole("editor"), async (c) => {
     "purchase_date",
     "location",
     "owner",
+    "mgmt_url",
     "status",
     "notes",
   ] as const;
