@@ -1,46 +1,23 @@
-# 通知機能改善 タスクリスト
+# パッケージ監査機能（OSV API連携）実装
 
-## Phase 1: バグ修正 — eol_expired ルール作成不可
+## Status: In Progress
 
-- [ ] migrations/043_notification_improvements.sql — eol_expired・slack追加
-- [ ] apps/worker/src/routes/notifications.ts — validEvents に eol_expired 追加
+## Tasks
 
-## Phase 2a: Toast導入
+- [ ] Step 1: DBマイグレーション（055_package_audit.sql）
+- [ ] Step 2: 共有型定義（audit.ts, vulnerability.ts更新）
+- [ ] Step 3: Lockfileパーサー（lockfile-parsers.ts）
+- [ ] Step 4: OSV APIクライアント（osv-api.ts）
+- [ ] Step 5: リポジトリ層（audit-repository.ts）
+- [ ] Step 6: スキャンサービス（audit-scan.ts）
+- [ ] Step 7: APIルート（audit.ts + index.ts更新）
+- [ ] Step 8: 通知（notifications.ts更新）
+- [ ] Step 9: フロントエンド（Pages + Components + Router + Sidebar）
+- [ ] Step 10: 型チェック・ビルド検証
+- [ ] Step 11: コミット
 
-- [ ] apps/web/package.json — sonner 追加
-- [ ] apps/web/src/main.tsx — <Toaster /> マウント
+## Notes
 
-## Phase 2b: コンポーネント分割
-
-- [ ] apps/web/src/hooks/useNotifications.ts — TanStack Query フック
-- [ ] apps/web/src/components/notifications/ChannelForm.tsx
-- [ ] apps/web/src/components/notifications/ChannelCard.tsx
-- [ ] apps/web/src/components/notifications/ChannelList.tsx
-- [ ] apps/web/src/components/notifications/RuleForm.tsx
-- [ ] apps/web/src/components/notifications/RuleList.tsx
-- [ ] apps/web/src/components/notifications/LogDetail.tsx
-- [ ] apps/web/src/components/notifications/LogTable.tsx
-- [ ] apps/web/src/pages/NotificationsPage.tsx — タブレイアウトのみに簡略化
-
-## Phase 3: severityフィルタ強化
-
-- [ ] apps/worker/src/services/notifications.ts — Array.isArray対応
-- [ ] RuleForm.tsx — severityチェックボックス追加 (Phase 2bと同時)
-
-## Phase 4: Slackチャネル追加
-
-- [ ] packages/shared/src/types/notification.ts — slack追加
-- [ ] apps/worker/src/routes/notifications.ts — slack バリデーション追加
-- [ ] apps/worker/src/services/notifications.ts — sendSlack 追加
-
-## Phase 5: 通知ログ改善
-
-- [ ] apps/worker/src/db/notification-repository.ts — pagination・filter・findLogById追加
-- [ ] apps/worker/src/routes/notifications.ts — GET /logs クエリパラメータ・POST /logs/:id/resend
-- [ ] LogTable.tsx — フィルタ・ページネーション・再送信 (Phase 2bと同時)
-
-## 検証
-
-- [ ] pnpm type-check
-- [ ] pnpm build:web
-- [ ] pnpm test
+- yamlパッケージなし → pnpm-lock.yaml は正規表現でパース
+- VulnSource: "osv"追加
+- EventType: "package_audit_critical"追加

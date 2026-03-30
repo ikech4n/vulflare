@@ -1,3 +1,4 @@
+export type * from "./audit.ts";
 export type * from "./eol.ts";
 export type * from "./notification.ts";
 export type * from "./user.ts";

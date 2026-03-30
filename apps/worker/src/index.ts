@@ -4,6 +4,7 @@ import { logger } from "hono/logger";
 import { csrfProtection } from "./middleware/csrf.ts";
 import { aiRemediationRoutes } from "./routes/ai-remediation.ts";
 import { appSettingsRoutes } from "./routes/app-settings.ts";
+import { auditRoutes } from "./routes/audit.ts";
 import { authRoutes } from "./routes/auth.ts";
 import { dashboardRoutes } from "./routes/dashboard.ts";
 import { eolRoutes } from "./routes/eol.ts";
@@ -57,6 +58,7 @@ app.route("/api/reports", reportRoutes);
 app.route("/api/dashboard", dashboardRoutes);
 app.route("/api/eol", eolRoutes);
 app.route("/api/app-settings", appSettingsRoutes);
+app.route("/api/audit", auditRoutes);
 
 app.notFound((c) => c.json({ error: "Not found" }, 404));
 

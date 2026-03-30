@@ -10,6 +10,8 @@ import { DashboardPage } from "@/pages/DashboardPage.tsx";
 import { EolPage } from "@/pages/EolPage.tsx";
 import { EolProductDetailPage } from "@/pages/EolProductDetailPage.tsx";
 import { NotificationsPage } from "@/pages/NotificationsPage.tsx";
+import { PackageAuditDetailPage } from "@/pages/PackageAuditDetailPage.tsx";
+import { PackageAuditPage } from "@/pages/PackageAuditPage.tsx";
 import { ProfilePage } from "@/pages/ProfilePage.tsx";
 import { SettingsPage } from "@/pages/SettingsPage.tsx";
 import { SyncPage } from "@/pages/SyncPage.tsx";
@@ -41,6 +43,8 @@ export const router = createBrowserRouter([
       { path: "/data-sources", element: <SyncPage /> },
       { path: "/eol", element: <EolPage /> },
       { path: "/eol/products/:id", element: <EolProductDetailPage /> },
+      { path: "/package-audit", element: <PackageAuditPage /> },
+      { path: "/package-audit/:id", element: <PackageAuditDetailPage /> },
       { path: "/notifications", element: <NotificationsPage /> },
       { path: "/users", element: <SettingsPage /> },
       { path: "/profile", element: <ProfilePage /> },

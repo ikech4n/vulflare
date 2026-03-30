@@ -6,6 +6,7 @@ import {
   Database,
   LayoutDashboard,
   LogOut,
+  Package,
   Settings,
   ShieldAlert,
   User,
@@ -49,6 +50,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/", icon: LayoutDashboard, label: "ダッシュボード", end: true },
   { to: "/vulnerabilities", icon: ShieldAlert, label: "脆弱性一覧" },
   { to: "/eol", icon: Calendar, label: "EOL管理" },
+  { to: "/package-audit", icon: Package, label: "パッケージ監査" },
   {
     icon: Settings,
     label: "設定",

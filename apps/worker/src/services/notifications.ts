@@ -8,7 +8,8 @@ export type EventType =
   | "eol_approaching"
   | "eol_expired"
   | "hw_support_approaching"
-  | "hw_support_expired";
+  | "hw_support_expired"
+  | "package_audit_critical";
 
 export interface NotificationPayload {
   eventType: EventType;
@@ -148,6 +149,7 @@ async function sendSlack(
     eol_expired: "#dc2626",
     hw_support_approaching: "#f59e0b",
     hw_support_expired: "#dc2626",
+    package_audit_critical: "#dc2626",
   };
   const color = colorMap[eventType] ?? "#6b7280";
 
@@ -166,7 +168,9 @@ async function sendSlack(
                 ? "ハードウェア保守期限が近づいています"
                 : eventType === "hw_support_expired"
                   ? "ハードウェア保守期限切れ"
-                  : `Vulflare: ${eventType}`;
+                  : eventType === "package_audit_critical"
+                    ? "パッケージ監査でクリティカル脆弱性が検出されました"
+                    : `Vulflare: ${eventType}`;
 
   const fields: { type: "mrkdwn"; text: string }[] = [];
 
@@ -191,6 +195,13 @@ async function sendSlack(
       fields.push({ type: "mrkdwn", text: `*保守期限*\n${data.support_expiry}` });
     if (data.days_until_expiry != null)
       fields.push({ type: "mrkdwn", text: `*残り日数*\n${data.days_until_expiry}日` });
+  } else if (eventType === "package_audit_critical") {
+    if (data.projectName)
+      fields.push({ type: "mrkdwn", text: `*プロジェクト*\n${data.projectName}` });
+    if (data.vulnsFound != null)
+      fields.push({ type: "mrkdwn", text: `*検出脆弱性数*\n${data.vulnsFound}件` });
+    if (data.criticalCount != null)
+      fields.push({ type: "mrkdwn", text: `*クリティカル*\n${data.criticalCount}件` });
   } else {
     if (data.vuln_id) fields.push({ type: "mrkdwn", text: `*CVE ID*\n${data.vuln_id}` });
     if (data.title) fields.push({ type: "mrkdwn", text: `*タイトル*\n${data.title}` });
@@ -205,14 +216,18 @@ async function sendSlack(
     eventType === "hw_support_approaching" ||
     eventType === "hw_support_expired"
       ? "/eol"
-      : "/vulnerabilities";
+      : eventType === "package_audit_critical"
+        ? "/package-audit"
+        : "/vulnerabilities";
   const listLabel =
     eventType === "eol_approaching" ||
     eventType === "eol_expired" ||
     eventType === "hw_support_approaching" ||
     eventType === "hw_support_expired"
       ? "EOL一覧を確認する"
-      : "脆弱性一覧を確認する";
+      : eventType === "package_audit_critical"
+        ? "パッケージ監査を確認する"
+        : "脆弱性一覧を確認する";
   const linkBlock = appUrl
     ? [{ type: "section", text: { type: "mrkdwn", text: `<${appUrl}${listPath}|${listLabel}>` } }]
     : [];
@@ -268,6 +283,7 @@ async function sendEmail(
     eol_expired: "サポートが終了しました",
     hw_support_approaching: "ハードウェア保守期限が近づいています",
     hw_support_expired: "ハードウェア保守期限が切れました",
+    package_audit_critical: "パッケージ監査でクリティカル脆弱性が検出されました",
   };
   const subjectTemplate = (config.subject as string) || "Vulflare: {eventType}";
   const subject = subjectTemplate.replace(
