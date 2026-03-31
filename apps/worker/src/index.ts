@@ -6,6 +6,7 @@ import { aiRemediationRoutes } from "./routes/ai-remediation.ts";
 import { appSettingsRoutes } from "./routes/app-settings.ts";
 import { auditRoutes } from "./routes/audit.ts";
 import { authRoutes } from "./routes/auth.ts";
+import { webScannerRoutes } from "./routes/web-scanner.ts";
 import { dashboardRoutes } from "./routes/dashboard.ts";
 import { eolRoutes } from "./routes/eol.ts";
 import { jvnRoutes } from "./routes/jvn.ts";
@@ -59,6 +60,7 @@ app.route("/api/dashboard", dashboardRoutes);
 app.route("/api/eol", eolRoutes);
 app.route("/api/app-settings", appSettingsRoutes);
 app.route("/api/audit", auditRoutes);
+app.route("/api/web-scanner", webScannerRoutes);
 
 app.notFound((c) => c.json({ error: "Not found" }, 404));
 

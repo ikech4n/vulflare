@@ -4,6 +4,7 @@ import {
   ChevronDown,
   ChevronRight,
   Database,
+  Globe,
   LayoutDashboard,
   LogOut,
   Package,
@@ -51,6 +52,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/vulnerabilities", icon: ShieldAlert, label: "脆弱性一覧" },
   { to: "/eol", icon: Calendar, label: "EOL管理" },
   { to: "/package-audit", icon: Package, label: "パッケージ監査" },
+  { to: "/web-scanner", icon: Globe, label: "Webスキャナー" },
   {
     icon: Settings,
     label: "設定",

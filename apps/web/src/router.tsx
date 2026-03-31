@@ -13,6 +13,8 @@ import { NotificationsPage } from "@/pages/NotificationsPage.tsx";
 import { PackageAuditDetailPage } from "@/pages/PackageAuditDetailPage.tsx";
 import { PackageAuditPage } from "@/pages/PackageAuditPage.tsx";
 import { ProfilePage } from "@/pages/ProfilePage.tsx";
+import { WebScannerDetailPage } from "@/pages/WebScannerDetailPage.tsx";
+import { WebScannerPage } from "@/pages/WebScannerPage.tsx";
 import { SettingsPage } from "@/pages/SettingsPage.tsx";
 import { SyncPage } from "@/pages/SyncPage.tsx";
 import { VulnerabilitiesPage } from "@/pages/VulnerabilitiesPage.tsx";
@@ -45,6 +47,8 @@ export const router = createBrowserRouter([
       { path: "/eol/products/:id", element: <EolProductDetailPage /> },
       { path: "/package-audit", element: <PackageAuditPage /> },
       { path: "/package-audit/:id", element: <PackageAuditDetailPage /> },
+      { path: "/web-scanner", element: <WebScannerPage /> },
+      { path: "/web-scanner/:id", element: <WebScannerDetailPage /> },
       { path: "/notifications", element: <NotificationsPage /> },
       { path: "/users", element: <SettingsPage /> },
       { path: "/profile", element: <ProfilePage /> },
