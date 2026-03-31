@@ -1,13 +1,13 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { AuditProjectWithStats, AuditScan } from "@vulflare/shared/types";
 import { Package, Plus, RefreshCw, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { LockfileUploadModal } from "@/components/LockfileUploadModal.tsx";
 import { api } from "@/lib/api.ts";
 import { useAuthStore } from "@/store/authStore.ts";
-import { LockfileUploadModal } from "@/components/LockfileUploadModal.tsx";
-import type { AuditProjectWithStats, AuditScan } from "@vulflare/shared/types";
 
-const SEVERITY_COLORS: Record<string, string> = {
+const _SEVERITY_COLORS: Record<string, string> = {
   critical: "text-red-600 dark:text-red-400",
   high: "text-orange-600 dark:text-orange-400",
   medium: "text-yellow-600 dark:text-yellow-400",

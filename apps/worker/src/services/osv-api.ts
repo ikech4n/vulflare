@@ -1,5 +1,4 @@
-import type { OsvQueryBatchResponse, OsvVulnerability } from "@vulflare/shared/types";
-import type { Severity } from "@vulflare/shared/types";
+import type { OsvQueryBatchResponse, OsvVulnerability, Severity } from "@vulflare/shared/types";
 
 export interface OsvPackageInput {
   name: string;

@@ -1,8 +1,8 @@
-import { vulnRepo } from "../db/repository.ts";
 import { auditFindingRepo, auditPackageRepo, auditScanRepo } from "../db/audit-repository.ts";
-import { queryOsvBatch, mapOsvToVulnRecord, extractFixedVersion } from "./osv-api.ts";
-import { dispatchNotification } from "./notifications.ts";
+import { vulnRepo } from "../db/repository.ts";
 import type { Env } from "../types.ts";
+import { dispatchNotification } from "./notifications.ts";
+import { extractFixedVersion, mapOsvToVulnRecord, queryOsvBatch } from "./osv-api.ts";
 
 /**
  * パッケージ監査スキャンを実行する
@@ -54,7 +54,7 @@ export async function runPackageAuditScan(
       fixed_version: string | null;
     }> = [];
 
-    let criticalVulns: Array<{ cveId: string | null; title: string }> = [];
+    const criticalVulns: Array<{ cveId: string | null; title: string }> = [];
 
     for (const { pkg, vulns } of osvResults) {
       // 対応するパッケージのDBレコードを探す

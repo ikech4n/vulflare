@@ -1,3 +1,4 @@
+import type { AuditLockfileType } from "@vulflare/shared/types";
 import { Hono } from "hono";
 import {
   auditFindingRepo,
@@ -9,7 +10,6 @@ import { authMiddleware, requireRole } from "../middleware/auth.ts";
 import { runPackageAuditScan } from "../services/audit-scan.ts";
 import { detectLockfileType, parseLockfile } from "../services/lockfile-parsers.ts";
 import type { Env, JwtVariables } from "../types.ts";
-import type { AuditLockfileType } from "@vulflare/shared/types";
 
 export const auditRoutes = new Hono<{ Bindings: Env; Variables: JwtVariables }>();
 

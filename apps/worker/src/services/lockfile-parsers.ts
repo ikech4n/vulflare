@@ -43,7 +43,7 @@ export function parsePnpmLockYaml(content: string): ParsedPackage[] {
 
   let inPackagesSection = false;
   // Match package entries like "/lodash@4.17.21:" or "lodash@4.17.21:" (2-space indented)
-  const packageLineRe = /^  (?:\/)?(@?[^@/\s][^@\s]*)@([^\s:]+):?\s*$/;
+  const packageLineRe = /^ {2}(?:\/)?(@?[^@/\s][^@\s]*)@([^\s:]+):?\s*$/;
 
   for (const line of lines) {
     if (line.startsWith("packages:")) {

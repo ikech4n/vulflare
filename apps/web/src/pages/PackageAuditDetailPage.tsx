@@ -1,16 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type {
+  AuditFindingWithDetails,
+  AuditLockfileType,
+  AuditProjectWithStats,
+  AuditScan,
+  PaginatedResponse,
+} from "@vulflare/shared/types";
 import { ArrowLeft, Package, RefreshCw, ShieldAlert, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "@/lib/api.ts";
 import { useAuthStore } from "@/store/authStore.ts";
-import type {
-  AuditFindingWithDetails,
-  AuditProjectWithStats,
-  AuditScan,
-} from "@vulflare/shared/types";
-import type { PaginatedResponse } from "@vulflare/shared/types";
-import type { AuditLockfileType } from "@vulflare/shared/types";
 
 const SEVERITY_BADGE: Record<string, string> = {
   critical: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",

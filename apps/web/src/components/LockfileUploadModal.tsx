@@ -1,7 +1,7 @@
+import type { AuditLockfileType } from "@vulflare/shared/types";
 import { X } from "lucide-react";
 import { useRef, useState } from "react";
 import { api } from "@/lib/api.ts";
-import type { AuditLockfileType } from "@vulflare/shared/types";
 
 interface Props {
   onClose: () => void;

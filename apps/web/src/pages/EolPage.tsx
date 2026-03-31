@@ -633,7 +633,7 @@ export function EolPage() {
                               </button>
                             )}
                             {user?.role === "admin" && (
-                              <div onClick={(e) => e.stopPropagation()}>
+                              <div role="none" onClick={(e) => e.stopPropagation()}>
                                 <AssetDeleteButton
                                   assetId={asset.id}
                                   productId={asset.product_id}
