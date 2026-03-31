@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { WebScan, WebScanTargetWithStats } from "@vulflare/shared/types";
-import { Globe, Plus, RefreshCw, ShieldAlert } from "lucide-react";
+import { AlertTriangle, Globe, Plus, RefreshCw, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { WebScanTargetModal } from "@/components/WebScanTargetModal.tsx";
@@ -65,6 +65,18 @@ export function WebScannerPage() {
             新規ターゲット
           </button>
         )}
+      </div>
+
+      {/* 免責事項バナー */}
+      <div className="flex items-start gap-3 rounded-lg border border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 px-4 py-3">
+        <AlertTriangle
+          size={16}
+          className="flex-shrink-0 mt-0.5 text-yellow-600 dark:text-yellow-400"
+        />
+        <p className="text-sm text-yellow-800 dark:text-yellow-300">
+          <strong>注意：</strong>
+          このスキャナーは自身が所有・管理するサイト、またはスキャンの許可を得たサイトに対してのみ使用してください。無断でのスキャンは不正アクセスに該当し、法的責任を問われる場合があります。
+        </p>
       </div>
 
       {/* サマリーカード */}

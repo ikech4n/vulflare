@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { CreateWebScanTargetRequest, WebScanTarget } from "@vulflare/shared/types";
-import { Globe, X } from "lucide-react";
+import { AlertTriangle, Globe, X } from "lucide-react";
 import { useState } from "react";
 import { api } from "@/lib/api.ts";
 
@@ -12,6 +12,7 @@ export function WebScanTargetModal({ onClose }: WebScanTargetModalProps) {
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
+  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
 
   const createMutation = useMutation({
@@ -45,6 +46,11 @@ export function WebScanTargetModal({ onClose }: WebScanTargetModalProps) {
       new URL(url);
     } catch {
       setError("有効なURLを入力してください (例: https://example.com)");
+      return;
+    }
+
+    if (!agreed) {
+      setError("利用規約に同意してください");
       return;
     }
 
@@ -104,6 +110,34 @@ export function WebScanTargetModal({ onClose }: WebScanTargetModalProps) {
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               スキャン対象のWebサイトのURLを入力してください
             </p>
+          </div>
+
+          {/* 免責事項 */}
+          <div className="rounded-lg border border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 p-3 space-y-2">
+            <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-400">
+              <AlertTriangle size={14} className="flex-shrink-0" />
+              <span className="text-xs font-semibold">
+                重要：スキャン実行前に必ずお読みください
+              </span>
+            </div>
+            <p className="text-xs text-yellow-700 dark:text-yellow-300 leading-relaxed">
+              このスキャナーは対象サイトに対してHTTPリクエストを送信します。
+              <strong>
+                自身が所有または管理するサイト、もしくはスキャンの許可を得たサイト以外に実行することは禁止されています。
+              </strong>
+              無断でのスキャンは不正アクセスとみなされ、法的責任を問われる場合があります。
+            </p>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                className="mt-0.5 flex-shrink-0"
+              />
+              <span className="text-xs text-yellow-800 dark:text-yellow-300">
+                対象サイトの所有者または管理者として、スキャン実行の権限があることを確認しました
+              </span>
+            </label>
           </div>
 
           {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
