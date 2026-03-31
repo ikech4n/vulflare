@@ -5,8 +5,8 @@ import type { Env } from "../types.ts";
 
 // 通知を送るマイルストーン（日前）
 const EOL_MILESTONES = [180, 90, 30] as const;
-// Cronスキップに備えた判定ウィンドウ（±日）
-const MILESTONE_WINDOW_DAYS = 2;
+// マイルストーンぴったりの日のみ通知
+const MILESTONE_WINDOW_DAYS = 0;
 // 重複チェック対象期間（日）
 const DEDUP_WINDOW_DAYS = 7;
 
