@@ -13,13 +13,13 @@ import { NotificationsPage } from "@/pages/NotificationsPage.tsx";
 import { PackageAuditDetailPage } from "@/pages/PackageAuditDetailPage.tsx";
 import { PackageAuditPage } from "@/pages/PackageAuditPage.tsx";
 import { ProfilePage } from "@/pages/ProfilePage.tsx";
-import { WebScannerDetailPage } from "@/pages/WebScannerDetailPage.tsx";
-import { WebScannerPage } from "@/pages/WebScannerPage.tsx";
 import { SettingsPage } from "@/pages/SettingsPage.tsx";
 import { SyncPage } from "@/pages/SyncPage.tsx";
 import { VulnerabilitiesPage } from "@/pages/VulnerabilitiesPage.tsx";
 import { VulnerabilityCreatePage } from "@/pages/VulnerabilityCreatePage.tsx";
 import { VulnerabilityDetailPage } from "@/pages/VulnerabilityDetailPage.tsx";
+import { WebScannerDetailPage } from "@/pages/WebScannerDetailPage.tsx";
+import { WebScannerPage } from "@/pages/WebScannerPage.tsx";
 
 export const router = createBrowserRouter([
   {
