@@ -49,6 +49,8 @@ export async function dispatchNotification(
         const filter = JSON.parse(rule.filter_config) as Record<string, unknown>;
         let match = true;
         for (const [key, value] of Object.entries(filter)) {
+          // データにフィルターキーが存在しない場合はスキップ（バッチ通知対応）
+          if (!(key in data)) continue;
           // 配列の場合は includes で判定（例: severity: ["critical", "high"]）
           if (Array.isArray(value)) {
             if (!value.includes(data[key])) {
