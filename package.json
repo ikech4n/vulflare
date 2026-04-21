@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.10",
-    "@cloudflare/vitest-pool-workers": "^0.14.7",
+    "@cloudflare/vitest-pool-workers": "^0.14.8",
     "@cloudflare/workers-types": "^4.20260417.1",
     "msw": "^2.13.4",
     "typescript": "^5.7.0",
